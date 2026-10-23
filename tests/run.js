@@ -276,6 +276,19 @@ test('beschrijvingen: netjes gemaakt, enkel zoeken waar nodig', () => {
   assert.strictEqual(M.heeftBeschrijvingNodig({ isbn: '', beschrijving: '', beschrijving_gezocht: '' }), false);
 });
 
+test('beschrijvingen vertalen: Nederlands blijft, Engels komt in beschrijving_en', () => {
+  const nep = (tekst, taal) => {
+    const woordenboek = { 'A made-up novel.': { nl: 'Een verzonnen roman.', en: 'A made-up novel.' }, 'Een verzonnen roman.': { nl: 'Een verzonnen roman.', en: 'A made-up novel.' } };
+    return woordenboek[tekst][taal];
+  };
+  gelijk(M.maakTweetaligeBeschrijving({ beschrijving: 'A made-up novel.', beschrijving_en: '' }, nep), { beschrijving: 'Een verzonnen roman.', beschrijving_en: 'A made-up novel.' });
+  gelijk(M.maakTweetaligeBeschrijving({ beschrijving: 'Een verzonnen roman.', beschrijving_en: '' }, nep), { beschrijving_en: 'A made-up novel.' });
+  gelijk(M.maakTweetaligeBeschrijving({ beschrijving: 'Een verzonnen roman.', beschrijving_en: 'Eigen Engelse tekst' }, nep), {});
+  assert.strictEqual(M.heeftVertalingNodig({ beschrijving: 'x', beschrijving_vertaald: '' }), true);
+  assert.strictEqual(M.heeftVertalingNodig({ beschrijving: 'x', beschrijving_vertaald: '2026-10-23' }), false);
+  assert.strictEqual(M.schoonMetRegels('  Regel  1 \r\n\n\n\n Regel 2 '), 'Regel 1\n\nRegel 2');
+});
+
 test('Google Books: cover in https, enkel lege velden, eigen cover blijft', () => {
   const info = { imageLinks: { thumbnail: 'http://books.google.com/books/content?id=abc&printsec=frontcover&img=1&zoom=1&edge=curl' }, language: 'nl', pageCount: 120, publisher: 'Verzonnen BV', publishedDate: '1999-05-01', description: '<b>Een</b> verzonnen boek.' };
   const v = M.verwerkGoogleBooks({ isbn: '9780306406157', cover_url: '', uitgeverij: 'Bestaand', jaartal: '', paginas: '', taal: '', beschrijving: '' }, info);
@@ -557,6 +570,19 @@ test('publieke catalogus toont geen herkomst, geen niet-publieke boeken en geen 
   const zine = p.boeken.find((b) => b.id === 'Z0001');
   assert.strictEqual(zine.b.l, 'Te koop in de bib, niet uitleenbaar');
   gelijk(Array.from(zine.g), ['Zines']);
+});
+test('publieke catalogus: beschrijving met alinea\'s, Engelse versie enkel als ze verschilt', () => {
+  const s = maakStaat();
+  s.catalogus[0].beschrijving = 'Een verzonnen roman.\n\nTweede alinea.';
+  s.catalogus[0].beschrijving_en = 'A made-up novel.';
+  s.catalogus[1].beschrijving = 'Zelfde tekst.';
+  s.catalogus[1].beschrijving_en = 'Zelfde tekst.';
+  const p = M.bouwPubliekeCatalogus(s, []);
+  const b0 = p.boeken.find((b) => b.id === String(s.catalogus[0].boek_id));
+  const b1 = p.boeken.find((b) => b.id === String(s.catalogus[1].boek_id));
+  assert.strictEqual(b0.d, 'Een verzonnen roman.\n\nTweede alinea.');
+  assert.strictEqual(b0.de, 'A made-up novel.');
+  assert.strictEqual(b1.de, undefined);
 });
 test('privacy-opruiming na de bewaartermijn', () => {
   const s = maakStaat('2027-12-01');
