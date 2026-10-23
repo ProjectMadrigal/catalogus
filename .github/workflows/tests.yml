@@ -12,3 +12,4 @@ jobs:
         with:
           node-version: 20
       - run: node tests/run.js
+      - run: BUNDEL=1 node tests/run.js
