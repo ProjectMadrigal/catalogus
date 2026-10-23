@@ -223,9 +223,9 @@ var KOLOMMEN = {
   'Catalogus': [
     'boek_id', 'soort', 'titel', 'auteur', 'isbn', 'uitgeverij', 'jaartal', 'taal', 'paginas',
     'uitvoering', 'nieuwstaat', 'aanrader', 'genre', 'extra_onderwerpen', 'klassieker', 'aantal',
-    'uitleenbaar', 'publiek', 'beschrijving', 'cover_url', 'startpagina', 'toegevoegd_op',
+    'uitleenbaar', 'publiek', 'beschrijving', 'beschrijving_en', 'cover_url', 'startpagina', 'toegevoegd_op',
     // Vanaf hier: nooit publiek.
-    'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht'
+    'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht', 'beschrijving_vertaald'
   ],
   'Onderwerpen': ['genre', 'filtergroepen', 'aantal_boeken'],
   'Leners': ['lenersnummer', 'voornaam', 'achternaam', 'telefoon', 'email', 'datum_inschrijving', 'toestemming_privacy', 'actief'],
@@ -251,7 +251,7 @@ var KOLOMMEN = {
 var DATUMKOLOMMEN = [
   'datum_inschrijving', 'datum_uit', 'oorspronkelijke_vervaldatum', 'vervaldatum', 'datum_terug',
   'datum_verlenging', 'borg_terugbetaald', 'laatste_herinnering', 'datum_reservatie', 'datum_klaar',
-  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd', 'toegevoegd_op', 'beschrijving_gezocht'
+  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd', 'toegevoegd_op', 'beschrijving_gezocht', 'beschrijving_vertaald'
 ];
 
 var OUDE_SITE = 'https://www.projectmadrigal.be/';
@@ -670,8 +670,10 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
       i: schoon(rij.isbn), u: schoon(rij.uitgeverij), j: parseerGetal(rij.jaartal) || '',
       l: schoon(rij.taal), p: parseerGetal(rij.paginas) || '', v: schoon(rij.uitvoering),
       n: jaNee(rij.nieuwstaat) === 'ja' ? 'nieuw' : (jaNee(rij.nieuwstaat) === 'nee' ? 'tweedehands' : ''),
-      d: schoon(rij.beschrijving), c: veiligeCoverUrl(rij.cover_url)
+      d: schoonMetRegels(rij.beschrijving), c: veiligeCoverUrl(rij.cover_url)
     };
+    var en = schoonMetRegels(rij.beschrijving_en);
+    if (en && en !== extra.d) extra.de = en;
     Object.keys(extra).forEach(function (k) { if (!isLeeg(extra[k])) boek[k] = extra[k]; });
     var aanraders = splitsLijst(String(rij.aanrader || '').replace(/ en | & /g, ','));
     if (aanraders.length) boek.r = aanraders;
@@ -1009,6 +1011,11 @@ function heeftOpenLibraryNodig(boek) {
   return OL_VELDEN.some(function (v) { return isLeeg(boek[v]); });
 }
 
+/** Moet deze beschrijving nog vertaald worden? */
+function heeftVertalingNodig(boek) {
+  return !isLeeg(boek.beschrijving) && isLeeg(boek.beschrijving_vertaald);
+}
+
 /**
  * Menu: wist de Catalogus en bouwt ze opnieuw op uit Stock en Zines.
  * Enkel bedoeld voor de eerste opbouw. Wat je met de hand in de Catalogus
@@ -1146,7 +1153,7 @@ function installeer() {
   // Niet-publieke kolommen van de Catalogus grijs markeren.
   var cat = ss.getSheetByName('Catalogus');
   var catKop = cat.getRange(1, 1, 1, cat.getLastColumn()).getValues()[0].map(schoon);
-  ['herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht'].forEach(function (k) {
+  ['herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht', 'beschrijving_vertaald'].forEach(function (k) {
     var i = catKop.indexOf(k);
     if (i > -1) {
       cat.getRange(1, i + 1).setBackground('#d9d9d9').setNote('Niet publiek. Deze kolom verschijnt nooit op de website.');
@@ -1650,6 +1657,25 @@ function maakIdGenerator(catalogusRijen) {
   };
 }
 
+/**
+ * Bepaalt de Nederlandse en de Engelse beschrijving.
+ * vertaal(tekst, doeltaal) geeft de vertaling (in Apps Script: LanguageApp).
+ *   - Is de tekst al Nederlands (de vertaling naar het Nederlands verandert niets),
+ *     dan blijft beschrijving precies zoals ze was.
+ *   - Een Engelse versie die je zelf invulde in beschrijving_en, blijft staan.
+ */
+function maakTweetaligeBeschrijving(boek, vertaal) {
+  var origineel = schoonMetRegels(boek.beschrijving);
+  var v = {};
+  var nl = schoonMetRegels(vertaal(origineel, 'nl'));
+  if (nl && !zelfdeTekst(nl, origineel)) v.beschrijving = nl;
+  if (isLeeg(boek.beschrijving_en)) {
+    var en = schoonMetRegels(vertaal(origineel, 'en'));
+    if (en) v.beschrijving_en = en;
+  }
+  return v;
+}
+
 /** "2026-11" naar "november 2026". */
 function maandTekst(jjjjmm) {
   var d = jjjjmm.split('-');
@@ -1851,6 +1877,7 @@ function onOpen() {
     .addItem('4. Vul aan uit Open Library', 'vulAanUitOpenLibrary')
     .addItem('5. Zoek ontbrekende covers bij Google Books', 'vulAanUitGoogleBooks')
     .addItem('6. Zoek ontbrekende beschrijvingen', 'vulBeschrijvingenAan')
+    .addItem('7. Vertaal de beschrijvingen (Nederlands en Engels)', 'vertaalBeschrijvingen')
     .addSeparator()
     .addItem('Nieuwe boeken verwerken', 'verwerkNieuweBoeken')
     .addItem('Werk de vertaaltabel Onderwerpen bij', 'werkOnderwerpenBijMenu')
@@ -1928,6 +1955,12 @@ function parseerGetal(waarde) {
   if (typeof waarde === 'number') return isNaN(waarde) ? null : waarde;
   var m = schoon(waarde).replace(',', '.').match(/-?\d+(\.\d+)?/);
   return m ? Number(m[0]) : null;
+}
+
+/** Plant de vertaling over een paar minuten (één keer). */
+function planVertaling(minuten) {
+  verwijderTriggers('vertaalBeschrijvingen');
+  ScriptApp.newTrigger('vertaalBeschrijvingen').timeBased().after(minuten * 60 * 1000).create();
 }
 
 /** De publieke catalogus als JSON-tekst, uit de cache als die er is. */
@@ -2098,6 +2131,12 @@ function ruimOpStaat(staat) {
 function schoon(waarde) {
   if (waarde === null || waarde === undefined) return '';
   return String(waarde).replace(/\s+/g, ' ').trim();
+}
+
+/** Zoals schoon, maar regeleinden en lege regels (alinea's) blijven. */
+function schoonMetRegels(waarde) {
+  if (waarde === null || waarde === undefined) return '';
+  return String(waarde).replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim();
 }
 
 /** Schrijft een volledige tabel in één keer (gebruikt bij de opbouw van de catalogus). */
@@ -2401,6 +2440,52 @@ function verlengen(staat, invoer) {
   });
   staat.log.push(['verlengen', u.uitlening_id + ' tot ' + nieuw]);
   return { ok: true, terugTekst: 'Nieuwe datum: breng terug tegen ' + datumTekst(nieuw, staat.vandaag), vervaldatum: nieuw, uitlening: uitleningInfo(staat, u) };
+}
+
+/** Menu: vertaalt de beschrijvingen naar het Nederlands en het Engels, in porties. */
+function vertaalBeschrijvingen() {
+  var start = Date.now();
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) { planVertaling(5); return; } // een andere bewerking loopt: straks opnieuw
+  var verwerkt = 0, rest = 0, limiet = false;
+  try {
+    var tabel = leesTabel('Catalogus');
+    if (tabel.kop.indexOf('beschrijving_vertaald') === -1 || tabel.kop.indexOf('beschrijving_en') === -1) {
+      meld('De kolommen beschrijving_en en beschrijving_vertaald ontbreken nog in de Catalogus. Voer eerst "installeer" uit.');
+      return;
+    }
+    var vandaag = vandaagTekst();
+    var vertaal = function (tekst, taal) { return LanguageApp.translate(tekst, '', taal); };
+    var teDoen = tabel.rijen.filter(heeftVertalingNodig);
+    for (var i = 0; i < teDoen.length; i++) {
+      if (Date.now() - start > BS_MAX_LOOPTIJD_MS) break;
+      var velden;
+      try {
+        velden = maakTweetaligeBeschrijving(teDoen[i], vertaal);
+      } catch (e) {
+        // Meestal de daglimiet van Google Translate.
+        limiet = true;
+        break;
+      }
+      velden.beschrijving_vertaald = vandaag;
+      wijzig(teDoen[i], velden);
+      verwerkt++;
+      if (verwerkt % 20 === 0) bewaarTabel(tabel);
+      Utilities.sleep(200);
+    }
+    bewaarTabel(tabel);
+    rest = tabel.rijen.filter(heeftVertalingNodig).length;
+  } finally {
+    lock.releaseLock();
+  }
+  verwijderTriggers('vertaalBeschrijvingen');
+  if (rest > 0) planVertaling(limiet ? 24 * 60 : 1);
+  if (verwerkt) leegCache();
+  logboek('menu', 'vertaalBeschrijvingen', verwerkt + ' vertaald, ' + rest + ' te gaan' + (limiet ? ' (daglimiet van Google Translate)' : ''));
+  var tekst = verwerkt + ' beschrijvingen vertaald.';
+  if (rest > 0) tekst += limiet ? ' De daglimiet van Google Translate is bereikt: morgen gaat het script vanzelf verder.' : ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.';
+  else tekst += ' Alles is vertaald.';
+  try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
 }
 
 /** Leest de vertaaltabel als object: genre -> lijst filtergroepen. */
@@ -3046,12 +3131,16 @@ function vulBeschrijvingenAan() {
     ScriptApp.newTrigger('vulBeschrijvingenAan').timeBased().after((limiet ? 6 * 60 : 1) * 60 * 1000).create();
   }
   if (gevonden) leegCache();
+  // Nieuwe beschrijvingen gevonden? Dan vertalen (zie onderaan).
+  if (gevonden) planVertaling(2);
   logboek('menu', 'vulBeschrijvingenAan', verwerkt + ' opgezocht, ' + gevonden + ' beschrijvingen gevonden, ' + rest + ' te gaan' + (limiet ? ' (limiet bereikt)' : ''));
   var tekst = verwerkt + ' boeken opgezocht, ' + gevonden + ' beschrijvingen gevonden.';
   if (rest > 0) tekst += limiet ? ' De daglimiet is bereikt: over 6 uur gaat het script vanzelf verder.' : ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.';
   else tekst += ' Alles is verwerkt.';
   try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
 }
+
+/* ---------- Vertalen ---------- */
 
 /** Pure versie van werkOnderwerpenBij, voor de tests. */
 function vulOnderwerpenAan(onderwerpRijen, catalogusRijen) {
@@ -3133,6 +3222,12 @@ function woorden(waarde) {
   var alle = normaliseerTekst(waarde).split(' ').filter(function (w) { return w; });
   var zonder = alle.filter(function (w) { return LIDWOORDEN.indexOf(w) === -1; });
   return zonder.length ? zonder : alle;
+}
+
+/** Vergelijkt twee teksten zonder hoofdletters, leestekens en spaties. */
+function zelfdeTekst(a, b) {
+  var kaal = function (t) { return normaliseerTekst(t).replace(/[^a-z0-9]/g, ''); };
+  return kaal(a) === kaal(b);
 }
 
 /** Past één instelling aan in het tabblad. */

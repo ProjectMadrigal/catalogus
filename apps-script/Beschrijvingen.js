@@ -15,6 +15,9 @@
  *   - Zonder API-sleutel (instelling google_books_api_key) deelt Google een kleine
  *     daglimiet met veel andere gebruikers. Is die op, dan zoekt het script verder
  *     bij Open Library en probeert het Google over 6 uur opnieuw.
+ *   - Daarna vertaalt het script elke beschrijving met Google Translate (gratis
+ *     in Apps Script): de Nederlandse versie komt in beschrijving, de Engelse in
+ *     beschrijving_en. De website toont de versie in de gekozen taal.
  *   - Werkt in porties van 4,5 minuten en plant zichzelf opnieuw in, net als
  *     Open Library en Google Books. Google Books start dit vanzelf als het klaar is.
  */
@@ -143,9 +146,95 @@ function vulBeschrijvingenAan() {
     ScriptApp.newTrigger('vulBeschrijvingenAan').timeBased().after((limiet ? 6 * 60 : 1) * 60 * 1000).create();
   }
   if (gevonden) leegCache();
+  // Nieuwe beschrijvingen gevonden? Dan vertalen (zie onderaan).
+  if (gevonden) planVertaling(2);
   logboek('menu', 'vulBeschrijvingenAan', verwerkt + ' opgezocht, ' + gevonden + ' beschrijvingen gevonden, ' + rest + ' te gaan' + (limiet ? ' (limiet bereikt)' : ''));
   var tekst = verwerkt + ' boeken opgezocht, ' + gevonden + ' beschrijvingen gevonden.';
   if (rest > 0) tekst += limiet ? ' De daglimiet is bereikt: over 6 uur gaat het script vanzelf verder.' : ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.';
   else tekst += ' Alles is verwerkt.';
+  try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
+}
+
+/* ---------- Vertalen ---------- */
+
+/** Moet deze beschrijving nog vertaald worden? */
+function heeftVertalingNodig(boek) {
+  return !isLeeg(boek.beschrijving) && isLeeg(boek.beschrijving_vertaald);
+}
+
+/** Vergelijkt twee teksten zonder hoofdletters, leestekens en spaties. */
+function zelfdeTekst(a, b) {
+  var kaal = function (t) { return normaliseerTekst(t).replace(/[^a-z0-9]/g, ''); };
+  return kaal(a) === kaal(b);
+}
+
+/**
+ * Bepaalt de Nederlandse en de Engelse beschrijving.
+ * vertaal(tekst, doeltaal) geeft de vertaling (in Apps Script: LanguageApp).
+ *   - Is de tekst al Nederlands (de vertaling naar het Nederlands verandert niets),
+ *     dan blijft beschrijving precies zoals ze was.
+ *   - Een Engelse versie die je zelf invulde in beschrijving_en, blijft staan.
+ */
+function maakTweetaligeBeschrijving(boek, vertaal) {
+  var origineel = schoonMetRegels(boek.beschrijving);
+  var v = {};
+  var nl = schoonMetRegels(vertaal(origineel, 'nl'));
+  if (nl && !zelfdeTekst(nl, origineel)) v.beschrijving = nl;
+  if (isLeeg(boek.beschrijving_en)) {
+    var en = schoonMetRegels(vertaal(origineel, 'en'));
+    if (en) v.beschrijving_en = en;
+  }
+  return v;
+}
+
+/** Plant de vertaling over een paar minuten (één keer). */
+function planVertaling(minuten) {
+  verwijderTriggers('vertaalBeschrijvingen');
+  ScriptApp.newTrigger('vertaalBeschrijvingen').timeBased().after(minuten * 60 * 1000).create();
+}
+
+/** Menu: vertaalt de beschrijvingen naar het Nederlands en het Engels, in porties. */
+function vertaalBeschrijvingen() {
+  var start = Date.now();
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) { planVertaling(5); return; } // een andere bewerking loopt: straks opnieuw
+  var verwerkt = 0, rest = 0, limiet = false;
+  try {
+    var tabel = leesTabel('Catalogus');
+    if (tabel.kop.indexOf('beschrijving_vertaald') === -1 || tabel.kop.indexOf('beschrijving_en') === -1) {
+      meld('De kolommen beschrijving_en en beschrijving_vertaald ontbreken nog in de Catalogus. Voer eerst "installeer" uit.');
+      return;
+    }
+    var vandaag = vandaagTekst();
+    var vertaal = function (tekst, taal) { return LanguageApp.translate(tekst, '', taal); };
+    var teDoen = tabel.rijen.filter(heeftVertalingNodig);
+    for (var i = 0; i < teDoen.length; i++) {
+      if (Date.now() - start > BS_MAX_LOOPTIJD_MS) break;
+      var velden;
+      try {
+        velden = maakTweetaligeBeschrijving(teDoen[i], vertaal);
+      } catch (e) {
+        // Meestal de daglimiet van Google Translate.
+        limiet = true;
+        break;
+      }
+      velden.beschrijving_vertaald = vandaag;
+      wijzig(teDoen[i], velden);
+      verwerkt++;
+      if (verwerkt % 20 === 0) bewaarTabel(tabel);
+      Utilities.sleep(200);
+    }
+    bewaarTabel(tabel);
+    rest = tabel.rijen.filter(heeftVertalingNodig).length;
+  } finally {
+    lock.releaseLock();
+  }
+  verwijderTriggers('vertaalBeschrijvingen');
+  if (rest > 0) planVertaling(limiet ? 24 * 60 : 1);
+  if (verwerkt) leegCache();
+  logboek('menu', 'vertaalBeschrijvingen', verwerkt + ' vertaald, ' + rest + ' te gaan' + (limiet ? ' (daglimiet van Google Translate)' : ''));
+  var tekst = verwerkt + ' beschrijvingen vertaald.';
+  if (rest > 0) tekst += limiet ? ' De daglimiet van Google Translate is bereikt: morgen gaat het script vanzelf verder.' : ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.';
+  else tekst += ' Alles is vertaald.';
   try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
 }
