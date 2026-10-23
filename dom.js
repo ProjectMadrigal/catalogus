@@ -58,5 +58,28 @@
     return '€ ' + (b % 1 === 0 ? String(b) : b.toFixed(2).replace('.', ','));
   }
 
-  root.MadrigalDom = { el: el, vervang: vervang, statusLabel: statusLabel, korteDatum: korteDatum, euro: euro };
+  /**
+   * Een tijdelijke cover voor een boek zonder foto: titel en auteur op een
+   * gekleurd vlak, zoals een eenvoudige boekomslag. De kleur hangt vast aan het
+   * boek (via de id), zodat hetzelfde boek altijd dezelfde kleur heeft.
+   * Zines krijgen altijd geel. De kleuren staan in styles.css (.ph-kleur-0 tot 6).
+   */
+  var PH_KLEUREN = 7;
+  function plaatshouder(b) {
+    var id = String(b.id || b.t || '');
+    var h = 0;
+    for (var i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) % 9973;
+    // "Verbeek, Mira" wordt "Mira Verbeek".
+    var auteur = String(b.a || '');
+    var delen = auteur.split(',');
+    if (delen.length === 2 && delen[1].trim()) auteur = delen[1].trim() + ' ' + delen[0].trim();
+    var zine = b.s === 'zine';
+    return el('div', { class: 'plaatshouder ' + (zine ? 'zine' : 'ph-kleur-' + (h % PH_KLEUREN)), 'aria-hidden': 'true' },
+      el('div', { class: 'ph-vlak' },
+        el('span', { class: 'ph-titel' }, b.t || ''),
+        auteur ? el('span', { class: 'ph-auteur' }, auteur) : null,
+        el('span', { class: 'ph-merk' }, zine ? 'zine' : 'Madrigal')));
+  }
+
+  root.MadrigalDom = { el: el, vervang: vervang, statusLabel: statusLabel, korteDatum: korteDatum, euro: euro, plaatshouder: plaatshouder };
 })(window);
