@@ -58,25 +58,39 @@ function bouwSiteInhoud(staat, tabellen) {
     .sort(function (a, b) { return (parseerGetal(a.volgorde) || 999) - (parseerGetal(b.volgorde) || 999); })
     .map(function (r) { return { vraag: tweetalig(r, 'vraag'), antwoord: tweetaligLang(r, 'antwoord') }; });
 
-  // Aanraders: boeken met een aanrader, beschikbare eerst, daarna willekeurig maar vast per dag.
-  // Namen in de instelling aanraders_verbergen tellen hier niet mee.
+  // Aanraders op de startpagina. Een boek staat erop als:
+  //   - de kolom startpagina "ja" is, of
+  //   - iemand het aanraadt (namen uit aanraders_verbergen tellen niet mee), of
+  //   - het nieuw binnen is: toegevoegd_op ligt minder dan nieuw_op_startpagina_dagen geleden.
+  // "nee" in de kolom startpagina haalt een boek er altijd af.
+  // Beschikbare boeken eerst, daarna willekeurig maar vast per dag.
   var verborgen = splitsLijst(inst.aanraders_verbergen).map(normaliseerTekst);
+  var dagenNieuw = parseerGetal(inst.nieuw_op_startpagina_dagen);
+  if (dagenNieuw === null) dagenNieuw = 60;
+  var isNieuw = function (b) {
+    var d = parseerDatum(b.toegevoegd_op);
+    if (!d || dagenNieuw <= 0) return false;
+    var dagen = dagenTussen(d, staat.vandaag);
+    return dagen >= 0 && dagen < dagenNieuw;
+  };
   var aanraders = staat.catalogus.filter(function (b) {
-    return !isLeeg(b.boek_id) && !isLeeg(b.aanrader) && jaNee(b.publiek) !== 'nee';
+    return !isLeeg(b.boek_id) && jaNee(b.publiek) !== 'nee' && jaNee(b.startpagina) !== 'nee';
   }).map(function (b) {
     var bs = beschikbaarheid(staat, b);
     return {
       id: String(b.boek_id), t: schoon(b.titel), a: schoon(b.auteur), c: veiligeCoverUrl(b.cover_url),
       s: normaliseerTekst(b.soort) === 'zine' ? 'zine' : 'boek',
-      r: splitsLijst(String(b.aanrader).replace(/ en | & /g, ',')).filter(function (naam) {
+      r: splitsLijst(String(b.aanrader || '').replace(/ en | & /g, ',')).filter(function (naam) {
         return verborgen.indexOf(normaliseerTekst(naam)) === -1;
       }),
+      n: isNieuw(b) ? 1 : 0,
+      zelf: jaNee(b.startpagina) === 'ja',
       vrij: bs.code === 'beschikbaar',
       volgorde: dagVolgorde(String(b.boek_id), staat.vandaag)
     };
-  }).filter(function (b) { return b.r.length; }).sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
+  }).filter(function (b) { return b.zelf || b.r.length || b.n; }).sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
     .slice(0, SITE_MAX_AANRADERS)
-    .map(function (b) { delete b.volgorde; return b; });
+    .map(function (b) { delete b.volgorde; delete b.zelf; return b; });
 
   return {
     bijgewerkt: staat.vandaag,

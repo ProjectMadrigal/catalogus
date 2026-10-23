@@ -140,6 +140,17 @@ test('maakCatalogus mag opnieuw: geen dubbels, handmatige correctie blijft', () 
   assert.strictEqual(catalogus[0].boek_id, 'B1');
 });
 
+test('nieuw boek krijgt toegevoegd_op, maar niet bij de eerste opbouw', () => {
+  const boek = (titel) => ({ soort: 'boek', titel: titel, auteur: 'Verzonnen, Iemand', isbn: '', uitgeverij: '', jaartal: '', taal: '', paginas: '', uitvoering: '', nieuwstaat: '', aanrader: '', genre: 'roman', aantal: 1, herkomst: '', isbn_origineel: '' });
+  const catalogus = [];
+  let n = 0;
+  const id = () => 'B' + (++n);
+  M.voegBronSamen(catalogus, [boek('Eerste')], id, instellingen(), '2026-10-01');
+  assert.strictEqual(catalogus[0].toegevoegd_op, '');
+  M.voegBronSamen(catalogus, [boek('Eerste'), boek('Tweede')], id, instellingen(), '2026-10-20');
+  assert.strictEqual(catalogus[1].toegevoegd_op, '2026-10-20');
+});
+
 test('boeken zonder ISBN met dezelfde titel tot de dubbele punt blijven apart', () => {
   const zine = (titel, aantal) => ({ soort: 'zine', titel: titel, auteur: '', isbn: '', uitgeverij: '', jaartal: '', taal: '', paginas: '', uitvoering: '', nieuwstaat: '', aanrader: '', genre: 'Zine', aantal: aantal, herkomst: '', isbn_origineel: '' });
   const catalogus = [];
@@ -610,6 +621,27 @@ test('startpagina: aanraders_verbergen haalt namen weg, het boek blijft als iema
   const d = M.bouwSiteInhoud(s, {});
   gelijk(d.aanraders.map((a) => a.id), [String(s.catalogus[1].boek_id)]);
   gelijk(d.aanraders[0].r, ['Sam']);
+});
+test('startpagina: nieuwe boeken staan bij de aanraders, de kolom startpagina beslist het laatst', () => {
+  const s = maakStaat('2026-10-23');
+  s.catalogus.forEach((b) => { b.aanrader = ''; b.toegevoegd_op = ''; b.startpagina = ''; });
+  s.catalogus[0].toegevoegd_op = '2026-10-01';               // nieuw binnen
+  s.catalogus[1].toegevoegd_op = '2026-01-01';               // te lang geleden
+  s.catalogus[2].toegevoegd_op = '2026-10-10';
+  s.catalogus[2].startpagina = 'nee';                        // nieuw, maar met de hand weggehaald
+  s.catalogus[4].startpagina = 'ja';                         // met de hand toegevoegd
+  const ids = (d) => d.aanraders.map((a) => a.id).sort();
+  let d = M.bouwSiteInhoud(s, {});
+  gelijk(ids(d), [s.catalogus[0].boek_id, s.catalogus[4].boek_id].map(String).sort());
+  assert.strictEqual(d.aanraders.find((a) => a.id === String(s.catalogus[0].boek_id)).n, 1);
+  assert.strictEqual(d.aanraders.find((a) => a.id === String(s.catalogus[4].boek_id)).n, 0);
+  s.inst.nieuw_op_startpagina_dagen = 0;
+  d = M.bouwSiteInhoud(s, {});
+  gelijk(ids(d), [String(s.catalogus[4].boek_id)]);
+  s.catalogus[4].aanrader = 'Robin';
+  s.catalogus[4].startpagina = 'nee';
+  d = M.bouwSiteInhoud(s, {});
+  gelijk(ids(d), []);
 });
 test('oude website: html wordt tekst, ids voorkomen dubbels', () => {
   assert.strictEqual(M.htmlNaarTekst('<p>Hallo <b>daar</b></p><p>Tot&nbsp;vrijdag</p>'), 'Hallo daar\nTot vrijdag');
