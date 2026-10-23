@@ -142,6 +142,14 @@ Voer de functies uit via het menu **Madrigal**, in deze volgorde. Elke functie m
 - Het script wacht tussen twee opvragingen, zoals Open Library vraagt.
 - Elk opgezocht boek krijgt een datum in de kolom `ol_gecontroleerd`. Wil je een boek opnieuw laten opzoeken? Maak die cel leeg.
 
+**Stap 3b. Ontbrekende covers bij Google Books (vanzelf)**
+
+- Zodra Open Library klaar is, start het script vanzelf **5. Zoek ontbrekende covers bij Google Books**. Je kan het ook zelf starten via het menu.
+- Het zoekt enkel bij boeken met een ISBN die nog geen cover hebben, en vult daarnaast enkel lege velden aan.
+- Zonder sleutel staat Google een beperkt aantal opvragingen per dag toe. Is die limiet bereikt, dan gaat het script 6 uur later vanzelf verder. Het Logboek toont de stand.
+- Wil je het sneller? Maak een gratis sleutel voor de Google Books-API in de Google Cloud Console en zet ze in Instellingen bij `google_books_api_key`. Dat is niet nodig.
+- Elk opgezocht boek krijgt een datum in de kolom `gb_gecontroleerd`. Maak die cel leeg om een boek opnieuw te laten opzoeken.
+
 **Stap 4. Het tabblad Na te kijken afwerken**
 
 Loop de rijen één voor één af:
@@ -256,6 +264,8 @@ Het adres hangt af van de naam van de organisatie op GitHub. Heet die anders, da
    - vult aan uit Goodreads (als dat tabblad er nog is) en uit Open Library.
 5. Kijk het genre, de filtergroepen en eventueel **Na te kijken** na.
 6. Schrijf het exemplaarnummer op het etiket.
+
+**Zelf een cover toevoegen.** Vond geen enkele bron een cover? Zoek het boek online op, bijvoorbeeld op Goodreads of de website van de uitgeverij. Klik met de rechtermuisknop op de cover en kies **Afbeeldingsadres kopiëren**. Plak dat adres in de kolom `cover_url` van het boek. Het adres moet beginnen met `https://`. Een cover die je zelf invult, overschrijft het script nooit.
 
 Een extra exemplaar van een boek dat er al is? Verhoog het getal in de kolom `aantal`.
 
