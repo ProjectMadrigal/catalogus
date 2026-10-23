@@ -195,6 +195,7 @@ var STANDAARD_INSTELLINGEN = [
   ['openingsuren_en', 'Every Friday: 18:00 - 20:00', 'Openingsuren op de website, in het Engels.'],
   ['mail_algemeen', 'info@projectmadrigal.be', 'Algemeen mailadres op de website.'],
   ['mail_events', 'events.madrigal@gmail.com', 'Mailadres voor events op de website.'],
+  ['aanraders_verbergen', '', 'Namen van wie de aanraders niet op de startpagina staan, gescheiden door komma\'s (bv. Nance). Het label en de filter in de catalogus blijven. Leeg: iedereen staat erop.'],
   ['tekst_herinnering', 'Hoi {voornaam}, je leende bij Project Madrigal "{titel}". Dat boek moest terug op {vervaldatum}. Breng je het binnenkort binnen? Lukt dat niet, laat het ons dan even weten. Dank je!', 'Herinnering voor een boek dat te laat is. Gebruik {voornaam}, {titel} en {vervaldatum}.'],
   ['tekst_herinnering_binnenkort', 'Hoi {voornaam}, een vriendelijke herinnering: "{titel}" mag terug naar Project Madrigal op {vervaldatum}. Wil je het langer houden? Laat het ons weten, dan verlengen we het. Veel leesplezier!', 'Herinnering voor een boek dat binnenkort vervalt.']
 ];
@@ -683,6 +684,8 @@ function bouwSiteInhoud(staat, tabellen) {
     .map(function (r) { return { vraag: tweetalig(r, 'vraag'), antwoord: tweetaligLang(r, 'antwoord') }; });
 
   // Aanraders: boeken met een aanrader, beschikbare eerst, daarna willekeurig maar vast per dag.
+  // Namen in de instelling aanraders_verbergen tellen hier niet mee.
+  var verborgen = splitsLijst(inst.aanraders_verbergen).map(normaliseerTekst);
   var aanraders = staat.catalogus.filter(function (b) {
     return !isLeeg(b.boek_id) && !isLeeg(b.aanrader) && jaNee(b.publiek) !== 'nee';
   }).map(function (b) {
@@ -690,10 +693,13 @@ function bouwSiteInhoud(staat, tabellen) {
     return {
       id: String(b.boek_id), t: schoon(b.titel), a: schoon(b.auteur), c: veiligeCoverUrl(b.cover_url),
       s: normaliseerTekst(b.soort) === 'zine' ? 'zine' : 'boek',
-      r: splitsLijst(String(b.aanrader).replace(/ en | & /g, ',')), vrij: bs.code === 'beschikbaar',
+      r: splitsLijst(String(b.aanrader).replace(/ en | & /g, ',')).filter(function (naam) {
+        return verborgen.indexOf(normaliseerTekst(naam)) === -1;
+      }),
+      vrij: bs.code === 'beschikbaar',
       volgorde: dagVolgorde(String(b.boek_id), staat.vandaag)
     };
-  }).sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
+  }).filter(function (b) { return b.r.length; }).sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
     .slice(0, SITE_MAX_AANRADERS)
     .map(function (b) { delete b.volgorde; return b; });
 

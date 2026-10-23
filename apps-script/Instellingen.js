@@ -37,6 +37,7 @@ var STANDAARD_INSTELLINGEN = [
   ['openingsuren_en', 'Every Friday: 18:00 - 20:00', 'Openingsuren op de website, in het Engels.'],
   ['mail_algemeen', 'info@projectmadrigal.be', 'Algemeen mailadres op de website.'],
   ['mail_events', 'events.madrigal@gmail.com', 'Mailadres voor events op de website.'],
+  ['aanraders_verbergen', '', 'Namen van wie de aanraders niet op de startpagina staan, gescheiden door komma\'s (bv. Nance). Het label en de filter in de catalogus blijven. Leeg: iedereen staat erop.'],
   ['tekst_herinnering', 'Hoi {voornaam}, je leende bij Project Madrigal "{titel}". Dat boek moest terug op {vervaldatum}. Breng je het binnenkort binnen? Lukt dat niet, laat het ons dan even weten. Dank je!', 'Herinnering voor een boek dat te laat is. Gebruik {voornaam}, {titel} en {vervaldatum}.'],
   ['tekst_herinnering_binnenkort', 'Hoi {voornaam}, een vriendelijke herinnering: "{titel}" mag terug naar Project Madrigal op {vervaldatum}. Wil je het langer houden? Laat het ons weten, dan verlengen we het. Veel leesplezier!', 'Herinnering voor een boek dat binnenkort vervalt.']
 ];
