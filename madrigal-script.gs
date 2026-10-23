@@ -35,6 +35,12 @@ var ACTIES = {
 
 /* ---------- Staat lezen en bewaren ---------- */
 
+var BS_MAX_LOOPTIJD_MS = 4.5 * 60 * 1000;
+
+var BS_MAX_LENGTE = 1000;
+
+var BS_USER_AGENT = 'ProjectMadrigal-catalogus (Google Apps Script; queer bibliotheek Antwerpen)';
+
 /** Kolomnamen in Stock en Zines, en hoe ze in de Catalogus heten. */
 var BRONKOLOMMEN = {
   'titel': 'titel',
@@ -219,7 +225,7 @@ var KOLOMMEN = {
     'uitvoering', 'nieuwstaat', 'aanrader', 'genre', 'extra_onderwerpen', 'klassieker', 'aantal',
     'uitleenbaar', 'publiek', 'beschrijving', 'cover_url', 'startpagina', 'toegevoegd_op',
     // Vanaf hier: nooit publiek.
-    'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd'
+    'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht'
   ],
   'Onderwerpen': ['genre', 'filtergroepen', 'aantal_boeken'],
   'Leners': ['lenersnummer', 'voornaam', 'achternaam', 'telefoon', 'email', 'datum_inschrijving', 'toestemming_privacy', 'actief'],
@@ -245,7 +251,7 @@ var KOLOMMEN = {
 var DATUMKOLOMMEN = [
   'datum_inschrijving', 'datum_uit', 'oorspronkelijke_vervaldatum', 'vervaldatum', 'datum_terug',
   'datum_verlenging', 'borg_terugbetaald', 'laatste_herinnering', 'datum_reservatie', 'datum_klaar',
-  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd', 'toegevoegd_op'
+  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd', 'toegevoegd_op', 'beschrijving_gezocht'
 ];
 
 var OUDE_SITE = 'https://www.projectmadrigal.be/';
@@ -458,6 +464,33 @@ function beschikbaarheid(staat, boek) {
   }
   var label = terug && terug >= staat.vandaag ? 'Uitgeleend, verwacht terug op ' + datumTekst(terug, staat.vandaag) : 'Uitgeleend';
   return { code: 'uitgeleend', label: label, totaal: totaal, beschikbaar: 0, terug: terug };
+}
+
+/** Beschrijving via Google Books. Geeft { tekst } of { limiet: true }. */
+function beschrijvingUitGoogleBooks(isbn, sleutel) {
+  var r = haalJson('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : ''));
+  if (r.code === 429 || r.code === 403) return { limiet: true };
+  var items = (r.data && r.data.items) || [];
+  for (var i = 0; i < items.length; i++) {
+    var tekst = maakBeschrijvingNetjes(items[i].volumeInfo && items[i].volumeInfo.description);
+    if (tekst) return { tekst: tekst };
+  }
+  return { tekst: '' };
+}
+
+/** Beschrijving via Open Library: eerst de uitgave, dan het werk. */
+function beschrijvingUitOpenLibrary(isbn) {
+  var uitgave = haalJson('https://openlibrary.org/isbn/' + isbn + '.json');
+  if (uitgave.code === 429) return { limiet: true };
+  if (!uitgave.data) return { tekst: '' };
+  var tekst = maakBeschrijvingNetjes(olTekst(uitgave.data.description));
+  if (tekst) return { tekst: tekst };
+  var werk = uitgave.data.works && uitgave.data.works.length ? uitgave.data.works[0].key : '';
+  if (!/^\/works\/OL\d+W$/.test(String(werk))) return { tekst: '' };
+  Utilities.sleep(1000);
+  var w = haalJson('https://openlibrary.org' + werk + '.json');
+  if (w.code === 429) return { limiet: true };
+  return { tekst: maakBeschrijvingNetjes(olTekst(w.data && w.data.description)) };
 }
 
 /** Gegevens voor het bestuursscherm. */
@@ -936,6 +969,14 @@ function goodreadsWaarde(rij, kolommen) {
   return '';
 }
 
+/** Haalt JSON op. Geeft { code, data } terug. */
+function haalJson(url) {
+  var antwoord = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true, headers: { 'User-Agent': BS_USER_AGENT } });
+  var data = null;
+  try { data = JSON.parse(antwoord.getContentText()); } catch (e) { data = null; }
+  return { code: antwoord.getResponseCode(), data: data };
+}
+
 /** Haalt een tabel op uit de oude databank. Geeft [] als die niet bestaat. */
 function haalOudeTabel(db, tabel) {
   var antwoord = UrlFetchApp.fetch(db.url + '/rest/v1/' + tabel + '?select=*', {
@@ -944,6 +985,13 @@ function haalOudeTabel(db, tabel) {
   });
   if (antwoord.getResponseCode() !== 200) return [];
   try { return JSON.parse(antwoord.getContentText()) || []; } catch (e) { return []; }
+}
+
+/** Moet het script voor dit boek nog een beschrijving zoeken? */
+function heeftBeschrijvingNodig(boek) {
+  if (!/^\d{13}$/.test(String(boek.isbn || ''))) return false;
+  if (!isLeeg(boek.beschrijving_gezocht)) return false;
+  return isLeeg(boek.beschrijving);
 }
 
 /** Heeft dit boek nog een cover nodig van Google Books? */
@@ -1098,7 +1146,7 @@ function installeer() {
   // Niet-publieke kolommen van de Catalogus grijs markeren.
   var cat = ss.getSheetByName('Catalogus');
   var catKop = cat.getRange(1, 1, 1, cat.getLastColumn()).getValues()[0].map(schoon);
-  ['herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd'].forEach(function (k) {
+  ['herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht'].forEach(function (k) {
     var i = catKop.indexOf(k);
     if (i > -1) {
       cat.getRange(1, i + 1).setBackground('#d9d9d9').setNote('Niet publiek. Deze kolom verschijnt nooit op de website.');
@@ -1520,6 +1568,31 @@ function lopendeUitleningenVan(staat, lenersnummer) {
   return lopendeUitleningen(staat).filter(function (u) { return String(u.lenersnummer) === String(lenersnummer); });
 }
 
+/**
+ * Maakt een beschrijving uit een externe bron netjes: geen HTML, geen
+ * bronvermeldingen van Open Library, en hoogstens BS_MAX_LENGTE tekens.
+ * Alinea's blijven behouden.
+ */
+function maakBeschrijvingNetjes(tekst) {
+  var t = String(tekst || '');
+  // Open Library zet onder een streep vaak bronnen en links: die laten we weg.
+  t = t.split(/\n\s*-{3,}/)[0];
+  t = t
+    .replace(/<\s*br\s*\/?>/gi, '\n').replace(/<\/p>/gi, '\n\n')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')       // [tekst](link) wordt tekst
+    .replace(/\[([^\]]+)\]\[\d+\]/g, '$1')         // [tekst][1] wordt tekst
+    .replace(/^\s*\[\d+\]:.*$/gm, '')              // [1]: https://... weg
+    .replace(/\(\s*\[?source\]?[^)]*\)/gi, '')     // (source) weg
+    .replace(/[ \t]+/g, ' ')
+    .replace(/ *\n */g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+  if (t.length > BS_MAX_LENGTE) t = t.slice(0, BS_MAX_LENGTE - 3).replace(/\s+\S*$/, '') + '...';
+  return t;
+}
+
 /** Menu: bouwt de Catalogus op uit Stock en Zines. */
 function maakCatalogus() {
   var lock = LockService.getScriptLock();
@@ -1763,6 +1836,12 @@ function normaliseerUitvoering(waarde) {
 
 /* ---------- ISBN ---------- */
 
+/** Een beschrijving uit Open Library: tekst, of een object met value. */
+function olTekst(description) {
+  if (!description) return '';
+  return typeof description === 'string' ? description : String(description.value || '');
+}
+
 /** Zet het menu klaar telkens de spreadsheet opent. */
 function onOpen() {
   SpreadsheetApp.getUi().createMenu('Madrigal')
@@ -1771,6 +1850,7 @@ function onOpen() {
     .addItem('3. Vul aan uit Goodreads', 'vulAanUitGoodreads')
     .addItem('4. Vul aan uit Open Library', 'vulAanUitOpenLibrary')
     .addItem('5. Zoek ontbrekende covers bij Google Books', 'vulAanUitGoogleBooks')
+    .addItem('6. Zoek ontbrekende beschrijvingen', 'vulBeschrijvingenAan')
     .addSeparator()
     .addItem('Nieuwe boeken verwerken', 'verwerkNieuweBoeken')
     .addItem('Werk de vertaaltabel Onderwerpen bij', 'werkOnderwerpenBijMenu')
@@ -2847,12 +2927,16 @@ function vulAanUitGoogleBooks() {
   if (rest > 0) {
     // Bij de daglimiet wachten we een paar uur, anders een minuut.
     ScriptApp.newTrigger('vulAanUitGoogleBooks').timeBased().after((limiet ? 6 * 60 : 1) * 60 * 1000).create();
+  } else {
+    // Klaar: nu de beschrijvingen die nog ontbreken (zie Beschrijvingen.js).
+    verwijderTriggers('vulBeschrijvingenAan');
+    ScriptApp.newTrigger('vulBeschrijvingenAan').timeBased().after(60 * 1000).create();
   }
   if (aangevuld) leegCache();
   logboek('menu', 'vulAanUitGoogleBooks', verwerkt + ' opgevraagd, ' + aangevuld + ' covers gevonden, ' + rest + ' te gaan' + (limiet ? ' (daglimiet van Google bereikt)' : ''));
   var tekst = verwerkt + ' boeken opgevraagd bij Google Books, ' + aangevuld + ' covers gevonden.';
   if (rest > 0) tekst += limiet ? ' De daglimiet van Google is bereikt: over 6 uur gaat het script vanzelf verder.' : ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.';
-  else tekst += ' Alles is verwerkt.';
+  else tekst += ' Alles is verwerkt. Het script zoekt nu nog ontbrekende beschrijvingen.';
   try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
 }
 
@@ -2912,6 +2996,60 @@ function vulAanUitOpenLibrary() {
   logboek('menu', 'vulAanUitOpenLibrary', verwerkt + ' opgevraagd, ' + aangevuld + ' aangevuld, ' + rest + ' te gaan');
   var tekst = verwerkt + ' boeken opgevraagd bij Open Library, ' + aangevuld + ' aangevuld.';
   tekst += rest > 0 ? ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.' : ' Alles is verwerkt. Google Books zoekt nu nog ontbrekende covers.';
+  try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
+}
+
+/** Menu: zoekt beschrijvingen voor boeken waar die nog ontbreekt, in porties. */
+function vulBeschrijvingenAan() {
+  var start = Date.now();
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) {
+    meld('Er loopt al een andere bewerking. Probeer het zo meteen opnieuw.');
+    return;
+  }
+  var verwerkt = 0, gevonden = 0, rest = 0, limiet = false, gbLimiet = false;
+  try {
+    var tabel = leesTabel('Catalogus');
+    if (tabel.kop.indexOf('beschrijving_gezocht') === -1) {
+      meld('De kolom beschrijving_gezocht ontbreekt nog in de Catalogus. Voer eerst "installeer" uit.');
+      return;
+    }
+    var sleutel = leesInstellingen().google_books_api_key;
+    var vandaag = vandaagTekst();
+    var teDoen = tabel.rijen.filter(heeftBeschrijvingNodig);
+    for (var i = 0; i < teDoen.length; i++) {
+      if (Date.now() - start > BS_MAX_LOOPTIJD_MS) break;
+      var boek = teDoen[i];
+      // Zit Google aan zijn daglimiet, dan zoeken we verder bij Open Library alleen.
+      var r = gbLimiet ? { tekst: '' } : beschrijvingUitGoogleBooks(boek.isbn, sleutel);
+      if (r.limiet) { gbLimiet = true; limiet = true; r = { tekst: '' }; }
+      if (!r.tekst) { Utilities.sleep(1000); r = beschrijvingUitOpenLibrary(boek.isbn); }
+      if (r.limiet) break; // Open Library vraagt om te wachten
+      if (r.tekst) {
+        wijzig(boek, { beschrijving: r.tekst, beschrijving_gezocht: vandaag });
+        gevonden++;
+      } else if (!gbLimiet) {
+        wijzig(boek, { beschrijving_gezocht: vandaag });
+      } // anders niet afvinken: Google probeert het later opnieuw
+      verwerkt++;
+      if (verwerkt % 20 === 0) bewaarTabel(tabel);
+      Utilities.sleep(400);
+    }
+    bewaarTabel(tabel);
+    rest = tabel.rijen.filter(heeftBeschrijvingNodig).length;
+  } finally {
+    lock.releaseLock();
+  }
+  verwijderTriggers('vulBeschrijvingenAan');
+  if (rest > 0) {
+    // Bij een limiet wachten we een paar uur, anders een minuut.
+    ScriptApp.newTrigger('vulBeschrijvingenAan').timeBased().after((limiet ? 6 * 60 : 1) * 60 * 1000).create();
+  }
+  if (gevonden) leegCache();
+  logboek('menu', 'vulBeschrijvingenAan', verwerkt + ' opgezocht, ' + gevonden + ' beschrijvingen gevonden, ' + rest + ' te gaan' + (limiet ? ' (limiet bereikt)' : ''));
+  var tekst = verwerkt + ' boeken opgezocht, ' + gevonden + ' beschrijvingen gevonden.';
+  if (rest > 0) tekst += limiet ? ' De daglimiet is bereikt: over 6 uur gaat het script vanzelf verder.' : ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.';
+  else tekst += ' Alles is verwerkt.';
   try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
 }
 

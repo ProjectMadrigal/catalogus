@@ -153,6 +153,16 @@ Voer de functies uit via het menu **Madrigal**, in deze volgorde. Elke functie m
 - Wil je het sneller? Maak een gratis sleutel voor de Google Books-API in de Google Cloud Console en zet ze in Instellingen bij `google_books_api_key`. Dat is niet nodig.
 - Elk opgezocht boek krijgt een datum in de kolom `gb_gecontroleerd`. Maak die cel leeg om een boek opnieuw te laten opzoeken.
 
+**Stap 3c. Ontbrekende beschrijvingen (vanzelf)**
+
+- Zodra Google Books klaar is, start het script vanzelf **6. Zoek ontbrekende beschrijvingen**. Je kan het ook zelf starten via het menu.
+- Het zoekt een beschrijving voor elk boek met een ISBN waar de kolom `beschrijving` leeg is: eerst bij Google Books, daarna bij Open Library.
+- Goodreads geeft geen beschrijvingen: niet in de export, en Goodreads heeft geen open API meer.
+- De beschrijving staat in de taal van de bron, meestal Engels. Een beschrijving die je zelf invult of verbetert, overschrijft het script nooit.
+- Zines en boeken zonder ISBN vul je zelf in.
+- Is de daglimiet van Google op, dan zoekt het script verder bij Open Library en probeert het Google 6 uur later opnieuw. Met een `google_books_api_key` gebeurt dat zelden.
+- Elk opgezocht boek krijgt een datum in de kolom `beschrijving_gezocht`. Maak die cel leeg om opnieuw te laten zoeken.
+
 **Stap 4. Het tabblad Na te kijken afwerken**
 
 Loop de rijen één voor één af:
@@ -394,6 +404,7 @@ Aan de balie zonder internet: noteer op papier de datum, het exemplaarnummer, he
 | `Instellingen.js` | standaardwaarden en uitleg van de instellingen |
 | `Catalogus.js` | opbouw van de Catalogus en de vertaaltabel Onderwerpen |
 | `Goodreads.js`, `OpenLibrary.js` | aanvullen uit Goodreads en Open Library |
+| `GoogleBooks.js`, `Beschrijvingen.js` | covers uit Google Books, beschrijvingen uit Google Books en Open Library |
 | `Grenzen.js` | **de grenzen**, met uitleg om er een toe te voegen |
 | `Uitlenen.js` | uitlenen, terugbrengen, verlengen, reserveren, leners |
 | `Datums.js` | vervaldatums, openingsdagen en statusteksten |
