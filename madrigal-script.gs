@@ -195,6 +195,7 @@ var STANDAARD_INSTELLINGEN = [
   ['openingsuren_en', 'Every Friday: 18:00 - 20:00', 'Openingsuren op de website, in het Engels.'],
   ['mail_algemeen', 'info@projectmadrigal.be', 'Algemeen mailadres op de website.'],
   ['mail_events', 'events.madrigal@gmail.com', 'Mailadres voor events op de website.'],
+  ['nieuw_op_startpagina_dagen', 60, 'Hoeveel dagen een nieuw toegevoegd boek bij de Aanraders op de startpagina staat, met het label "Nieuw binnen". 0: nieuwe boeken niet automatisch tonen.'],
   ['aanraders_verbergen', '', 'Namen van wie de aanraders niet op de startpagina staan, gescheiden door komma\'s (bv. Nance). Het label en de filter in de catalogus blijven. Leeg: iedereen staat erop.'],
   ['tekst_herinnering', 'Hoi {voornaam}, je leende bij Project Madrigal "{titel}". Dat boek moest terug op {vervaldatum}. Breng je het binnenkort binnen? Lukt dat niet, laat het ons dan even weten. Dank je!', 'Herinnering voor een boek dat te laat is. Gebruik {voornaam}, {titel} en {vervaldatum}.'],
   ['tekst_herinnering_binnenkort', 'Hoi {voornaam}, een vriendelijke herinnering: "{titel}" mag terug naar Project Madrigal op {vervaldatum}. Wil je het langer houden? Laat het ons weten, dan verlengen we het. Veel leesplezier!', 'Herinnering voor een boek dat binnenkort vervalt.']
@@ -216,7 +217,7 @@ var KOLOMMEN = {
   'Catalogus': [
     'boek_id', 'soort', 'titel', 'auteur', 'isbn', 'uitgeverij', 'jaartal', 'taal', 'paginas',
     'uitvoering', 'nieuwstaat', 'aanrader', 'genre', 'extra_onderwerpen', 'klassieker', 'aantal',
-    'uitleenbaar', 'publiek', 'beschrijving', 'cover_url',
+    'uitleenbaar', 'publiek', 'beschrijving', 'cover_url', 'startpagina', 'toegevoegd_op',
     // Vanaf hier: nooit publiek.
     'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd'
   ],
@@ -244,7 +245,7 @@ var KOLOMMEN = {
 var DATUMKOLOMMEN = [
   'datum_inschrijving', 'datum_uit', 'oorspronkelijke_vervaldatum', 'vervaldatum', 'datum_terug',
   'datum_verlenging', 'borg_terugbetaald', 'laatste_herinnering', 'datum_reservatie', 'datum_klaar',
-  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd'
+  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd', 'toegevoegd_op'
 ];
 
 var OUDE_SITE = 'https://www.projectmadrigal.be/';
@@ -683,25 +684,39 @@ function bouwSiteInhoud(staat, tabellen) {
     .sort(function (a, b) { return (parseerGetal(a.volgorde) || 999) - (parseerGetal(b.volgorde) || 999); })
     .map(function (r) { return { vraag: tweetalig(r, 'vraag'), antwoord: tweetaligLang(r, 'antwoord') }; });
 
-  // Aanraders: boeken met een aanrader, beschikbare eerst, daarna willekeurig maar vast per dag.
-  // Namen in de instelling aanraders_verbergen tellen hier niet mee.
+  // Aanraders op de startpagina. Een boek staat erop als:
+  //   - de kolom startpagina "ja" is, of
+  //   - iemand het aanraadt (namen uit aanraders_verbergen tellen niet mee), of
+  //   - het nieuw binnen is: toegevoegd_op ligt minder dan nieuw_op_startpagina_dagen geleden.
+  // "nee" in de kolom startpagina haalt een boek er altijd af.
+  // Beschikbare boeken eerst, daarna willekeurig maar vast per dag.
   var verborgen = splitsLijst(inst.aanraders_verbergen).map(normaliseerTekst);
+  var dagenNieuw = parseerGetal(inst.nieuw_op_startpagina_dagen);
+  if (dagenNieuw === null) dagenNieuw = 60;
+  var isNieuw = function (b) {
+    var d = parseerDatum(b.toegevoegd_op);
+    if (!d || dagenNieuw <= 0) return false;
+    var dagen = dagenTussen(d, staat.vandaag);
+    return dagen >= 0 && dagen < dagenNieuw;
+  };
   var aanraders = staat.catalogus.filter(function (b) {
-    return !isLeeg(b.boek_id) && !isLeeg(b.aanrader) && jaNee(b.publiek) !== 'nee';
+    return !isLeeg(b.boek_id) && jaNee(b.publiek) !== 'nee' && jaNee(b.startpagina) !== 'nee';
   }).map(function (b) {
     var bs = beschikbaarheid(staat, b);
     return {
       id: String(b.boek_id), t: schoon(b.titel), a: schoon(b.auteur), c: veiligeCoverUrl(b.cover_url),
       s: normaliseerTekst(b.soort) === 'zine' ? 'zine' : 'boek',
-      r: splitsLijst(String(b.aanrader).replace(/ en | & /g, ',')).filter(function (naam) {
+      r: splitsLijst(String(b.aanrader || '').replace(/ en | & /g, ',')).filter(function (naam) {
         return verborgen.indexOf(normaliseerTekst(naam)) === -1;
       }),
+      n: isNieuw(b) ? 1 : 0,
+      zelf: jaNee(b.startpagina) === 'ja',
       vrij: bs.code === 'beschikbaar',
       volgorde: dagVolgorde(String(b.boek_id), staat.vandaag)
     };
-  }).filter(function (b) { return b.r.length; }).sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
+  }).filter(function (b) { return b.zelf || b.r.length || b.n; }).sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
     .slice(0, SITE_MAX_AANRADERS)
-    .map(function (b) { delete b.volgorde; return b; });
+    .map(function (b) { delete b.volgorde; delete b.zelf; return b; });
 
   return {
     bijgewerkt: staat.vandaag,
@@ -1520,7 +1535,7 @@ function maakCatalogus() {
     if (!bron.length) throw new Error('Geen boeken gevonden in de tabbladen Stock en Zines.');
     var tabel = leesTabel('Catalogus');
     var ids = maakIdGenerator(tabel.rijen);
-    var teller = voegBronSamen(tabel.rijen, bron, ids.nieuw, inst);
+    var teller = voegBronSamen(tabel.rijen, bron, ids.nieuw, inst, vandaagTekst());
     schrijfVolledig(tabel);
     ids.bewaar();
     var onderwerpen = werkOnderwerpenBij();
@@ -2405,7 +2420,8 @@ function verwerkNieuweBoeken() {
         nieuwstaat: jaNee(rij.nieuwstaat),
         aantal: parseerGetal(rij.aantal) || 1,
         uitleenbaar: jaNee(rij.uitleenbaar) || 'ja',
-        publiek: jaNee(rij.publiek) || 'ja'
+        publiek: jaNee(rij.publiek) || 'ja',
+        toegevoegd_op: parseerDatum(rij.toegevoegd_op) || vandaagTekst()
       };
       velden.bron_sleutel = bronSleutel({ soort: soort, isbn: velden.isbn, titel: velden.titel, auteur: velden.auteur });
       wijzig(rij, velden);
@@ -2581,7 +2597,9 @@ function vindOudeDatabank() {
  * nieuwId: functie(soort) die een nieuwe, unieke boek-ID geeft.
  * Geeft { nieuw, aangevuld } terug (aantallen).
  */
-function voegBronSamen(bestaand, bron, nieuwId, inst) {
+function voegBronSamen(bestaand, bron, nieuwId, inst, vandaag) {
+  // Bij de eerste opbouw is niets "nieuw binnen". Daarna krijgt een nieuw boek de datum van vandaag.
+  var datumNieuw = bestaand.length && vandaag ? vandaag : '';
   // 1. Dubbele rijen in de bron samenvoegen: aantallen optellen, herkomst bundelen.
   var perSleutel = {};
   var volgorde = [];
@@ -2624,7 +2642,7 @@ function voegBronSamen(bestaand, bron, nieuwId, inst) {
       aantal: b.aantal,
       uitleenbaar: teKoop && !inst.zines_te_koop_uitleenbaar ? 'nee' : 'ja',
       publiek: nietPubliekVolgensHerkomst(b.herkomst) ? 'nee' : 'ja',
-      beschrijving: '', cover_url: '',
+      beschrijving: '', cover_url: '', startpagina: '', toegevoegd_op: datumNieuw,
       herkomst: b.herkomst, isbn_origineel: b.isbn_origineel, bron_sleutel: s, ol_gecontroleerd: ''
     };
     voegToe(bestaand, nieuweRij);
