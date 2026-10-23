@@ -89,6 +89,8 @@ function onOpen() {
     .addSeparator()
     .addItem('Neem lopende uitleningen over uit het oude blad', 'neemUitleningenOver')
     .addItem('Privacy-opruiming nu uitvoeren', 'ruimOp')
+    .addSeparator()
+    .addItem('Catalogus wissen en opnieuw opbouwen (enkel bij de start)', 'herbouwCatalogus')
     .addToUi();
 }
 

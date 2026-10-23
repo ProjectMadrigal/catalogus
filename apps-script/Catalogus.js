@@ -30,12 +30,12 @@ var FILTERGROEPEN = ['Gender', 'Seksualiteit', 'Feminisme', 'Fictie', 'Klassieke
 
 /** Voorstellen voor de vertaaltabel: een genre met dit woord erin gaat naar deze groep. */
 var ONDERWERP_VOORSTELLEN = [
-  [/gender|trans|non ?binair|intersekse|intersex/, 'Gender'],
-  [/seks|homo|lesb|biseks|queer|lgbt|holebi|coming out|gay/, 'Seksualiteit'],
+  [/gender|trans|non ?binair|interseks|intersex/, 'Gender'],
+  [/seks|sexualiteit|homo|lesb|queer|lgbt|holebi|coming out|gay|polyamor|relatie/, 'Seksualiteit'],
   [/femin|vrouw/, 'Feminisme'],
-  [/roman|fictie|fiction|verhal|novel|literatuur|thriller|detective|fantasy|science|kort/, 'Fictie'],
-  [/geschied|histor|maatschap|politi|sociolog|activis|essay|non ?fictie|filosof|religie/, 'Geschiedenis en maatschappij'],
-  [/biogra|memoir|dagboek/, 'Biografie'],
+  [/roman|fictie|fiction|verhal|verhaal|proza|literatuur|thriller|detective|fantasy|science|kort/, 'Fictie'],
+  [/geschied|histor|maatschap|politi|sociolog|activis|essay|non ?fictie|filosof|religie|kolonial|marx|fascis|ecolog|cultuur|onderzoek/, 'Geschiedenis en maatschappij'],
+  [/biogra|^bio$|memoir|dagboek/, 'Biografie'],
   [/poezie|gedicht|poetry|poem/, 'Poëzie'],
   [/graphic|strip|comic|manga/, 'Graphic novel'],
   [/young adult|^ya$|jeugd|kinder/, 'Young adult'],
@@ -105,12 +105,14 @@ function leesBronRijen(waarden, soort) {
 }
 
 /**
- * Sleutel om hetzelfde boek te herkennen: het ISBN, of anders titel en achternaam.
+ * Sleutel om hetzelfde boek te herkennen: het ISBN, of anders de volledige titel en auteur.
  * Een boek zonder geldig ISBN maar met een ongeldig nummer, gebruikt titel en auteur.
  */
 function bronSleutel(boek) {
   if (boek.isbn) return boek.soort + ':isbn:' + boek.isbn;
-  return boek.soort + ':ta:' + titelSleutel(boek.titel) + '|' + achternaam(boek.auteur);
+  // De volledige titel: "Ember: Macht (derde editie)" en "Ember: Bubbels (tweede editie)"
+  // zijn verschillende boeken. Enkel hoofdletters, accenten en leestekens tellen niet.
+  return boek.soort + ':ta:' + normaliseerTekst(boek.titel) + '|' + normaliseerTekst(boek.auteur);
 }
 
 /** Staat er in de herkomst een interne notitie dat het boek niet publiek mag? */
@@ -233,6 +235,31 @@ function maakCatalogus() {
   } finally {
     lock.releaseLock();
   }
+}
+
+/**
+ * Menu: wist de Catalogus en bouwt ze opnieuw op uit Stock en Zines.
+ * Enkel bedoeld voor de eerste opbouw. Wat je met de hand in de Catalogus
+ * aanpaste, gaat verloren. Het script weigert zodra er uitleningen of
+ * reservaties zijn, want die verwijzen naar de boek-ID's.
+ */
+function herbouwCatalogus() {
+  if (leesTabel('Uitleningen').rijen.length || leesTabel('Reservaties').rijen.length) {
+    meld('De Catalogus opnieuw opbouwen kan niet meer: er zijn al uitleningen of reservaties. Die verwijzen naar de boek-ID\'s.');
+    return;
+  }
+  var ui = SpreadsheetApp.getUi();
+  var antwoord = ui.alert('Catalogus opnieuw opbouwen',
+    'Dit wist alle boeken in het tabblad Catalogus, ook wat je er met de hand aanpaste, en bouwt ze opnieuw op uit Stock en Zines. De boek-ID\'s beginnen opnieuw bij B0001. Doorgaan?',
+    ui.ButtonSet.YES_NO);
+  if (antwoord !== ui.Button.YES) return;
+  var blad = spreadsheet().getSheetByName('Catalogus');
+  if (blad.getLastRow() > 1) blad.getRange(2, 1, blad.getLastRow() - 1, blad.getLastColumn()).clearContent();
+  var props = PropertiesService.getScriptProperties();
+  props.deleteProperty('teller_boek_B');
+  props.deleteProperty('teller_boek_Z');
+  logboek('menu', 'herbouwCatalogus', 'Catalogus gewist');
+  maakCatalogus();
 }
 
 /**
