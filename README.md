@@ -266,14 +266,14 @@ Je mag deze functie opnieuw uitvoeren: wat al overgenomen is, komt er niet dubbe
 
 ## 9. GitHub Pages aanzetten
 
-1. Ga op GitHub naar de repository **catalogus** van de organisatie.
+1. Ga op GitHub naar de repository **projectmadrigal.github.io** van de organisatie (vroeger heette ze **catalogus**).
 2. Klik op **Settings > Pages**.
 3. Bij "Build and deployment": kies **Source: Deploy from a branch**, branch **main**, map **/ (root)**. Klik op **Save**.
-4. Na een paar minuten staat de website online op `https://projectmadrigal.github.io/catalogus/`. De catalogus staat op `boeken.html`.
-   - Het uitleenscherm: `https://projectmadrigal.github.io/catalogus/balie.html`
-   - Het bestuursscherm: `https://projectmadrigal.github.io/catalogus/bestuur.html`
+4. Na een paar minuten staat de website online op `https://projectmadrigal.github.io/`. De catalogus staat op `boeken.html`.
+   - Het uitleenscherm: `https://projectmadrigal.github.io/balie.html`
+   - Het bestuursscherm: `https://projectmadrigal.github.io/bestuur.html`
 
-Het adres hangt af van de naam van de organisatie op GitHub. Heet die anders, dan staat die naam vooraan in het adres.
+Waarom die naam? Een repository die precies `<naam van de organisatie>.github.io` heet, krijgt het korte adres zonder extra map. Heet de repository anders, dan komt die naam achteraan in het adres (zoals vroeger `/catalogus/`). Heet de organisatie anders, dan staat die naam vooraan.
 
 **Op het beginscherm zetten.** Open de catalogus op een smartphone en kies in het menu van de browser **Toevoegen aan beginscherm**. Doe dat op de smartphone van de balie ook voor `balie.html`.
 
