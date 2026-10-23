@@ -32,19 +32,19 @@
 
     <div id="voorbeeld-melding" class="melding let-op" hidden data-i18n="voorbeeldSite"></div>
 
-    <section class="sectie sectie-licht" aria-labelledby="nieuws-titel" id="nieuws-sectie">
-      <div class="binnen">
-        <h2 id="nieuws-titel" data-i18n="nieuws">Nieuws</h2>
-        <div class="kaarten" id="nieuws"><p class="laden" data-i18n="laden">Even laden...</p></div>
+    <!-- Nieuws en agenda: naast elkaar op een groot scherm, onder elkaar op een gsm. -->
+    <div class="sectie sectie-licht">
+      <div class="binnen naast-elkaar">
+        <section class="kolom" aria-labelledby="nieuws-titel" id="nieuws-sectie">
+          <h2 id="nieuws-titel" data-i18n="nieuws">Nieuws</h2>
+          <div class="kaarten" id="nieuws"><p class="laden" data-i18n="laden">Even laden...</p></div>
+        </section>
+        <section class="kolom kolom-geel" aria-labelledby="agenda-titel">
+          <h2 id="agenda-titel" data-i18n="agenda">Agenda</h2>
+          <div class="kaarten" id="agenda"><p class="laden" data-i18n="laden">Even laden...</p></div>
+        </section>
       </div>
-    </section>
-
-    <section class="sectie sectie-geel" aria-labelledby="agenda-titel">
-      <div class="binnen">
-        <h2 id="agenda-titel" data-i18n="agenda">Agenda</h2>
-        <div class="kaarten" id="agenda"><p class="laden" data-i18n="laden">Even laden...</p></div>
-      </div>
-    </section>
+    </div>
 
     <section class="sectie sectie-donker" aria-labelledby="aanraders-titel" id="aanraders-sectie">
       <div class="binnen">
