@@ -26,6 +26,7 @@
   /* Lichte modus */
   --kleur-achtergrond: #fafafa;
   --kleur-sectie-donker: #1b1b1c; --kleur-sectie-lila: #f1e8fa;
+  --kleur-geel-zacht: #fff1c2; --kleur-op-geel-zacht: #1b1b1c;
   --kleur-vlak: #ffffff;
   --kleur-tekst: #1b1b1c;
   --kleur-tekst-zacht: #4a4650;
@@ -61,7 +62,7 @@
 /* Donkere modus: volgt het toestel, tenzij iemand zelf licht koos. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --kleur-achtergrond: #1b1b1c; --kleur-vlak: #262627; --kleur-sectie-donker: #111112; --kleur-sectie-lila: #2a2135; --kleur-tekst: #efeff1; --kleur-tekst-zacht: #c4c1cc;
+    --kleur-achtergrond: #1b1b1c; --kleur-vlak: #262627; --kleur-sectie-donker: #111112; --kleur-sectie-lila: #2a2135; --kleur-geel-zacht: #3a3118; --kleur-op-geel-zacht: #efeff1; --kleur-tekst: #efeff1; --kleur-tekst-zacht: #c4c1cc;
     --kleur-rand: #45434a; --kleur-accent: #ffcd30; --kleur-accent-donker: #fdb416; --kleur-accent-tekst: #1b1b1c;
     --kleur-focus: #e7b0ff;
     --kleur-ok: #8fe0ad; --kleur-ok-vlak: #173322; --kleur-let-op: #ffd27a; --kleur-let-op-vlak: #3a2e10;
@@ -72,7 +73,7 @@
   }
 }
 :root[data-theme="dark"] {
-  --kleur-achtergrond: #1b1b1c; --kleur-vlak: #262627; --kleur-sectie-donker: #111112; --kleur-sectie-lila: #2a2135; --kleur-tekst: #efeff1; --kleur-tekst-zacht: #c4c1cc;
+  --kleur-achtergrond: #1b1b1c; --kleur-vlak: #262627; --kleur-sectie-donker: #111112; --kleur-sectie-lila: #2a2135; --kleur-geel-zacht: #3a3118; --kleur-op-geel-zacht: #efeff1; --kleur-tekst: #efeff1; --kleur-tekst-zacht: #c4c1cc;
   --kleur-rand: #45434a; --kleur-accent: #ffcd30; --kleur-accent-donker: #fdb416; --kleur-accent-tekst: #1b1b1c;
   --kleur-focus: #e7b0ff;
   --kleur-ok: #8fe0ad; --kleur-ok-vlak: #173322; --kleur-let-op: #ffd27a; --kleur-let-op-vlak: #3a2e10;
@@ -415,15 +416,15 @@ html[lang="nl"] [data-taal="nl"], html[lang="en"] [data-taal="en"] { display: re
 .sectie > .binnen { max-width: 60rem; margin: 0 auto; }
 .sectie h2 { margin-top: 0; font-size: 1.6rem; }
 .sectie-paars { background: var(--kleur-paars); color: var(--kleur-op-paars); }
-.sectie-geel { background: var(--kleur-geel); color: var(--kleur-op-geel); }
+.sectie-geel { background: var(--kleur-geel-zacht); color: var(--kleur-op-geel-zacht); }
 .sectie-donker { background: var(--kleur-sectie-donker); color: var(--kleur-op-donker); }
 .sectie-lila { background: var(--kleur-sectie-lila); color: var(--kleur-tekst); }
 /* Een gekleurde streep bovenaan maakt de overgang tussen twee secties duidelijk, ook in de donkere modus. */
 main.website > .sectie:not(:first-child), .site-voet { border-top: 6px solid var(--kleur-geel); }
 main.website > .sectie-lila:not(:first-child), main.website > .sectie-geel:not(:first-child) { border-top-color: var(--kleur-paars); }
 .sectie-paars a, .sectie-donker a { color: var(--kleur-geel); }
-.sectie-geel a { color: var(--kleur-op-geel); }
-.sectie-geel .knop.tweede { background: transparent; color: var(--kleur-op-geel); border-color: var(--kleur-op-geel); }
+.sectie-geel a { color: var(--kleur-op-geel-zacht); }
+.sectie-geel .knop.tweede { background: transparent; color: var(--kleur-op-geel-zacht); border-color: var(--kleur-op-geel-zacht); }
 .sectie-licht { background: var(--kleur-achtergrond); }
 main.website { max-width: none; padding: 0; }
 
@@ -446,7 +447,7 @@ main.website { max-width: none; padding: 0; }
 .binnen.naast-elkaar { max-width: 72rem; display: grid; gap: 1.5rem; grid-template-columns: 1fr; align-items: start; }
 .naast-elkaar .kaarten > * { max-width: none; }
 .naast-elkaar .kolom { padding: 1.2rem; border-radius: var(--hoek); }
-.kolom-geel { background: var(--kleur-geel); color: var(--kleur-op-geel); }
+.kolom-geel { background: var(--kleur-geel-zacht); color: var(--kleur-op-geel-zacht); border: 2px solid var(--kleur-geel); }
 .nieuwskaart { background: var(--kleur-vlak); color: var(--kleur-tekst); border-radius: var(--hoek); overflow: hidden; }
 .nieuwskaart img { width: 100%; max-height: 22rem; object-fit: cover; display: block; }
 .nieuwskaart .inhoud { padding: 1rem 1.2rem; }
