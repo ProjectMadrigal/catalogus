@@ -140,6 +140,18 @@ test('maakCatalogus mag opnieuw: geen dubbels, handmatige correctie blijft', () 
   assert.strictEqual(catalogus[0].boek_id, 'B1');
 });
 
+test('boeken zonder ISBN met dezelfde titel tot de dubbele punt blijven apart', () => {
+  const zine = (titel, aantal) => ({ soort: 'zine', titel: titel, auteur: '', isbn: '', uitgeverij: '', jaartal: '', taal: '', paginas: '', uitvoering: '', nieuwstaat: '', aanrader: '', genre: 'Zine', aantal: aantal, herkomst: '', isbn_origineel: '' });
+  const catalogus = [];
+  let n = 0;
+  const t = M.voegBronSamen(catalogus, [
+    zine('Glitter: Macht (derde editie)', 3), zine('Glitter: Bubbels (tweede editie)', 3),
+    zine('Het besef (23)', 1), zine('Het besef (28)', 1), zine('Het besef (28) ', 1)
+  ], () => 'Z' + (++n), instellingen());
+  assert.strictEqual(t.nieuw, 4);
+  assert.strictEqual(catalogus[3].aantal, 2);
+});
+
 test('genres met andere schrijfwijze komen één keer in Onderwerpen', () => {
   const rijen = [];
   const nieuw = M.vulOnderwerpenAan(rijen, [{ genre: 'Young Adult' }, { genre: 'Young adult' }, { genre: 'young adult' }, { genre: 'Erotica' }, { genre: 'erotica' }]);
