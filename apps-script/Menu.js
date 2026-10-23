@@ -1,35 +1,9 @@
 /**
  * Menu.js
  * Het menu "Madrigal" in de spreadsheet, en de installatie van de tabbladen.
+ * installeer() staat bewust als eerste functie: Apps Script kiest die dan
+ * standaard in de keuzelijst naast "Uitvoeren".
  */
-
-/** Zet het menu klaar telkens de spreadsheet opent. */
-function onOpen() {
-  SpreadsheetApp.getUi().createMenu('Madrigal')
-    .addItem('1. Installeer tabbladen', 'installeer')
-    .addItem('2. Bouw de catalogus uit Stock en Zines', 'maakCatalogus')
-    .addItem('3. Vul aan uit Goodreads', 'vulAanUitGoodreads')
-    .addItem('4. Vul aan uit Open Library', 'vulAanUitOpenLibrary')
-    .addSeparator()
-    .addItem('Nieuwe boeken verwerken', 'verwerkNieuweBoeken')
-    .addItem('Werk de vertaaltabel Onderwerpen bij', 'werkOnderwerpenBijMenu')
-    .addItem('Ververs de publieke catalogus', 'verversMenu')
-    .addSeparator()
-    .addItem('Neem lopende uitleningen over uit het oude blad', 'neemUitleningenOver')
-    .addItem('Privacy-opruiming nu uitvoeren', 'ruimOp')
-    .addToUi();
-}
-
-function werkOnderwerpenBijMenu() {
-  var nieuw = werkOnderwerpenBij();
-  leegCache();
-  meld(nieuw + ' nieuwe genres toegevoegd aan Onderwerpen. Kijk de kolom filtergroepen na.');
-}
-
-function verversMenu() {
-  leegCache();
-  meld('De publieke catalogus haalt bij de volgende opvraging alles vers op.');
-}
 
 /**
  * Menu: maakt de nieuwe tabbladen aan. Bestaande tabbladen en gegevens blijven
@@ -99,6 +73,34 @@ function installeer() {
 
   logboek('menu', 'installeer', 'tabbladen klaar');
   meld('De tabbladen staan klaar. Kijk in Instellingen de codes en teksten na.');
+}
+
+/** Zet het menu klaar telkens de spreadsheet opent. */
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('Madrigal')
+    .addItem('1. Installeer tabbladen', 'installeer')
+    .addItem('2. Bouw de catalogus uit Stock en Zines', 'maakCatalogus')
+    .addItem('3. Vul aan uit Goodreads', 'vulAanUitGoodreads')
+    .addItem('4. Vul aan uit Open Library', 'vulAanUitOpenLibrary')
+    .addSeparator()
+    .addItem('Nieuwe boeken verwerken', 'verwerkNieuweBoeken')
+    .addItem('Werk de vertaaltabel Onderwerpen bij', 'werkOnderwerpenBijMenu')
+    .addItem('Ververs de publieke catalogus', 'verversMenu')
+    .addSeparator()
+    .addItem('Neem lopende uitleningen over uit het oude blad', 'neemUitleningenOver')
+    .addItem('Privacy-opruiming nu uitvoeren', 'ruimOp')
+    .addToUi();
+}
+
+function werkOnderwerpenBijMenu() {
+  var nieuw = werkOnderwerpenBij();
+  leegCache();
+  meld(nieuw + ' nieuwe genres toegevoegd aan Onderwerpen. Kijk de kolom filtergroepen na.');
+}
+
+function verversMenu() {
+  leegCache();
+  meld('De publieke catalogus haalt bij de volgende opvraging alles vers op.');
 }
 
 /** Bij elke wijziging met de hand in Catalogus, Onderwerpen of Instellingen: cache leegmaken. */
