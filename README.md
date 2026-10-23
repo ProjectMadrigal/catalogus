@@ -77,12 +77,11 @@ GitHub Pages (index.html, balie.html, bestuur.html)
 **Het script installeren**
 
 1. Open de kopie. Kies **Extensies > Apps Script**. Er opent een nieuw venster met een bestand `Code.gs`.
-2. Klik links op het tandwiel **Projectinstellingen**:
-   - vink **"appsscript.json-manifestbestand weergeven in editor"** aan.
-   - zet de **tijdzone** op `(GMT+01:00) Brussel`.
+2. Klik links op het tandwiel **Projectinstellingen**. Zie je links enkel icoontjes? Ga er met de muis over, dan verschijnen de namen.
+   - Zet de **tijdzone** op `(GMT+01:00) Brussel`. Dat is de enige instelling die je hier nodig hebt.
+   - Zie je ook een vakje **"appsscript.json-manifestbestand weergeven in editor"**? Dan mag je het aanvinken en in de Editor de inhoud van `appsscript.json` vervangen door die van [`apps-script/appsscript.json`](apps-script/appsscript.json). Zie je het vakje niet? Sla het dan over. Het script werkt ook zonder.
 3. Ga terug naar de **Editor** (het icoon `< >`).
-4. Open `appsscript.json` en vervang de inhoud door die van [`apps-script/appsscript.json`](apps-script/appsscript.json).
-5. Maak voor elk bestand in de map [`apps-script/`](apps-script/) een scriptbestand met dezelfde naam: klik op **+** naast "Bestanden", kies **Script**, typ de naam zonder `.js` (bijvoorbeeld `Hulp`). Kopieer de volledige inhoud van het bestand op GitHub en plak die erin. Je kan `Code.gs` hernoemen naar het eerste bestand.
+4. Maak voor elk bestand in de map [`apps-script/`](apps-script/) een scriptbestand met dezelfde naam: klik op **+** naast "Bestanden", kies **Script**, typ de naam zonder `.js` (bijvoorbeeld `Hulp`). Kopieer de volledige inhoud van het bestand op GitHub en plak die erin. Je kan `Code.gs` hernoemen naar het eerste bestand.
 
    Vink af wat je gedaan hebt:
 
@@ -103,8 +102,8 @@ GitHub Pages (index.html, balie.html, bestuur.html)
    - [ ] Uitlenen
 
    De volgorde maakt niet uit. Tip: op GitHub klik je in een bestand op het icoon **"Copy raw file"** om alles in één keer te kopiëren.
-6. Klik op **Opslaan** (het diskette-icoon).
-7. Ga terug naar de spreadsheet en **vernieuw** de pagina. Na een paar seconden verschijnt het menu **Madrigal**.
+5. Klik op **Opslaan** (het diskette-icoon).
+6. Ga terug naar de spreadsheet en **vernieuw** de pagina. Na een paar seconden verschijnt het menu **Madrigal**.
 
 **Installeren**
 
