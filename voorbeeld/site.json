@@ -1,0 +1,178 @@
+{
+ "bijgewerkt": "2026-10-23",
+ "contact": {
+  "adres": "Voorbeeldstraat 1\n2000 Antwerpen",
+  "openingsuren": {
+   "nl": "Elke vrijdag: 18:00 - 20:00",
+   "en": "Every Friday: 18:00 - 20:00"
+  },
+  "mail_algemeen": "info@projectmadrigal.be",
+  "mail_events": "events.madrigal@gmail.com"
+ },
+ "nieuws": [
+  {
+   "datum": "2026-10-01",
+   "titel": {
+    "nl": "Voorbeeld: nieuwe boeken binnen",
+    "en": "Example: new books in"
+   },
+   "tekst": {
+    "nl": "Dit is een verzonnen nieuwsbericht.\nHet echte nieuws beheer je in het tabblad Nieuws van de spreadsheet.",
+    "en": "This is a made-up news item.\nYou manage the real news in the Nieuws tab of the spreadsheet."
+   },
+   "afbeelding": "",
+   "link": ""
+  },
+  {
+   "datum": "2026-09-12",
+   "titel": {
+    "nl": "Voorbeeld: we zoeken vrijwilligers",
+    "en": "Example: we are looking for volunteers"
+   },
+   "tekst": {
+    "nl": "Nog een verzonnen bericht.",
+    "en": "Another made-up item."
+   },
+   "afbeelding": "",
+   "link": ""
+  }
+ ],
+ "agenda": {
+  "komend": [
+   {
+    "datum": "2026-11-27",
+    "uur": "19:00",
+    "titel": {
+     "nl": "Voorbeeld: leesclub",
+     "en": "Example: book club"
+    },
+    "tekst": {
+     "nl": "Een verzonnen event.",
+     "en": "A made-up event."
+    },
+    "locatie": "Project Madrigal",
+    "afbeelding": "",
+    "link": ""
+   }
+  ],
+  "vorig": {
+   "datum": "2026-09-26",
+   "uur": "",
+   "titel": {
+    "nl": "Voorbeeld: zineworkshop",
+    "en": "Example: zine workshop"
+   },
+   "tekst": {
+    "nl": "",
+    "en": ""
+   },
+   "locatie": "",
+   "afbeelding": "",
+   "link": ""
+  }
+ },
+ "faq": [
+  {
+   "vraag": {
+    "nl": "Voorbeeld: kost lenen iets?",
+    "en": "Example: does borrowing cost anything?"
+   },
+   "antwoord": {
+    "nl": "Dit is een verzonnen antwoord. De echte vragen beheer je in het tabblad Veelgestelde vragen.",
+    "en": "This is a made-up answer. You manage the real questions in the Veelgestelde vragen tab."
+   }
+  }
+ ],
+ "aanraders": [
+  {
+   "id": "B0001",
+   "t": "De verzonnen zee",
+   "a": "Verbeek, Mira",
+   "c": "",
+   "s": "boek",
+   "r": [
+    "Sam"
+   ],
+   "vrij": true
+  },
+  {
+   "id": "B0002",
+   "t": "Twee kasten vol",
+   "a": "Dewit, Rein",
+   "c": "",
+   "s": "boek",
+   "r": [
+    "Robin"
+   ],
+   "vrij": true
+  },
+  {
+   "id": "B0003",
+   "t": "Stille lichten",
+   "a": "Aerts, Noor",
+   "c": "",
+   "s": "boek",
+   "r": [
+    "Sam",
+    "Kim"
+   ],
+   "vrij": true
+  },
+  {
+   "id": "B0004",
+   "t": "The Glass Parade",
+   "a": "Holloway, Jamie",
+   "c": "",
+   "s": "boek",
+   "r": [
+    "Sam"
+   ],
+   "vrij": false
+  },
+  {
+   "id": "B0005",
+   "t": "Letters to Nobody",
+   "a": "Okafor, Sam",
+   "c": "",
+   "s": "boek",
+   "r": [
+    "Robin"
+   ],
+   "vrij": true
+  },
+  {
+   "id": "B0006",
+   "t": "Le jardin des autres",
+   "a": "Moreau, Camille",
+   "c": "",
+   "s": "boek",
+   "r": [
+    "Sam",
+    "Kim"
+   ],
+   "vrij": true
+  },
+  {
+   "id": "B0007",
+   "t": "Kleine geschiedenis van de roze straat",
+   "a": "Peeters, Lien",
+   "c": "",
+   "s": "boek",
+   "r": [
+    "Sam"
+   ],
+   "vrij": true
+  },
+  {
+   "id": "B0008",
+   "t": "Body, Border, Becoming",
+   "a": "Reyes, Alex",
+   "c": "",
+   "s": "boek",
+   "r": [
+    "Robin"
+   ],
+   "vrij": false
+  }
+ ]
+}

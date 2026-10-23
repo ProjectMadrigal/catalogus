@@ -1,10 +1,12 @@
 # Catalogus en uitleensysteem van Project Madrigal
 
-Project Madrigal is een queer bibliotheek in Antwerpen, gedragen door vrijwilligers. Deze repository bevat de code voor drie schermen:
+Project Madrigal is een queer bibliotheek in Antwerpen, gedragen door vrijwilligers. Deze repository bevat de volledige website en het uitleensysteem:
 
 | Scherm | Voor wie | Adres |
 | --- | --- | --- |
-| **Catalogus** | iedereen, zonder account | `index.html` |
+| **Startpagina** | iedereen: nieuws, agenda, aanraders, veelgestelde vragen, adres | `index.html` |
+| **Boeken** (de catalogus) | iedereen, zonder account | `boeken.html` |
+| **Over ons** | iedereen | `over-ons.html` |
 | **Uitleenscherm** | vrijwilligers aan de balie (met code) | `balie.html` |
 | **Bestuursscherm** | het bestuur (met een aparte code) | `bestuur.html` |
 
@@ -27,6 +29,7 @@ Daarnaast is er een **handleiding van één pagina** voor de balie, om af te dru
 13. [Privacy en veiligheid](#13-privacy-en-veiligheid)
 14. [Wat te doen als iets niet werkt](#14-wat-te-doen-als-iets-niet-werkt)
 15. [Waar alles staat, voor een volgende beheerder](#15-waar-alles-staat-voor-een-volgende-beheerder)
+16. [De website: nieuws, agenda, vragen en Engelse teksten](#16-de-website-nieuws-agenda-vragen-en-engelse-teksten)
 
 ---
 
@@ -56,7 +59,7 @@ Google-spreadsheet (catalogus, leners, uitleningen)
 Google Apps Script (de code in de map apps-script/)
         │  publiceert een "web-app": een adres dat gegevens doorgeeft
         ▼
-GitHub Pages (index.html, balie.html, bestuur.html)
+GitHub Pages (index.html, boeken.html, over-ons.html, balie.html, bestuur.html)
            de schermen die je in de browser ziet
 ```
 
@@ -245,7 +248,7 @@ Je mag deze functie opnieuw uitvoeren: wat al overgenomen is, komt er niet dubbe
 1. Ga op GitHub naar de repository **catalogus** van de organisatie.
 2. Klik op **Settings > Pages**.
 3. Bij "Build and deployment": kies **Source: Deploy from a branch**, branch **main**, map **/ (root)**. Klik op **Save**.
-4. Na een paar minuten staat de catalogus online op `https://projectmadrigal.github.io/catalogus/`.
+4. Na een paar minuten staat de website online op `https://projectmadrigal.github.io/catalogus/`. De catalogus staat op `boeken.html`.
    - Het uitleenscherm: `https://projectmadrigal.github.io/catalogus/balie.html`
    - Het bestuursscherm: `https://projectmadrigal.github.io/catalogus/bestuur.html`
 
@@ -357,7 +360,13 @@ Aan de balie zonder internet: noteer op papier de datum, het exemplaarnummer, he
 
 | Bestand | Wat erin staat |
 | --- | --- |
-| `index.html`, `app.js` | de publieke catalogus |
+| `index.html`, `home.js` | de startpagina: nieuws, agenda, aanraders, vragen, adres |
+| `boeken.html`, `app.js` | de publieke catalogus |
+| `over-ons.html` | de pagina Over ons (tekst rechtstreeks in de HTML, in het Nederlands en het Engels) |
+| `layout.js` | de kop (menu, taal, donkere modus) en de voet van elke publieke pagina |
+| `i18n.js` | alle vaste teksten van de website in het Nederlands en het Engels |
+| `404.html` | stuurt adressen van de oude website door (bv. `/boeken`) |
+| `assets/` | logo, lettertype (Geist Mono) en foto's |
 | `zoeken.js` | zoeken met tikfouten, zonder hoofdletters, accenten en lidwoorden |
 | `filters.js` | de filters en het sorteren (een filter toevoegen: zie uitleg bovenaan) |
 | `balie.html`, `balie.js` | het uitleenscherm |
@@ -367,9 +376,9 @@ Aan de balie zonder internet: noteer op papier de datum, het exemplaarnummer, he
 | `dom.js` | kleine hulpfuncties om pagina's te bouwen |
 | `config.js` | de URL van de web-app |
 | `styles.css` | kleuren, lettertypes en opmaak (variabelen bovenaan) |
-| `manifest.json`, `icons/` | om de site op het beginscherm te zetten. Het icoon is een plaatshouder tot het logo er is. |
+| `manifest.json`, `icons/` | om de site op het beginscherm te zetten |
 | `handleiding-balie.html` | handleiding van één pagina om af te drukken |
-| `voorbeeld/catalogus.json` | verzonnen voorbeeldboeken, voor als de web-app nog niet gekoppeld is |
+| `voorbeeld/catalogus.json`, `voorbeeld/site.json` | verzonnen voorbeeldboeken en -nieuws, voor als de web-app nog niet gekoppeld is |
 | `apps-script/` | alle code van Google Apps Script |
 | `madrigal-script.gs` | dezelfde code in één bestand, om in Apps Script te plakken. Pas het niet met de hand aan. |
 | `tools/bundel.js` | maakt `madrigal-script.gs` opnieuw na een wijziging in `apps-script/` |
@@ -391,6 +400,8 @@ Aan de balie zonder internet: noteer op papier de datum, het exemplaarnummer, he
 | `Privacy.js` | de nachtelijke opruiming |
 | `Overzetten.js` | eenmalig: lopende uitleningen uit het oude blad |
 | `Api.js` | de web-app: het publieke en de afgeschermde eindpunten |
+| `Site.js` | de inhoud van de startpagina (`?actie=site`) |
+| `OudeSite.js` | eenmalig: nieuws, agenda en vragen overnemen van de oude website |
 | `Opslag.js` | lezen en schrijven van de tabbladen |
 | `Hulp.js` | hulpfuncties voor tekst, ISBN en datums |
 
@@ -401,3 +412,46 @@ node tests/run.js
 ```
 
 Pas je iets aan in `apps-script/`? Voer dan eerst `node tools/bundel.js` uit, zodat `madrigal-script.gs` mee verandert. Alle tests moeten "ok" tonen. GitHub voert ze ook automatisch uit bij elke wijziging (zie het tabblad **Actions**).
+
+## 16. De website: nieuws, agenda, vragen en Engelse teksten
+
+De website heeft de opmaak van de oude website (projectmadrigal.be), maar alle inhoud komt uit de spreadsheet. Je hebt geen aparte beheeromgeving meer nodig.
+
+**De tabbladen.** `installeer` maakt drie tabbladen aan:
+
+| Tabblad | Kolommen |
+| --- | --- |
+| **Nieuws** | `datum`, `titel`, `titel_en`, `tekst`, `tekst_en`, `afbeelding`, `link`, `publiek` |
+| **Agenda** | `datum`, `uur`, `titel`, `titel_en`, `tekst`, `tekst_en`, `locatie`, `afbeelding`, `link`, `publiek` |
+| **Veelgestelde vragen** | `volgorde`, `vraag`, `vraag_en`, `antwoord`, `antwoord_en`, `publiek` |
+
+- De startpagina toont de 3 nieuwste berichten, de 3 volgende events en het vorige event.
+- Zet **nee** in `publiek` om een rij te verbergen zonder ze te wissen.
+- `afbeelding` en `link` zijn volledige adressen die met `https://` beginnen.
+- Laat je een kolom op `_en` leeg, dan toont de Engelse versie de Nederlandse tekst.
+- De kolom `bron_id` vult het script zelf in. Laat die staan.
+
+**Overnemen van de oude website.** Kies in het menu **Madrigal > Neem nieuws, agenda en vragen over van de oude website**. Het script haalt alles op en zet het in de drie tabbladen. Opnieuw uitvoeren maakt niets dubbel. Kijk de teksten daarna na: opmaak zoals vet en links verdwijnt. De afbeeldingen blijven op de server van de oude website staan. Zet ze op een andere plaats voor je die server opzegt, en pas de link in de kolom `afbeelding` aan.
+
+**Instellingen voor de website.** In het tabblad Instellingen:
+
+| Instelling | Wat |
+| --- | --- |
+| `adres` | het adres, elke regel op een nieuwe lijn (Alt+Enter in een cel) |
+| `openingsuren`, `openingsuren_en` | de openingsuren zoals ze op de startpagina staan |
+| `mail_algemeen`, `mail_events` | de mailadressen onder "Kom eens langs" |
+| `tekst_welkom_en`, `tekst_uitleg_lenen_en`, `tekst_privacy_en` | de Engelse versie van de teksten op de pagina Boeken |
+
+**Aanraders.** De startpagina toont tot 12 boeken met een naam in de kolom `aanrader` van de Catalogus. Beschikbare boeken komen eerst, de volgorde wisselt elke dag.
+
+**Vaste teksten en de pagina Over ons.** De knoppen, menu's en titels staan in `i18n.js`. De tekst van Over ons staat rechtstreeks in `over-ons.html`, met een blok `data-taal="nl"` en een blok `data-taal="en"`. Pas je de ene taal aan, pas dan ook de andere aan.
+
+**Na een wijziging in het script** publiceer je een nieuwe versie van de web-app (zie [hoofdstuk 12](#12-na-een-wijziging-in-het-script-een-nieuwe-versie-publiceren)). Anders kent de web-app `?actie=site` niet en blijft de startpagina leeg.
+
+**Het eigen domein projectmadrigal.be.** Wil je dat projectmadrigal.be naar deze website wijst:
+
+1. Ga op GitHub naar **Settings > Pages > Custom domain**, vul `www.projectmadrigal.be` in en klik op **Save**.
+2. Pas bij je domeinregistrar de DNS aan: een `CNAME`-record voor `www` naar `projectmadrigal.github.io`, en voor het domein zonder www de vier `A`-records van GitHub Pages (`185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`).
+3. Vink **Enforce HTTPS** aan zodra GitHub dat toelaat (dat duurt soms een dag).
+
+Doe dit pas als de nieuwe website klaar is: vanaf dat moment toont projectmadrigal.be de nieuwe website en niet langer de oude.
