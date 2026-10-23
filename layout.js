@@ -1,0 +1,110 @@
+/**
+ * layout.js
+ * De kop (logo, menu, taal, donkere modus) en de voet van elke publieke pagina.
+ * Zo staan ze maar op één plaats. Een pagina zet in <body> data-pagina="home",
+ * "boeken" of "over", en heeft een <header id="site-kop"> en <footer id="site-voet">.
+ *
+ * Een menu-item toevoegen? Voeg het toe aan MENU hieronder, en de tekst in i18n.js.
+ */
+(function () {
+  'use strict';
+
+  var T = window.MadrigalTaal;
+  var THEMA = 'madrigal_thema';
+
+  var MENU = [
+    { pagina: 'home', href: 'index.html', tekst: 'menuHome' },
+    { pagina: 'boeken', href: 'boeken.html', tekst: 'menuBoeken' },
+    { pagina: 'over', href: 'over-ons.html', tekst: 'menuOver' }
+  ];
+
+  /* Iconen (Feather, MIT-licentie). De kleur volgt de tekstkleur. */
+  var ICOON = {
+    wereld: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>',
+    maan: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
+    zon: '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>',
+    menu: '<svg viewBox="0 0 24 24" aria-hidden="true"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>'
+  };
+
+  function huidigThema() {
+    var gezet = document.documentElement.getAttribute('data-theme');
+    if (gezet) return gezet;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  function zetThema(thema) {
+    document.documentElement.setAttribute('data-theme', thema);
+    try { localStorage.setItem(THEMA, thema); } catch (e) { /* enkel voor deze pagina */ }
+    tekenKnoppen();
+  }
+
+  function tekenKnoppen() {
+    var donker = huidigThema() === 'dark';
+    var tk = document.getElementById('themaknop');
+    if (tk) {
+      tk.innerHTML = donker ? ICOON.zon : ICOON.maan;
+      tk.setAttribute('aria-label', T.t(donker ? 'donkerUit' : 'donkerAan'));
+      tk.setAttribute('aria-pressed', donker ? 'true' : 'false');
+    }
+    var tl = document.getElementById('taalknop');
+    if (tl) {
+      tl.innerHTML = ICOON.wereld + '<span>' + T.t('taalKnop') + '</span>';
+      tl.setAttribute('aria-label', T.t('taalLabel'));
+      tl.setAttribute('lang', T.taal() === 'nl' ? 'en' : 'nl');
+    }
+  }
+
+  function kop(pagina) {
+    var el = document.getElementById('site-kop');
+    if (!el) return;
+    el.className = 'site-kop';
+    el.innerHTML =
+      '<a class="overslaan" href="#inhoud" data-i18n="overslaan"></a>' +
+      '<div class="site-kop-binnen">' +
+      '  <a class="merk" href="index.html"><img src="assets/logo.svg" alt="" width="44" height="44"><span class="merk-naam">Project Madrigal</span></a>' +
+      '  <button type="button" class="menuknop" id="menuknop" aria-expanded="false" aria-controls="hoofdmenu" data-i18n-aria-label="menu">' + ICOON.menu + '</button>' +
+      '  <nav class="hoofdmenu" id="hoofdmenu" data-i18n-aria-label="menu"><ul>' +
+      MENU.map(function (m) {
+        return '<li><a href="' + m.href + '" data-i18n="' + m.tekst + '"' + (m.pagina === pagina ? ' aria-current="page"' : '') + '></a></li>';
+      }).join('') +
+      '  </ul>' +
+      '  <div class="kopknoppen"><button type="button" class="ikoonknop" id="taalknop"></button><button type="button" class="ikoonknop" id="themaknop"></button></div>' +
+      '  </nav>' +
+      '</div>';
+    document.getElementById('menuknop').addEventListener('click', function () {
+      var open = this.getAttribute('aria-expanded') !== 'true';
+      this.setAttribute('aria-expanded', open ? 'true' : 'false');
+      el.classList.toggle('menu-open', open);
+    });
+    document.getElementById('taalknop').addEventListener('click', function () {
+      T.kies(T.taal() === 'nl' ? 'en' : 'nl');
+    });
+    document.getElementById('themaknop').addEventListener('click', function () {
+      zetThema(huidigThema() === 'dark' ? 'light' : 'dark');
+    });
+  }
+
+  function voet() {
+    var el = document.getElementById('site-voet');
+    if (!el) return;
+    el.className = 'site-voet';
+    el.innerHTML =
+      '<div class="site-voet-binnen">' +
+      '  <p><strong>Project Madrigal</strong></p>' +
+      '  <p data-i18n="voetTekst"></p>' +
+      '  <p><a href="boeken.html#/privacy" data-i18n="privacy"></a> · <a href="balie.html" data-i18n="vrijwilligers"></a> · <a href="mailto:info@projectmadrigal.be">info@projectmadrigal.be</a></p>' +
+      '</div>';
+  }
+
+  var pagina = document.body.getAttribute('data-pagina');
+  kop(pagina);
+  voet();
+  T.toepassen();
+  tekenKnoppen();
+  document.addEventListener('taalgewijzigd', tekenKnoppen);
+  // Volgt de instelling van het toestel zolang er niets gekozen is.
+  if (window.matchMedia) {
+    var mq = window.matchMedia('(prefers-color-scheme: dark)');
+    if (mq.addEventListener) mq.addEventListener('change', tekenKnoppen);
+  }
+})();

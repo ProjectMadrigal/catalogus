@@ -9,7 +9,8 @@
  *   u   uitgeverij       j  jaartal         l  taal          p  pagina's
  *   v   uitvoering       n  nieuw/tweedehands                r  aanraders (lijst)
  *   g   filtergroepen    s  soort (boek/zine)                d  beschrijving
- *   c   cover-URL        b  beschikbaarheid { c: code, l: label, t: totaal, v: vrij }
+ *   c   cover-URL        b  beschikbaarheid { c: code, l: label, t: totaal, v: vrij,
+ *                                           d: verwacht terug (datum), k: 1 als te koop }
  */
 
 /** Bouwt het object dat het publieke eindpunt teruggeeft. */
@@ -28,6 +29,9 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
       s: normaliseerTekst(rij.soort) === 'zine' ? 'zine' : 'boek',
       b: { c: b.code, l: b.label, t: b.totaal, v: b.beschikbaar }
     };
+    // Datum van verwachte terugkeer en "te koop": zo maakt de website het label in elke taal op.
+    if (b.code === 'uitgeleend' && b.terug && b.terug >= staat.vandaag) boek.b.d = b.terug;
+    if (b.code === 'niet_uitleenbaar' && normaliseerTekst(rij.genre) === 'verkoop') boek.b.k = 1;
     // Lege velden laten we weg: dat maakt de lijst kleiner.
     var extra = {
       i: schoon(rij.isbn), u: schoon(rij.uitgeverij), j: parseerGetal(rij.jaartal) || '',

@@ -85,6 +85,7 @@ function bewaarStaat(staat) {
 function doGet(e) {
   var actie = e && e.parameter ? e.parameter.actie : '';
   if (actie === 'catalogus') return json(publiekeCatalogusJson(), true);
+  if (actie === 'site') return json(siteInhoudJson(), true);
   return json(JSON.stringify({ ok: true, info: 'Catalogus Project Madrigal. Gebruik ?actie=catalogus.' }), true);
 }
 
@@ -125,7 +126,7 @@ function verwerkVervallenReservatiesStil(staat) {
 
 /** Maakt de cache van de publieke catalogus leeg, zodat de volgende opvraging vers is. */
 function leegCache() {
-  try { CacheService.getScriptCache().remove(CACHE_SLEUTEL + '_n'); } catch (e) { /* niets aan de hand */ }
+  try { CacheService.getScriptCache().removeAll([CACHE_SLEUTEL + '_n', SITE_CACHE_SLEUTEL]); } catch (e) { /* niets aan de hand */ }
 }
 
 /** Een JSON-antwoord. */

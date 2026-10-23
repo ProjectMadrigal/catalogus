@@ -16,6 +16,8 @@
   var F = window.MadrigalFilters;
   var D = window.MadrigalDom;
   var el = D.el;
+  var T = window.MadrigalTaal;
+  var t = T.t;
 
   var PER_KEER = 40; // zoveel boeken tonen we per keer
 
@@ -64,16 +66,35 @@
 
   /* ---------- Gegevens ---------- */
 
+  /** Tekst uit de spreadsheet in de gekozen taal, met het Nederlands als terugval. */
+  function tekst(sleutel) {
+    var teksten = (staat.data && staat.data.teksten) || {};
+    return (T.taal() === 'en' && teksten[sleutel + '_en']) || teksten[sleutel] || '';
+  }
+
+  /** Beschikbaarheid in de gekozen taal. Code, aantallen en datum komen van de server. */
+  function status(b) {
+    var s = b.b || {};
+    if (s.c === 'niet_uitleenbaar') return t(s.k ? 'stTeKoop' : 'stNietUitleenbaar');
+    if (s.c === 'beschikbaar') return s.t > 1 ? t('stVanBeschikbaar', { v: s.v, t: s.t }) : t('stBeschikbaar');
+    if (s.c === 'gereserveerd') return t('stGereserveerd');
+    if (s.c === 'uitgeleend') return s.d ? t('stUitgeleendTot', { datum: T.datum(s.d) }) : t('stUitgeleend');
+    return s.l || '';
+  }
+
+  function zetTeksten() {
+    $('welkom').textContent = tekst('welkom');
+    $('uitleg-lenen').textContent = tekst('uitleg');
+    $('privacy-tekst').textContent = tekst('privacy');
+  }
+
   function ontvang(data) {
     staat.data = data;
     staat.index = Z.maakIndex(data.boeken);
     staat.perId = {};
     data.boeken.forEach(function (b) { staat.perId[b.id] = b; });
     $('voorbeeld-melding').hidden = window.MadrigalApi.isGekoppeld();
-    var t = data.teksten || {};
-    if (t.welkom) $('welkom').textContent = t.welkom;
-    $('uitleg-lenen').textContent = t.uitleg || '';
-    $('privacy-tekst').textContent = t.privacy || '';
+    zetTeksten();
     $('laden').hidden = true;
     var eerste = !staat.geladen;
     staat.geladen = true;
@@ -86,8 +107,8 @@
   }
 
   function fout() {
-    $('laden').textContent = 'De catalogus kon niet laden. Kijk of je internet hebt en vernieuw de pagina.';
-    $('aantal').textContent = 'De catalogus kon niet laden.';
+    $('laden').textContent = t('ladenFout');
+    $('aantal').textContent = t('ladenFout');
   }
 
   /* ---------- Filters ---------- */
@@ -98,11 +119,11 @@
     D.vervang(raster, F.FILTERS.map(function (f) {
       var id = 'filter-' + f.sleutel;
       var select = el('select', { id: id, onchange: function () { staat.keuzes[f.sleutel] = this.value; nieuweLijst(); } },
-        el('option', { value: '' }, 'Alle'),
+        el('option', { value: '' }, t('alle')),
         opties[f.sleutel].map(function (o) {
-          return el('option', { value: o.waarde, selected: staat.keuzes[f.sleutel] === o.waarde }, o.waarde + ' (' + o.aantal + ')');
+          return el('option', { value: o.waarde, selected: staat.keuzes[f.sleutel] === o.waarde }, T.waarde(o.waarde) + ' (' + o.aantal + ')');
         }));
-      return el('div', { class: 'veld' }, el('label', { for: id }, f.label), select);
+      return el('div', { class: 'veld' }, el('label', { for: id }, t(f.labelSleutel) || f.label), select);
     }));
     $('filter-beschikbaar').checked = staat.keuzes.beschikbaar;
   }
@@ -145,14 +166,13 @@
     var zichtbaar = lijst.slice(0, staat.getoond);
     D.vervang($('resultaten'), zichtbaar.map(boekKaart));
     var n = lijst.length;
-    $('aantal').textContent = n === 0
-      ? 'Geen boeken gevonden. Probeer een ander woord of wis de filters.'
-      : n + (n === 1 ? ' boek' : ' boeken') + ' gevonden' + (n > zichtbaar.length ? ', ' + zichtbaar.length + ' getoond' : '');
+    $('aantal').textContent = n === 0 ? t('gevonden0')
+      : (n === 1 ? t('gevonden1') : t('gevondenN', { n: n })) + (n > zichtbaar.length ? t('getoond', { n: zichtbaar.length }) : '');
     var meer = $('meer');
     meer.hidden = n <= zichtbaar.length;
-    meer.textContent = 'Toon meer boeken (nog ' + (n - zichtbaar.length) + ')';
+    meer.textContent = t('meerBoeken', { n: n - zichtbaar.length });
     var actief = aantalActieveFilters();
-    $('filter-teller').textContent = actief ? '(' + actief + ' actief)' : '';
+    $('filter-teller').textContent = actief ? t('filtersActief', { n: actief }) : '';
   }
 
   function cover(b, groot) {
@@ -160,7 +180,7 @@
     var plaatshouder = el('div', { class: 'plaatshouder' + (b.s === 'zine' ? ' zine' : ''), 'aria-hidden': 'true' }, letter);
     if (!b.c) return plaatshouder;
     var img = el('img', {
-      class: 'cover', src: b.c, alt: groot ? 'Cover van ' + b.t : '', loading: 'lazy', decoding: 'async',
+      class: 'cover', src: b.c, alt: groot ? t('coverVan', { titel: b.t }) : '', loading: 'lazy', decoding: 'async',
       width: groot ? 192 : 72, height: groot ? 288 : 108
     });
     img.addEventListener('error', function () { if (img.parentNode) img.parentNode.replaceChild(plaatshouder, img); });
@@ -168,13 +188,13 @@
   }
 
   function meta(b) {
-    return [b.j, b.l, b.u].filter(Boolean).join(' · ');
+    return [b.j, T.waarde(b.l), b.u].filter(Boolean).join(' · ');
   }
 
   function labels(b) {
-    var items = [el('li', {}, D.statusLabel(b.b.c, b.b.l))];
-    (b.r || []).forEach(function (naam) { items.push(el('li', {}, el('span', { class: 'label label-aanrader' }, 'Aanrader van ' + naam))); });
-    return el('ul', { class: 'labels', 'aria-label': 'Labels' }, items);
+    var items = [el('li', {}, D.statusLabel(b.b.c, status(b)))];
+    (b.r || []).forEach(function (naam) { items.push(el('li', {}, el('span', { class: 'label label-aanrader' }, t('aanraderVan', { naam: naam })))); });
+    return el('ul', { class: 'labels', 'aria-label': t('labels') }, items);
   }
 
   function boekKaart(b) {
@@ -192,45 +212,45 @@
   function toonDetail(id) {
     var b = staat.perId[id];
     var scherm = $('detail-scherm');
-    var terug = el('a', { class: 'terug', href: staat.laatsteLijstAdres }, '← Terug naar de catalogus');
+    var terug = el('a', { class: 'terug', href: staat.laatsteLijstAdres }, t('terugCatalogus'));
     if (!b) {
       D.vervang(scherm, terug, el('div', { class: 'blok' },
-        el('h2', { tabindex: '-1' }, 'Dit boek vonden we niet'),
-        el('p', {}, 'Misschien is het uit de catalogus gehaald. Zoek in de catalogus naar een ander boek.')));
-      document.title = 'Boek niet gevonden · Project Madrigal';
+        el('h2', { tabindex: '-1' }, t('nietGevonden')),
+        el('p', {}, t('nietGevondenTekst'))));
+      document.title = t('nietGevonden') + ' · Project Madrigal';
       return;
     }
     var rijen = [
-      ['Jaartal', b.j], ['Taal', b.l], ['Uitgeverij', b.u], ["Pagina's", b.p], ['Uitvoering', b.v],
-      ['Staat', b.n === 'nieuw' ? 'Nieuw' : (b.n === 'tweedehands' ? 'Tweedehands' : '')], ['ISBN', b.i],
-      ['Soort', b.s === 'zine' ? 'Zine' : '']
+      [t('vJaartal'), b.j], [t('vTaal'), T.waarde(b.l)], [t('vUitgeverij'), b.u], [t('vPaginas'), b.p], [t('vUitvoering'), T.waarde(b.v)],
+      [t('vStaat'), b.n === 'nieuw' ? t('nieuw') : (b.n === 'tweedehands' ? t('tweedehands') : '')], [t('vIsbn'), b.i],
+      [t('vSoort'), b.s === 'zine' ? t('zine') : '']
     ].filter(function (r) { return r[1]; });
 
     var onderwerpen = (b.g || []).map(function (g) {
-      return el('li', {}, el('a', { class: 'label label-onderwerp', href: '#/?groep=' + encodeURIComponent(g) }, g));
+      return el('li', {}, el('a', { class: 'label label-onderwerp', href: '#/?groep=' + encodeURIComponent(g) }, T.waarde(g)));
     });
     var uitlegStatus = {
-      beschikbaar: 'Kom langs aan de balie om dit boek te lenen.',
-      uitgeleend: 'Vraag aan de balie om het te reserveren. Je krijgt het als eerste in de wachtrij zodra het terug is.',
-      gereserveerd: 'Iemand wacht al op dit boek. Je kan aan de balie ook in de wachtrij staan.',
+      beschikbaar: t('uitlegBeschikbaar'),
+      uitgeleend: t('uitlegUitgeleend'),
+      gereserveerd: t('uitlegGereserveerd'),
       niet_uitleenbaar: ''
     }[b.b.c] || '';
 
-    var deelKnop = el('button', { type: 'button', class: 'knop tweede', onclick: function () { deel(b); } }, 'Deel dit boek');
+    var deelKnop = el('button', { type: 'button', class: 'knop tweede', onclick: function () { deel(b); } }, t('deelBoek'));
 
     D.vervang($('detail-scherm'), terug, el('article', { class: 'blok detail' },
       el('div', {}, cover(b, true)),
       el('div', {},
         el('h2', { tabindex: '-1' }, b.t),
         b.a ? el('p', { class: 'auteur' }, b.a) : null,
-        el('p', { class: 'beschikbaarheid' }, D.statusLabel(b.b.c, b.b.l)),
+        el('p', { class: 'beschikbaarheid' }, D.statusLabel(b.b.c, status(b))),
         uitlegStatus ? el('p', {}, uitlegStatus) : null,
         (b.r || []).length ? el('ul', { class: 'labels' }, b.r.map(function (n) {
-          return el('li', {}, el('a', { class: 'label label-aanrader', href: '#/?aanrader=' + encodeURIComponent('Aanrader van ' + n) }, 'Aanrader van ' + n));
+          return el('li', {}, el('a', { class: 'label label-aanrader', href: '#/?aanrader=' + encodeURIComponent('Aanrader van ' + n) }, t('aanraderVan', { naam: n })));
         })) : null,
         b.d ? el('p', {}, b.d) : null,
         el('dl', { class: 'gegevens' }, rijen.map(function (r) { return [el('dt', {}, r[0]), el('dd', {}, String(r[1]))]; })),
-        onderwerpen.length ? el('div', {}, el('h3', {}, 'Onderwerpen'), el('ul', { class: 'labels' }, onderwerpen)) : null,
+        onderwerpen.length ? el('div', {}, el('h3', {}, t('onderwerpen')), el('ul', { class: 'labels' }, onderwerpen)) : null,
         el('div', { class: 'knoppen' }, deelKnop),
         el('p', { class: 'hulptekst', id: 'deel-melding', 'aria-live': 'polite' }))));
     document.title = b.t + ' · Project Madrigal';
@@ -239,15 +259,15 @@
   function deel(b) {
     var url = location.href.split('#')[0] + '#/boek/' + encodeURIComponent(b.id);
     if (navigator.share) {
-      navigator.share({ title: b.t, text: b.t + (b.a ? ' van ' + b.a : '') + ' in de catalogus van Project Madrigal', url: url }).catch(function () {});
+      navigator.share({ title: b.t, text: b.t + (b.a ? ' · ' + b.a : '') + ' · Project Madrigal', url: url }).catch(function () {});
       return;
     }
     var melding = $('deel-melding');
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(url).then(function () { melding.textContent = 'De link is gekopieerd.'; },
-        function () { melding.textContent = 'Kopieer deze link: ' + url; });
+      navigator.clipboard.writeText(url).then(function () { melding.textContent = t('linkGekopieerd'); },
+        function () { melding.textContent = t('kopieerLink', { url: url }); });
     } else {
-      melding.textContent = 'Kopieer deze link: ' + url;
+      melding.textContent = t('kopieerLink', { url: url });
     }
   }
 
@@ -261,7 +281,7 @@
     privacy.hidden = adres.scherm !== 'privacy';
 
     if (adres.scherm === 'lijst') {
-      document.title = 'Catalogus · Project Madrigal';
+      document.title = t('catalogusTitel') + ' · Project Madrigal';
       var vorigeKeuzes = JSON.stringify(staat.keuzes);
       staat.keuzes = adres.keuzes;
       if (JSON.stringify(staat.keuzes) !== vorigeKeuzes) staat.getoond = PER_KEER;
@@ -296,6 +316,9 @@
   }
 
   function start() {
+    // Het zoekveld op de startpagina stuurt naar boeken.html?q=...: zet dat om naar #/?q=...
+    var zoekvraag = new URLSearchParams(location.search).get('q');
+    if (zoekvraag && !location.hash) history.replaceState(null, '', location.pathname + '#/?' + new URLSearchParams({ q: zoekvraag }).toString());
     var adres = leesAdres();
     if (adres.scherm === 'lijst') staat.keuzes = adres.keuzes;
     zetFormulier();
@@ -333,6 +356,16 @@
       if (a) { staat.laatstGeopend = a.getAttribute('data-id'); staat.scrollPositie = window.scrollY; }
     });
     window.addEventListener('hashchange', toonScherm);
+    // Andere taal gekozen: alles opnieuw tekenen, zonder de focus te verplaatsen.
+    document.addEventListener('taalgewijzigd', function () {
+      if (!staat.data) return;
+      zetTeksten();
+      bouwFilters();
+      zetFormulier();
+      var adres = leesAdres();
+      if (adres.scherm === 'lijst') toonLijst();
+      else if (adres.scherm === 'boek') toonDetail(adres.id);
+    });
 
     window.MadrigalApi.haalCatalogus(ontvang, fout);
   }
