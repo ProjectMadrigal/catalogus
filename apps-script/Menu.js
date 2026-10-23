@@ -88,6 +88,7 @@ function onOpen() {
     .addSeparator()
     .addItem('Nieuwe boeken verwerken', 'verwerkNieuweBoeken')
     .addItem('Werk de vertaaltabel Onderwerpen bij', 'werkOnderwerpenBijMenu')
+    .addItem('Wis de aanraders die uit de stocklijst kwamen', 'wisAanradersUitStock')
     .addItem('Ververs de publieke catalogus', 'verversMenu')
     .addSeparator()
     .addItem('Neem lopende uitleningen over uit het oude blad', 'neemUitleningenOver')
