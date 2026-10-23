@@ -602,6 +602,15 @@ test('startpagina: enkel publieke rijen, nieuwste nieuws, komend en vorig event,
   gelijk(d.aanraders.map((a) => a.id), ['B0001']);
   assert.ok(JSON.stringify(d).indexOf('Kees Voorbeeld') === -1);
 });
+test('startpagina: aanraders_verbergen haalt namen weg, het boek blijft als iemand anders het aanraadt', () => {
+  const s = maakStaat('2026-10-23');
+  s.catalogus[0].aanrader = 'Robin';
+  s.catalogus[1].aanrader = 'robin en Sam';
+  s.inst.aanraders_verbergen = 'Robin';
+  const d = M.bouwSiteInhoud(s, {});
+  gelijk(d.aanraders.map((a) => a.id), [String(s.catalogus[1].boek_id)]);
+  gelijk(d.aanraders[0].r, ['Sam']);
+});
 test('oude website: html wordt tekst, ids voorkomen dubbels', () => {
   assert.strictEqual(M.htmlNaarTekst('<p>Hallo <b>daar</b></p><p>Tot&nbsp;vrijdag</p>'), 'Hallo daar\nTot vrijdag');
   const faq = M.zetOudeFaqOm([{ id: 1, order: 1, question: 'Kan ik lenen?', answer: '<p>Ja!</p>' }]);
