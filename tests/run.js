@@ -179,15 +179,12 @@ test('koppeling op ISBN vult enkel lege velden aan', () => {
   gelijk(velden, ['paginas', 'uitgeverij']);
   assert.strictEqual(r.naTeKijken.length, 0);
 });
-test('verschillende waarde: Catalogus blijft, beide waarden naar Na te kijken', () => {
+test('verschillende waarde: de Catalogus wint, geen rij in Na te kijken', () => {
   const catalogus = [{ boek_id: 'B1', titel: 'De verzonnen zee', auteur: 'Verbeek, Mira', isbn: '9780306406157', uitgeverij: 'Fictie', jaartal: 1999, paginas: 210 }];
-  const gr = [{ Title: 'De verzonnen zee', 'Author l-f': 'Verbeek, Mira', ISBN13: '="9780306406157"', Publisher: 'Fictie', 'Year Published': '2004', 'Number of Pages': '210' }];
+  const gr = [{ Title: 'De verzonnen zee', 'Author l-f': 'Verbeek, Mira', ISBN13: '="9780306406157"', Publisher: 'Fictie BV', 'Year Published': '2004', 'Number of Pages': '209' }];
   const r = M.koppelGoodreads(catalogus, gr);
   assert.strictEqual(r.aanvullingen.length, 0);
-  assert.strictEqual(r.naTeKijken.length, 1);
-  assert.strictEqual(r.naTeKijken[0].veld, 'jaartal');
-  assert.strictEqual(r.naTeKijken[0].waarde_catalogus, 1999);
-  assert.strictEqual(r.naTeKijken[0].waarde_bron, 2004);
+  assert.strictEqual(r.naTeKijken.length, 0);
 });
 test('koppeling op titel en auteur (zonder ISBN), ISBN enkel als voorstel', () => {
   const catalogus = [{ boek_id: 'B2', titel: 'Twee kasten vol', auteur: 'Dewit, Rein', isbn: '', uitgeverij: '', jaartal: '', paginas: '' }];
