@@ -120,7 +120,7 @@ function zetTekstopmaak(blad, kolommen) {
   var kop = blad.getRange(1, 1, 1, blad.getLastColumn()).getValues()[0].map(schoon);
   kolommen.forEach(function (k) {
     var i = kop.indexOf(k);
-    if (i > -1) blad.getRange(2, i + 1, blad.getMaxRows() - 1, 1).setNumberFormat('@');
+    if (i > -1 && blad.getMaxRows() > 1) blad.getRange(2, i + 1, blad.getMaxRows() - 1, 1).setNumberFormat('@');
   });
 }
 
