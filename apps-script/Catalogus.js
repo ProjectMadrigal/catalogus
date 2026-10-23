@@ -127,7 +127,9 @@ function nietPubliekVolgensHerkomst(herkomst) {
  * nieuwId: functie(soort) die een nieuwe, unieke boek-ID geeft.
  * Geeft { nieuw, aangevuld } terug (aantallen).
  */
-function voegBronSamen(bestaand, bron, nieuwId, inst) {
+function voegBronSamen(bestaand, bron, nieuwId, inst, vandaag) {
+  // Bij de eerste opbouw is niets "nieuw binnen". Daarna krijgt een nieuw boek de datum van vandaag.
+  var datumNieuw = bestaand.length && vandaag ? vandaag : '';
   // 1. Dubbele rijen in de bron samenvoegen: aantallen optellen, herkomst bundelen.
   var perSleutel = {};
   var volgorde = [];
@@ -170,7 +172,7 @@ function voegBronSamen(bestaand, bron, nieuwId, inst) {
       aantal: b.aantal,
       uitleenbaar: teKoop && !inst.zines_te_koop_uitleenbaar ? 'nee' : 'ja',
       publiek: nietPubliekVolgensHerkomst(b.herkomst) ? 'nee' : 'ja',
-      beschrijving: '', cover_url: '',
+      beschrijving: '', cover_url: '', startpagina: '', toegevoegd_op: datumNieuw,
       herkomst: b.herkomst, isbn_origineel: b.isbn_origineel, bron_sleutel: s, ol_gecontroleerd: ''
     };
     voegToe(bestaand, nieuweRij);
@@ -224,7 +226,7 @@ function maakCatalogus() {
     if (!bron.length) throw new Error('Geen boeken gevonden in de tabbladen Stock en Zines.');
     var tabel = leesTabel('Catalogus');
     var ids = maakIdGenerator(tabel.rijen);
-    var teller = voegBronSamen(tabel.rijen, bron, ids.nieuw, inst);
+    var teller = voegBronSamen(tabel.rijen, bron, ids.nieuw, inst, vandaagTekst());
     schrijfVolledig(tabel);
     ids.bewaar();
     var onderwerpen = werkOnderwerpenBij();
@@ -288,7 +290,8 @@ function verwerkNieuweBoeken() {
         nieuwstaat: jaNee(rij.nieuwstaat),
         aantal: parseerGetal(rij.aantal) || 1,
         uitleenbaar: jaNee(rij.uitleenbaar) || 'ja',
-        publiek: jaNee(rij.publiek) || 'ja'
+        publiek: jaNee(rij.publiek) || 'ja',
+        toegevoegd_op: parseerDatum(rij.toegevoegd_op) || vandaagTekst()
       };
       velden.bron_sleutel = bronSleutel({ soort: soort, isbn: velden.isbn, titel: velden.titel, auteur: velden.auteur });
       wijzig(rij, velden);
