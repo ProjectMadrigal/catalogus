@@ -471,6 +471,9 @@ main.website { max-width: none; padding: 0; }
 .site-voet-binnen { max-width: var(--breedte-max); margin: 0 auto; padding: 2rem var(--ruimte); }
 .site-voet a { color: var(--kleur-geel); }
 .site-voet p { margin: .3rem 0; }
+.sociaal { display: inline-flex; align-items: center; gap: .5rem; min-height: 2.75rem; margin-top: .6rem; padding: .3rem 1rem .3rem .6rem; border: 2px solid var(--kleur-geel); border-radius: 999px; font-weight: 700; text-decoration: none; }
+.sociaal:hover, .sociaal:focus-visible { background: var(--kleur-geel); color: var(--kleur-op-geel) !important; }
+.sociaal svg { width: 1.4rem; height: 1.4rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 
 /* ---------- Grotere schermen ---------- */
 
