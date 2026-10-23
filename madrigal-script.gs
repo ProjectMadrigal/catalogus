@@ -187,6 +187,14 @@ var STANDAARD_INSTELLINGEN = [
   ['tekst_welkom', 'Welkom in de catalogus van Project Madrigal, de queer bib van Antwerpen. Zoek, snuister en kom langs om te lenen.', 'Welkomsttekst bovenaan de publieke catalogus.'],
   ['tekst_uitleg_lenen', 'Je leent gratis, je betaalt enkel 5 euro borg per boek. Die krijg je terug als je het boek terugbrengt. Je mag 2 boeken tegelijk lenen, voor 4 weken. Kom langs op vrijdag tijdens de openingsuren.', 'Uitleg over lenen in de publieke catalogus: wanneer open, hoe lang, hoeveel.'],
   ['tekst_privacy', 'We bewaren enkel je voornaam, eventueel je achternaam, je telefoonnummer en/of e-mailadres, en je lenersnummer. We gebruiken die enkel om je uitleningen op te volgen en je te herinneren als een boek terug moet. Enkel het bestuur ziet je contactgegevens. Na een teruggebracht boek wissen we de koppeling met jou na 12 maanden. Wil je je gegevens inkijken of laten wissen? Vraag het aan de balie of mail naar [vul het mailadres van het bestuur in].', 'Privacyverklaring bij het inschrijven en in de publieke catalogus.'],
+  ['tekst_welkom_en', 'Welcome to the catalogue of Project Madrigal, the queer library of Antwerp. Search, browse and come by to borrow.', 'Welkomsttekst in het Engels.'],
+  ['tekst_uitleg_lenen_en', 'Borrowing is free, you only pay a 5 euro deposit per book. You get it back when you return the book. You can borrow 2 books at a time, for 4 weeks. Come by on Friday during opening hours.', 'Uitleg over lenen in het Engels.'],
+  ['tekst_privacy_en', 'We only keep your first name, possibly your last name, your phone number and/or email address, and your borrower number. We only use them to follow up on your loans and to remind you when a book is due. Only the board can see your contact details. Twelve months after you return a book, we remove the link with you. Want to see your data or have it deleted? Ask at the desk or email [fill in the board email address].', 'Privacyverklaring in het Engels.'],
+  ['adres', 'Peperfabriek (eerste verdieping)\nBreughelstraat 31\n2018 Antwerpen', 'Adres op de website. Een nieuwe regel maak je met Ctrl+Enter.'],
+  ['openingsuren', 'Elke vrijdag: 18:00 - 20:00', 'Openingsuren op de website, in het Nederlands. Een nieuwe regel maak je met Ctrl+Enter.'],
+  ['openingsuren_en', 'Every Friday: 18:00 - 20:00', 'Openingsuren op de website, in het Engels.'],
+  ['mail_algemeen', 'info@projectmadrigal.be', 'Algemeen mailadres op de website.'],
+  ['mail_events', 'events.madrigal@gmail.com', 'Mailadres voor events op de website.'],
   ['tekst_herinnering', 'Hoi {voornaam}, je leende bij Project Madrigal "{titel}". Dat boek moest terug op {vervaldatum}. Breng je het binnenkort binnen? Lukt dat niet, laat het ons dan even weten. Dank je!', 'Herinnering voor een boek dat te laat is. Gebruik {voornaam}, {titel} en {vervaldatum}.'],
   ['tekst_herinnering_binnenkort', 'Hoi {voornaam}, een vriendelijke herinnering: "{titel}" mag terug naar Project Madrigal op {vervaldatum}. Wil je het langer houden? Laat het ons weten, dan verlengen we het. Veel leesplezier!', 'Herinnering voor een boek dat binnenkort vervalt.']
 ];
@@ -224,7 +232,11 @@ var KOLOMMEN = {
   ],
   'Uitzonderingen': ['datum', 'wie', 'grens', 'lenersnummer', 'boek_id', 'exemplaar', 'reden', 'actie'],
   'Na te kijken': ['datum', 'bron', 'boek_id', 'titel', 'veld', 'waarde_catalogus', 'waarde_bron', 'opmerking', 'afgehandeld', 'sleutel'],
-  'Logboek': ['tijdstip', 'wie', 'actie', 'details']
+  'Logboek': ['tijdstip', 'wie', 'actie', 'details'],
+  // Inhoud van de website. Kolommen op _en zijn de Engelse versie (mag leeg: dan toont de site het Nederlands).
+  'Nieuws': ['datum', 'titel', 'titel_en', 'tekst', 'tekst_en', 'afbeelding', 'link', 'publiek', 'bron_id'],
+  'Agenda': ['datum', 'uur', 'titel', 'titel_en', 'tekst', 'tekst_en', 'locatie', 'afbeelding', 'link', 'publiek', 'bron_id'],
+  'Veelgestelde vragen': ['volgorde', 'vraag', 'vraag_en', 'antwoord', 'antwoord_en', 'publiek', 'bron_id']
 };
 
 /** Kolommen met een datum. Die schrijven we als echte datum in de spreadsheet. */
@@ -233,6 +245,14 @@ var DATUMKOLOMMEN = [
   'datum_verlenging', 'borg_terugbetaald', 'laatste_herinnering', 'datum_reservatie', 'datum_klaar',
   'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd'
 ];
+
+var OUDE_SITE = 'https://www.projectmadrigal.be/';
+
+var SITE_CACHE_SLEUTEL = 'site_v1';
+
+var SITE_MAX_NIEUWS = 3;
+
+var SITE_MAX_AANRADERS = 12;
 
 var STATUS_WACHT = 'wacht';
 
@@ -570,7 +590,7 @@ function bewaarTabel(tabel) {
 /** Bij elke wijziging met de hand in Catalogus, Onderwerpen of Instellingen: cache leegmaken. */
 function bijWijziging(e) {
   var naam = e && e.range ? e.range.getSheet().getName() : '';
-  if (['Catalogus', 'Onderwerpen', 'Instellingen', 'Uitleningen', 'Reservaties'].indexOf(naam) > -1) leegCache();
+  if (['Catalogus', 'Onderwerpen', 'Instellingen', 'Uitleningen', 'Reservaties', 'Nieuws', 'Agenda', 'Veelgestelde vragen'].indexOf(naam) > -1) leegCache();
 }
 
 function boekVan(staat, boekId) {
@@ -607,6 +627,9 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
       s: normaliseerTekst(rij.soort) === 'zine' ? 'zine' : 'boek',
       b: { c: b.code, l: b.label, t: b.totaal, v: b.beschikbaar }
     };
+    // Datum van verwachte terugkeer en "te koop": zo maakt de website het label in elke taal op.
+    if (b.code === 'uitgeleend' && b.terug && b.terug >= staat.vandaag) boek.b.d = b.terug;
+    if (b.code === 'niet_uitleenbaar' && normaliseerTekst(rij.genre) === 'verkoop') boek.b.k = 1;
     // Lege velden laten we weg: dat maakt de lijst kleiner.
     var extra = {
       i: schoon(rij.isbn), u: schoon(rij.uitgeverij), j: parseerGetal(rij.jaartal) || '',
@@ -627,6 +650,63 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
     teksten: publiekeTeksten(staat.inst),
     filtergroepen: groepen,
     boeken: boeken
+  };
+}
+
+/**
+ * Bouwt de inhoud van de startpagina (zonder de spreadsheet aan te raken).
+ * tabellen: { nieuws, agenda, faq } met de rijen van die tabbladen.
+ * staat: zoals in Uitlenen.js (voor de aanraders en hun beschikbaarheid).
+ */
+function bouwSiteInhoud(staat, tabellen) {
+  var inst = staat.inst;
+
+  var nieuws = (tabellen.nieuws || []).filter(function (r) { return isPubliek(r) && (r.titel || r.tekst); })
+    .sort(function (a, b) { return String(b.datum || '').localeCompare(String(a.datum || '')); })
+    .slice(0, SITE_MAX_NIEUWS)
+    .map(function (r) {
+      return { datum: parseerDatum(r.datum), titel: tweetalig(r, 'titel'), tekst: tweetaligLang(r, 'tekst'), afbeelding: veiligeCoverUrl(r.afbeelding), link: veiligeCoverUrl(r.link) };
+    });
+
+  var events = (tabellen.agenda || []).filter(function (r) { return isPubliek(r) && parseerDatum(r.datum) && r.titel; })
+    .map(function (r) {
+      return {
+        datum: parseerDatum(r.datum), uur: schoon(r.uur), titel: tweetalig(r, 'titel'), tekst: tweetaligLang(r, 'tekst'),
+        locatie: schoon(r.locatie), afbeelding: veiligeCoverUrl(r.afbeelding), link: veiligeCoverUrl(r.link)
+      };
+    });
+  var komend = events.filter(function (e) { return e.datum >= staat.vandaag; }).sort(function (a, b) { return a.datum.localeCompare(b.datum); });
+  var voorbij = events.filter(function (e) { return e.datum < staat.vandaag; }).sort(function (a, b) { return b.datum.localeCompare(a.datum); });
+
+  var faq = (tabellen.faq || []).filter(function (r) { return isPubliek(r) && r.vraag; })
+    .sort(function (a, b) { return (parseerGetal(a.volgorde) || 999) - (parseerGetal(b.volgorde) || 999); })
+    .map(function (r) { return { vraag: tweetalig(r, 'vraag'), antwoord: tweetaligLang(r, 'antwoord') }; });
+
+  // Aanraders: boeken met een aanrader, beschikbare eerst, daarna willekeurig maar vast per dag.
+  var aanraders = staat.catalogus.filter(function (b) {
+    return !isLeeg(b.boek_id) && !isLeeg(b.aanrader) && jaNee(b.publiek) !== 'nee';
+  }).map(function (b) {
+    var bs = beschikbaarheid(staat, b);
+    return {
+      id: String(b.boek_id), t: schoon(b.titel), a: schoon(b.auteur), c: veiligeCoverUrl(b.cover_url),
+      s: normaliseerTekst(b.soort) === 'zine' ? 'zine' : 'boek',
+      r: splitsLijst(String(b.aanrader).replace(/ en | & /g, ',')), vrij: bs.code === 'beschikbaar',
+      volgorde: dagVolgorde(String(b.boek_id), staat.vandaag)
+    };
+  }).sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
+    .slice(0, SITE_MAX_AANRADERS)
+    .map(function (b) { delete b.volgorde; return b; });
+
+  return {
+    bijgewerkt: staat.vandaag,
+    contact: {
+      adres: String(inst.adres || ''), openingsuren: { nl: String(inst.openingsuren || ''), en: String(inst.openingsuren_en || '') || String(inst.openingsuren || '') },
+      mail_algemeen: inst.mail_algemeen, mail_events: inst.mail_events
+    },
+    nieuws: nieuws,
+    agenda: { komend: komend.slice(0, 3), vorig: voorbij[0] || null },
+    faq: faq,
+    aanraders: aanraders
   };
 }
 
@@ -676,6 +756,14 @@ function dagenTussen(a, b) {
   return Math.round((naarUtc(b) - naarUtc(a)) / 86400000);
 }
 
+/** Een getal dat per boek en per dag anders is: zo wisselen de aanraders elke dag. */
+function dagVolgorde(id, dag) {
+  var tekst = id + dag;
+  var h = 0;
+  for (var i = 0; i < tekst.length; i++) h = (h * 31 + tekst.charCodeAt(i)) % 1000003;
+  return h;
+}
+
 /**
  * Datum als leesbare tekst: "vrijdag 20 november".
  * Valt de datum in een ander jaar dan vandaag, dan komt het jaar erbij.
@@ -692,6 +780,7 @@ function datumTekst(datum, vandaag) {
 function doGet(e) {
   var actie = e && e.parameter ? e.parameter.actie : '';
   if (actie === 'catalogus') return json(publiekeCatalogusJson(), true);
+  if (actie === 'site') return json(siteInhoudJson(), true);
   return json(JSON.stringify({ ok: true, info: 'Catalogus Project Madrigal. Gebruik ?actie=catalogus.' }), true);
 }
 
@@ -723,6 +812,15 @@ function doPost(e) {
     logboek('systeem', 'fout', actie + ': ' + String(err && err.message || err).slice(0, 200));
     return json({ ok: false, fout: 'Er ging iets mis: ' + String(err && err.message || err) });
   }
+}
+
+/** De eerste niet-lege waarde uit een lijst mogelijke veldnamen. */
+function eersteVeld(rij, namen) {
+  for (var i = 0; i < namen.length; i++) {
+    var w = rij[namen[i]];
+    if (w !== undefined && w !== null && String(w).trim() !== '') return w;
+  }
+  return '';
 }
 
 /** Zoekt boek en exemplaar bij een exemplaarnummer. "B0012" mag ook als er maar één exemplaar is. */
@@ -817,6 +915,16 @@ function goodreadsWaarde(rij, kolommen) {
   return '';
 }
 
+/** Haalt een tabel op uit de oude databank. Geeft [] als die niet bestaat. */
+function haalOudeTabel(db, tabel) {
+  var antwoord = UrlFetchApp.fetch(db.url + '/rest/v1/' + tabel + '?select=*', {
+    muteHttpExceptions: true,
+    headers: { apikey: db.sleutel, Authorization: 'Bearer ' + db.sleutel }
+  });
+  if (antwoord.getResponseCode() !== 200) return [];
+  try { return JSON.parse(antwoord.getContentText()) || []; } catch (e) { return []; }
+}
+
 /** Heeft dit boek nog een cover nodig van Google Books? */
 function heeftGoogleBooksNodig(boek) {
   if (!/^\d{13}$/.test(String(boek.isbn || ''))) return false;
@@ -872,6 +980,48 @@ function herinneringVerstuurd(staat, invoer) {
   wijzig(u, { laatste_herinnering: staat.vandaag });
   staat.log.push(['herinnering verstuurd', u.uitlening_id]);
   return { ok: true, tekst: 'Herinnering genoteerd op ' + korteDatum(staat.vandaag) + '.' };
+}
+
+/** HTML uit de oude databank naar gewone tekst met regeleinden. */
+function htmlNaarTekst(html) {
+  return String(html || '')
+    .replace(/<\s*br\s*\/?>/gi, '\n')
+    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '- ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'")
+    .replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/** Menu: neemt nieuws, agenda en veelgestelde vragen over van de oude website. */
+function importeerOudeSite() {
+  installeer(); // zorgt dat de tabbladen Nieuws, Agenda en Veelgestelde vragen bestaan
+  var db = vindOudeDatabank();
+  var posts = haalOudeTabel(db, 'posts');
+  if (!posts.length) posts = haalOudeTabel(db, 'view_posts');
+  var events = haalOudeTabel(db, 'events');
+  var faq = haalOudeTabel(db, 'faq');
+
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  var tellers = {};
+  try {
+    [['Nieuws', zetOudeNieuwsOm(posts, db.url)], ['Agenda', zetOudeEventsOm(events, db.url)], ['Veelgestelde vragen', zetOudeFaqOm(faq)]].forEach(function (paar) {
+      var tabel = leesTabel(paar[0]);
+      tellers[paar[0]] = voegOudeRijenToe(tabel.rijen, paar[1]);
+      bewaarTabel(tabel);
+    });
+  } finally {
+    lock.releaseLock();
+  }
+  leegCache();
+  // Welke velden de oude databank had: handig als er iets ontbreekt.
+  var velden = function (rijen) { return rijen.length ? Object.keys(rijen[0]).join(', ') : '(leeg)'; };
+  logboek('menu', 'importeerOudeSite', 'nieuws: ' + velden(posts) + ' | events: ' + velden(events) + ' | faq: ' + velden(faq));
+  meld('Overgenomen van de oude website: ' + tellers['Nieuws'] + ' nieuwsberichten, ' + tellers['Agenda'] + ' events en ' +
+    tellers['Veelgestelde vragen'] + ' veelgestelde vragen. Kijk ze na in de tabbladen. De Engelse kolommen vul je zelf aan waar nodig.');
 }
 
 /**
@@ -984,6 +1134,10 @@ function isLeeg(waarde) {
 /** Is de bib open op deze datum? Juiste weekdag en niet in gesloten_data. */
 function isOpeningsdag(datum, inst) {
   return inst.openingsdagen.indexOf(weekdag(datum)) > -1 && inst.gesloten_data.indexOf(datum) === -1;
+}
+
+function isPubliek(rij) {
+  return jaNee(rij.publiek) !== 'nee';
 }
 
 /** Maakt ja/nee eenvormig. Geeft 'ja', 'nee' of '' terug. */
@@ -1102,7 +1256,7 @@ function laadStaat(wie, metUitzonderingen) {
 
 /** Maakt de cache van de publieke catalogus leeg, zodat de volgende opvraging vers is. */
 function leegCache() {
-  try { CacheService.getScriptCache().remove(CACHE_SLEUTEL + '_n'); } catch (e) { /* niets aan de hand */ }
+  try { CacheService.getScriptCache().removeAll([CACHE_SLEUTEL + '_n', SITE_CACHE_SLEUTEL]); } catch (e) { /* niets aan de hand */ }
 }
 
 /** Leest de borg uit tekst als "5 cash", "€5 QR" of "QR". */
@@ -1602,6 +1756,7 @@ function onOpen() {
     .addItem('Ververs de publieke catalogus', 'verversMenu')
     .addSeparator()
     .addItem('Neem lopende uitleningen over uit het oude blad', 'neemUitleningenOver')
+    .addItem('Neem nieuws, agenda en vragen over van de oude website', 'importeerOudeSite')
     .addItem('Privacy-opruiming nu uitvoeren', 'ruimOp')
     .addSeparator()
     .addItem('Catalogus wissen en opnieuw opbouwen (enkel bij de start)', 'herbouwCatalogus')
@@ -1615,10 +1770,34 @@ function opmaakKop(blad, kolommen) {
   blad.setFrozenRows(1);
 }
 
+/** Een afbeelding: een volledige link, of een pad in de opslag van de oude databank. */
+function oudeAfbeelding(waarde, basis) {
+  var w = schoon(waarde);
+  if (!w) return '';
+  if (/^https:\/\//.test(w)) return w;
+  if (/^http:\/\//.test(w)) return w.replace(/^http:/, 'https:');
+  return basis ? basis + '/storage/v1/object/public/' + w.replace(/^\//, '') : w;
+}
+
+/** Datum uit een ISO-tijdstip, in de tijdzone van Brussel ("2026-11-20"). */
+function oudeDatum(iso, tz) {
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return parseerDatum(iso);
+  return typeof Utilities !== 'undefined' ? Utilities.formatDate(d, tz || 'Europe/Brussels', 'yyyy-MM-dd') : d.toISOString().slice(0, 10);
+}
+
 /** Zoekt een kolom in de kop van het oude blad, op het begin van de naam. */
 function oudeKolom(kop, begin) {
   for (var i = 0; i < kop.length; i++) if (kop[i].indexOf(begin) === 0) return i;
   return -1;
+}
+
+/** Uur uit een ISO-tijdstip, in de tijdzone van Brussel ("19:30"). Leeg als het middernacht is. */
+function oudUur(iso, tz) {
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  var uur = typeof Utilities !== 'undefined' ? Utilities.formatDate(d, tz || 'Europe/Brussels', 'HH:mm') : d.toISOString().slice(11, 16);
+  return uur === '00:00' ? '' : uur;
 }
 
 /**
@@ -1678,7 +1857,10 @@ function publiekeTeksten(inst) {
   return {
     welkom: inst.tekst_welkom,
     uitleg: inst.tekst_uitleg_lenen,
-    privacy: inst.tekst_privacy
+    privacy: inst.tekst_privacy,
+    welkom_en: inst.tekst_welkom_en,
+    uitleg_en: inst.tekst_uitleg_lenen_en,
+    privacy_en: inst.tekst_privacy_en
   };
 }
 
@@ -1832,6 +2014,20 @@ function schrijfVolledig(tabel) {
   tabel.rijen.forEach(function (r, i) { r._rij = i + 2; r._nieuw = false; r._gewijzigd = false; });
 }
 
+/** De inhoud van de startpagina als JSON-tekst, uit de cache als die er is. */
+function siteInhoudJson() {
+  var cache = CacheService.getScriptCache();
+  var bewaard = cache.get(SITE_CACHE_SLEUTEL);
+  if (bewaard) return bewaard;
+  var staat = laadStaat('publiek', false);
+  var lees = function (naam) {
+    return spreadsheet().getSheetByName(naam) ? leesTabel(naam).rijen : [];
+  };
+  var tekst = JSON.stringify(bouwSiteInhoud(staat, { nieuws: lees('Nieuws'), agenda: lees('Agenda'), faq: lees('Veelgestelde vragen') }));
+  try { cache.put(SITE_CACHE_SLEUTEL, tekst, CACHE_DUUR_SECONDEN); } catch (e) { /* te groot: dan zonder cache */ }
+  return tekst;
+}
+
 /** Splitst een lijst in een cel ("a, b; c") in losse, opgeschoonde waarden. */
 function splitsLijst(waarde) {
   return schoon(waarde).split(/[,;\n]+/).map(schoon).filter(function (x) { return x; });
@@ -1924,6 +2120,18 @@ function titelSleutel(titel) {
 /** Vult aan met nullen: 7 wordt "07". */
 function tweeCijfers(n) {
   return (n < 10 ? '0' : '') + n;
+}
+
+/** Een tekst in beide talen. Lege Engelse versie: de Nederlandse. */
+function tweetalig(rij, veld) {
+  var nl = schoon(rij[veld]);
+  return { nl: nl, en: schoon(rij[veld + '_en']) || nl };
+}
+
+/** Een tekst met meerdere regels: enkel spaties aan begin en einde weg. */
+function tweetaligLang(rij, veld) {
+  var nl = String(rij[veld] || '').trim();
+  return { nl: nl, en: String(rij[veld + '_en'] || '').trim() || nl };
 }
 
 /**
@@ -2152,7 +2360,9 @@ function verwerkInstellingen(ruw) {
     } else if (standaard === 'ja' || standaard === 'nee') {
       inst[sleutel] = (jaNee(waarde) || standaard) === 'ja';
     } else {
-      inst[sleutel] = isDatumObject(waarde) ? parseerDatum(waarde) : schoon(waarde);
+      // Teksten, adres en openingsuren mogen meerdere regels hebben.
+      var meerdereRegels = sleutel.indexOf('tekst_') === 0 || ['adres', 'openingsuren', 'openingsuren_en'].indexOf(sleutel) > -1;
+      inst[sleutel] = isDatumObject(waarde) ? parseerDatum(waarde) : (meerdereRegels ? String(waarde).trim() : schoon(waarde));
     }
   });
   inst.openingsdagen = weekdagNummers(inst.openingsdagen);
@@ -2346,6 +2556,18 @@ function verwijderTriggers(functienaam) {
   });
 }
 
+/** Zoekt het adres en de publieke sleutel van de databank in de code van de oude website. */
+function vindOudeDatabank() {
+  var html = UrlFetchApp.fetch(OUDE_SITE).getContentText();
+  var main = (html.match(/main\.[a-f0-9]+\.js/) || [])[0];
+  if (!main) throw new Error('Ik vond de code van de oude website niet.');
+  var code = UrlFetchApp.fetch(OUDE_SITE + main).getContentText();
+  var url = (code.match(/https:\/\/[a-z0-9]+\.supabase\.co/) || [])[0];
+  var sleutel = (code.match(/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/) || [])[0];
+  if (!url || !sleutel) throw new Error('Ik vond het adres van de oude databank niet.');
+  return { url: url, sleutel: sleutel };
+}
+
 /**
  * Voegt de boeken uit Stock en Zines samen met de bestaande Catalogus.
  * bestaand: rijen van de Catalogus (worden aangevuld, nooit overschreven).
@@ -2428,6 +2650,20 @@ function voegNaTeKijkenToe(rijen, items, bron, vandaag) {
     nieuw++;
   });
   return nieuw;
+}
+
+/** Voegt rijen toe die er nog niet zijn (op bron_id). Geeft het aantal nieuwe terug. */
+function voegOudeRijenToe(bestaande, nieuwe) {
+  var bekend = {};
+  bestaande.forEach(function (r) { if (r.bron_id) bekend[r.bron_id] = true; });
+  var n = 0;
+  nieuwe.forEach(function (r) {
+    if (bekend[r.bron_id]) return;
+    voegToe(bestaande, r);
+    bekend[r.bron_id] = true;
+    n++;
+  });
+  return n;
 }
 
 /** Voegt een nieuwe rij toe aan een lijst en markeert ze als nieuw. */
@@ -2746,6 +2982,52 @@ function zetInstelling(blad, sleutel, waarde) {
       return;
     }
   }
+}
+
+function zetOudeEventsOm(rijen, basis) {
+  return rijen.map(function (r) {
+    var moment = eersteVeld(r, ['eventDate', 'event_date', 'date', 'start']);
+    return {
+      datum: oudeDatum(moment), uur: oudUur(moment),
+      titel: schoon(eersteVeld(r, ['title', 'titleNl', 'title_nl', 'name'])),
+      titel_en: schoon(eersteVeld(r, ['titleEn', 'title_en'])),
+      tekst: htmlNaarTekst(eersteVeld(r, ['content', 'contentNl', 'description', 'body', 'text', 'textNl'])),
+      tekst_en: htmlNaarTekst(eersteVeld(r, ['contentEn', 'descriptionEn', 'bodyEn', 'textEn', 'text_en'])),
+      locatie: schoon(eersteVeld(r, ['location', 'locatie', 'place'])),
+      afbeelding: oudeAfbeelding(eersteVeld(r, ['image', 'imageUrl', 'image_url', 'cover']), basis),
+      link: schoon(eersteVeld(r, ['link', 'url'])),
+      publiek: 'ja', bron_id: 'oud-' + r.id
+    };
+  });
+}
+
+function zetOudeFaqOm(rijen) {
+  return rijen.map(function (r) {
+    return {
+      volgorde: eersteVeld(r, ['order', 'volgorde', 'position']),
+      vraag: schoon(htmlNaarTekst(eersteVeld(r, ['question', 'questionNl', 'title', 'titleNl']))),
+      vraag_en: schoon(htmlNaarTekst(eersteVeld(r, ['questionEn', 'question_en', 'titleEn']))),
+      antwoord: htmlNaarTekst(eersteVeld(r, ['answer', 'answerNl', 'content', 'contentNl', 'text', 'textNl'])),
+      antwoord_en: htmlNaarTekst(eersteVeld(r, ['answerEn', 'answer_en', 'contentEn', 'textEn'])),
+      publiek: 'ja', bron_id: 'oud-' + r.id
+    };
+  });
+}
+
+/** Zet de rijen van de oude databank om naar rijen voor de nieuwe tabbladen. */
+function zetOudeNieuwsOm(rijen, basis) {
+  return rijen.map(function (r) {
+    return {
+      datum: oudeDatum(eersteVeld(r, ['date', 'publishedAt', 'published_at', 'created_at', 'createdAt'])),
+      titel: schoon(eersteVeld(r, ['title', 'titleNl', 'title_nl', 'name'])),
+      titel_en: schoon(eersteVeld(r, ['titleEn', 'title_en'])),
+      tekst: htmlNaarTekst(eersteVeld(r, ['content', 'contentNl', 'content_nl', 'body', 'text', 'textNl', 'description'])),
+      tekst_en: htmlNaarTekst(eersteVeld(r, ['contentEn', 'content_en', 'bodyEn', 'textEn', 'text_en', 'descriptionEn'])),
+      afbeelding: oudeAfbeelding(eersteVeld(r, ['image', 'imageUrl', 'image_url', 'cover', 'picture']), basis),
+      link: schoon(eersteVeld(r, ['link', 'url'])),
+      publiek: 'ja', bron_id: 'oud-' + r.id
+    };
+  });
 }
 
 /** Zet de opmaak van kolommen op tekst, zodat 0470... en ISBN's niet als getal verminkt worden. */
