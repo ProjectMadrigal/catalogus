@@ -107,7 +107,9 @@ Goodreads heeft voor niche-titels vaak completere gegevens. Er is geen open kopp
 3. Klik op **Export Library**. Na even wachten verschijnt een link naar een CSV-bestand. Download het.
 4. Maak in de spreadsheet een nieuw tabblad met precies de naam **`Goodreads-export`**.
 5. Klik in dat tabblad op cel A1. Kies **Bestand > Importeren > Uploaden**, kies het CSV-bestand, en kies **"Huidige blad vervangen"**.
-6. Bewaar het CSV-bestand niet in deze repository.
+6. Zet in het tabblad **Instellingen** bij `goodreads_shelf` de naam van de Madrigal-shelf, precies zoals op Goodreads. De export bevat je volledige bibliotheek: met deze instelling gebruikt het script enkel de boeken op die shelf.
+7. Verwijder het tabblad `Goodreads-export` nadat je "Vul aan uit Goodreads" uitvoerde. Het bevat ook de rest van je persoonlijke bibliotheek, met je beoordelingen.
+8. Bewaar het CSV-bestand niet in deze repository.
 
 Goed om te weten: de export van Goodreads bevat geen taal en geen beschrijving. Die vult Open Library later aan.
 

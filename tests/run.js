@@ -205,6 +205,17 @@ test('enkel de titel komt overeen: twijfel, niets ingevuld', () => {
   assert.strictEqual(r.naTeKijken.length, 1);
   assert.strictEqual(r.naTeKijken[0].veld, 'koppeling');
 });
+test('Goodreads: enkel boeken van de gekozen shelf', () => {
+  const waarden = [
+    ['Title', 'Author', 'Bookshelves', 'Exclusive Shelf'],
+    ['Boek op shelf', 'A', 'madrigal, favorites', 'read'],
+    ['Persoonlijk boek', 'B', 'favorites', 'read'],
+    ['Exclusief op shelf', 'C', '', 'Madrigal']
+  ];
+  gelijk(M.leesGoodreadsRijen(waarden, 'Madrigal').map((r) => r.Title), ['Boek op shelf', 'Exclusief op shelf']);
+  assert.strictEqual(M.leesGoodreadsRijen(waarden, '').length, 3);
+});
+
 test('Na te kijken: zelfde twijfel twee keer, één rij', () => {
   const rijen = [];
   const item = { boek: { boek_id: 'B1', titel: 'T' }, veld: 'jaartal', waarde_catalogus: 1999, waarde_bron: 2004, opmerking: '' };
