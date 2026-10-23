@@ -19,14 +19,13 @@
   var T = window.MadrigalTaal;
   var t = T.t;
 
-  var PER_KEER = 40; // zoveel boeken tonen we per keer
+  var PER_PAGINA = 30; // zoveel boeken staan er op één pagina (deelbaar door 2 en 3, voor het raster)
 
   var staat = {
     data: null,
     index: [],
     perId: {},
-    keuzes: { q: '', beschikbaar: false, sorteer: 'relevantie' },
-    getoond: PER_KEER,
+    keuzes: { q: '', beschikbaar: false, sorteer: 'relevantie', pagina: 1 },
     laatsteLijstAdres: '#/',
     laatstGeopend: null,
     scrollPositie: 0
@@ -42,17 +41,22 @@
     if (m) return { scherm: 'boek', id: decodeURIComponent(m[1]) };
     if (hash.indexOf('privacy') === 0) return { scherm: 'privacy' };
     var params = new URLSearchParams(hash.replace(/^\?/, ''));
-    var keuzes = { q: params.get('q') || '', beschikbaar: params.get('beschikbaar') === 'ja', sorteer: params.get('sorteer') || 'relevantie' };
+    var keuzes = {
+      q: params.get('q') || '', beschikbaar: params.get('beschikbaar') === 'ja', sorteer: params.get('sorteer') || 'relevantie',
+      pagina: Math.max(1, parseInt(params.get('pagina'), 10) || 1)
+    };
     F.FILTERS.forEach(function (f) { if (params.get(f.sleutel)) keuzes[f.sleutel] = params.get(f.sleutel); });
     return { scherm: 'lijst', keuzes: keuzes };
   }
 
-  function lijstAdres() {
+  function lijstAdres(pagina) {
     var params = new URLSearchParams();
     if (staat.keuzes.q) params.set('q', staat.keuzes.q);
     F.FILTERS.forEach(function (f) { if (staat.keuzes[f.sleutel]) params.set(f.sleutel, staat.keuzes[f.sleutel]); });
     if (staat.keuzes.beschikbaar) params.set('beschikbaar', 'ja');
     if (staat.keuzes.sorteer !== 'relevantie') params.set('sorteer', staat.keuzes.sorteer);
+    var nr = pagina || staat.keuzes.pagina;
+    if (nr > 1) params.set('pagina', nr);
     var p = params.toString();
     return '#/' + (p ? '?' + p : '');
   }
@@ -154,8 +158,9 @@
     return F.sorteer(gefilterd, wijze);
   }
 
+  /** Andere zoekterm, filter of sortering: terug naar pagina 1. */
   function nieuweLijst() {
-    staat.getoond = PER_KEER;
+    staat.keuzes.pagina = 1;
     toonLijst();
     bewaarAdres();
   }
@@ -163,16 +168,51 @@
   function toonLijst() {
     if (!staat.data) return;
     var lijst = resultaten();
-    var zichtbaar = lijst.slice(0, staat.getoond);
-    D.vervang($('resultaten'), zichtbaar.map(boekKaart));
     var n = lijst.length;
+    var paginas = Math.max(1, Math.ceil(n / PER_PAGINA));
+    if (staat.keuzes.pagina > paginas) { staat.keuzes.pagina = paginas; bewaarAdres(); }
+    var nu = staat.keuzes.pagina;
+    D.vervang($('resultaten'), lijst.slice((nu - 1) * PER_PAGINA, nu * PER_PAGINA).map(boekKaart));
     $('aantal').textContent = n === 0 ? t('gevonden0')
-      : (n === 1 ? t('gevonden1') : t('gevondenN', { n: n })) + (n > zichtbaar.length ? t('getoond', { n: zichtbaar.length }) : '');
-    var meer = $('meer');
-    meer.hidden = n <= zichtbaar.length;
-    meer.textContent = t('meerBoeken', { n: n - zichtbaar.length });
+      : (n === 1 ? t('gevonden1') : t('gevondenN', { n: n })) + (paginas > 1 ? t('paginaVan', { nu: nu, totaal: paginas }) : '');
+    tekenPaginas(nu, paginas);
     var actief = aantalActieveFilters();
     $('filter-teller').textContent = actief ? t('filtersActief', { n: actief }) : '';
+  }
+
+  /** Welke paginanummers we tonen: de eerste, de laatste en twee rond de huidige. */
+  function paginaNummers(nu, totaal) {
+    var nrs = [];
+    for (var i = 1; i <= totaal; i++) {
+      if (i === 1 || i === totaal || Math.abs(i - nu) <= 2) nrs.push(i);
+      else if (nrs[nrs.length - 1] !== '…') nrs.push('…');
+    }
+    return nrs;
+  }
+
+  function tekenPaginas(nu, totaal) {
+    var nav = $('paginas');
+    nav.hidden = totaal <= 1;
+    if (totaal <= 1) { D.vervang(nav); return; }
+    // Op een smal scherm verdwijnt het woord en blijft enkel de pijl (zie styles.css).
+    var stap = function (nr, tekstSleutel, rel) {
+      var pijl = rel === 'prev' ? '←' : '→';
+      var inhoud = rel === 'prev'
+        ? [pijl, el('span', { class: 'pagina-woord' }, ' ' + t(tekstSleutel))]
+        : [el('span', { class: 'pagina-woord' }, t(tekstSleutel) + ' '), pijl];
+      if (nr < 1 || nr > totaal) return el('span', { class: 'pagina-stap uit', 'aria-hidden': 'true' }, inhoud);
+      return el('a', { class: 'pagina-stap', href: lijstAdres(nr), rel: rel, 'aria-label': t(tekstSleutel) }, inhoud);
+    };
+    D.vervang(nav,
+      stap(nu - 1, 'vorige', 'prev'),
+      el('ul', null, paginaNummers(nu, totaal).map(function (nr) {
+        if (nr === '…') return el('li', { 'aria-hidden': 'true' }, '…');
+        return el('li', null, el('a', {
+          href: lijstAdres(nr), 'aria-current': nr === nu ? 'page' : null,
+          'aria-label': t('paginaNr', { nr: nr })
+        }, String(nr)));
+      })),
+      stap(nu + 1, 'volgende', 'next'));
   }
 
   function cover(b, groot) {
@@ -282,12 +322,16 @@
 
     if (adres.scherm === 'lijst') {
       document.title = t('catalogusTitel') + ' · Project Madrigal';
-      var vorigeKeuzes = JSON.stringify(staat.keuzes);
+      var anderePagina = staat.data && adres.keuzes.pagina !== staat.keuzes.pagina;
       staat.keuzes = adres.keuzes;
-      if (JSON.stringify(staat.keuzes) !== vorigeKeuzes) staat.getoond = PER_KEER;
       staat.laatsteLijstAdres = lijstAdres();
       zetFormulier();
       toonLijst();
+      // Andere pagina gekozen: naar boven, en de schermlezer leest het aantal en de pagina.
+      if (anderePagina && !staat.laatstGeopend) {
+        $('lijst-titel').scrollIntoView();
+        $('aantal').focus({ preventScroll: true });
+      }
       // Terug van een detailpagina: zelfde plek en focus op hetzelfde boek.
       if (staat.laatstGeopend) {
         window.scrollTo(0, staat.scrollPositie);
@@ -342,14 +386,6 @@
       staat.keuzes.beschikbaar = false;
       zetFormulier();
       nieuweLijst();
-    });
-    $('meer').addEventListener('click', function () {
-      var eerste = staat.getoond;
-      staat.getoond += PER_KEER;
-      toonLijst();
-      // Focus naar het eerste nieuwe boek, zodat toetsenbordgebruikers verder kunnen.
-      var links = $('resultaten').querySelectorAll('h3 a');
-      if (links[eerste]) links[eerste].focus();
     });
     $('resultaten').addEventListener('click', function (e) {
       var a = e.target.closest('a[data-id]');
