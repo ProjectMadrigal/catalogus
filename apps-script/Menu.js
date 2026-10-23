@@ -1,0 +1,144 @@
+/**
+ * Menu.js
+ * Het menu "Madrigal" in de spreadsheet, en de installatie van de tabbladen.
+ */
+
+/** Zet het menu klaar telkens de spreadsheet opent. */
+function onOpen() {
+  SpreadsheetApp.getUi().createMenu('Madrigal')
+    .addItem('1. Installeer tabbladen', 'installeer')
+    .addItem('2. Bouw de catalogus uit Stock en Zines', 'maakCatalogus')
+    .addItem('3. Vul aan uit Goodreads', 'vulAanUitGoodreads')
+    .addItem('4. Vul aan uit Open Library', 'vulAanUitOpenLibrary')
+    .addSeparator()
+    .addItem('Nieuwe boeken verwerken', 'verwerkNieuweBoeken')
+    .addItem('Werk de vertaaltabel Onderwerpen bij', 'werkOnderwerpenBijMenu')
+    .addItem('Ververs de publieke catalogus', 'verversMenu')
+    .addSeparator()
+    .addItem('Neem lopende uitleningen over uit het oude blad', 'neemUitleningenOver')
+    .addItem('Privacy-opruiming nu uitvoeren', 'ruimOp')
+    .addToUi();
+}
+
+function werkOnderwerpenBijMenu() {
+  var nieuw = werkOnderwerpenBij();
+  leegCache();
+  meld(nieuw + ' nieuwe genres toegevoegd aan Onderwerpen. Kijk de kolom filtergroepen na.');
+}
+
+function verversMenu() {
+  leegCache();
+  meld('De publieke catalogus haalt bij de volgende opvraging alles vers op.');
+}
+
+/**
+ * Menu: maakt de nieuwe tabbladen aan. Bestaande tabbladen en gegevens blijven
+ * staan: enkel ontbrekende tabbladen, kolommen en instellingen komen erbij.
+ */
+function installeer() {
+  var ss = spreadsheet();
+
+  // Instellingen: sleutel, waarde, uitleg.
+  var inst = ss.getSheetByName('Instellingen') || ss.insertSheet('Instellingen');
+  if (inst.getLastRow() === 0) {
+    inst.appendRow(['sleutel', 'waarde', 'uitleg']);
+    opmaakKop(inst, 3);
+  }
+  var bestaand = {};
+  inst.getDataRange().getValues().slice(1).forEach(function (r) { bestaand[schoon(r[0])] = r[1]; });
+  STANDAARD_INSTELLINGEN.forEach(function (rij) {
+    if (bestaand.hasOwnProperty(rij[0])) {
+      // Een lege code vullen we in met een willekeurige code.
+      if ((rij[0] === 'toegangscode_balie' || rij[0] === 'code_bestuur') && isLeeg(bestaand[rij[0]])) {
+        zetInstelling(inst, rij[0], willekeurigeCode());
+      }
+      return;
+    }
+    var waarde = rij[1];
+    if (rij[0] === 'toegangscode_balie' || rij[0] === 'code_bestuur') waarde = willekeurigeCode();
+    inst.appendRow([rij[0], waarde, rij[2]]);
+  });
+  inst.setColumnWidth(1, 280);
+  inst.setColumnWidth(2, 380);
+  inst.setColumnWidth(3, 480);
+  inst.getRange(1, 2, inst.getLastRow(), 2).setWrap(true);
+
+  // De andere tabbladen met hun kolommen.
+  Object.keys(KOLOMMEN).forEach(function (naam) {
+    var blad = ss.getSheetByName(naam) || ss.insertSheet(naam);
+    var kolommen = KOLOMMEN[naam];
+    var kop = blad.getLastRow() > 0 ? blad.getRange(1, 1, 1, Math.max(1, blad.getLastColumn())).getValues()[0].map(schoon) : [];
+    var ontbrekend = kolommen.filter(function (k) { return kop.indexOf(k) === -1; });
+    if (ontbrekend.length) {
+      var start = blad.getLastColumn() + 1;
+      if (!kop.some(function (k) { return k; })) start = 1;
+      blad.getRange(1, start, 1, ontbrekend.length).setValues([ontbrekend]);
+    }
+    opmaakKop(blad, blad.getLastColumn());
+  });
+
+  // Tekstopmaak voor kolommen die tekst moeten blijven (ISBN, telefoon, lenersnummer).
+  zetTekstopmaak(ss.getSheetByName('Catalogus'), ['isbn', 'boek_id']);
+  zetTekstopmaak(ss.getSheetByName('Leners'), ['telefoon']);
+
+  // Niet-publieke kolommen van de Catalogus grijs markeren.
+  var cat = ss.getSheetByName('Catalogus');
+  var catKop = cat.getRange(1, 1, 1, cat.getLastColumn()).getValues()[0].map(schoon);
+  ['herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd'].forEach(function (k) {
+    var i = catKop.indexOf(k);
+    if (i > -1) {
+      cat.getRange(1, i + 1).setBackground('#d9d9d9').setNote('Niet publiek. Deze kolom verschijnt nooit op de website.');
+    }
+  });
+
+  // Planning: elke nacht de privacy-opruiming, en de cache legen bij een wijziging.
+  verwijderTriggers('ruimOp');
+  verwijderTriggers('bijWijziging');
+  ScriptApp.newTrigger('ruimOp').timeBased().everyDays(1).atHour(3).create();
+  ScriptApp.newTrigger('bijWijziging').forSpreadsheet(ss).onEdit().create();
+
+  logboek('menu', 'installeer', 'tabbladen klaar');
+  meld('De tabbladen staan klaar. Kijk in Instellingen de codes en teksten na.');
+}
+
+/** Bij elke wijziging met de hand in Catalogus, Onderwerpen of Instellingen: cache leegmaken. */
+function bijWijziging(e) {
+  var naam = e && e.range ? e.range.getSheet().getName() : '';
+  if (['Catalogus', 'Onderwerpen', 'Instellingen', 'Uitleningen', 'Reservaties'].indexOf(naam) > -1) leegCache();
+}
+
+/** Opmaak van de kopregel: vet, vastgezet. */
+function opmaakKop(blad, kolommen) {
+  if (kolommen < 1) return;
+  blad.getRange(1, 1, 1, kolommen).setFontWeight('bold');
+  blad.setFrozenRows(1);
+}
+
+/** Zet de opmaak van kolommen op tekst, zodat 0470... en ISBN's niet als getal verminkt worden. */
+function zetTekstopmaak(blad, kolommen) {
+  if (!blad) return;
+  var kop = blad.getRange(1, 1, 1, blad.getLastColumn()).getValues()[0].map(schoon);
+  kolommen.forEach(function (k) {
+    var i = kop.indexOf(k);
+    if (i > -1) blad.getRange(2, i + 1, blad.getMaxRows() - 1, 1).setNumberFormat('@');
+  });
+}
+
+/** Past één instelling aan in het tabblad. */
+function zetInstelling(blad, sleutel, waarde) {
+  var waarden = blad.getDataRange().getValues();
+  for (var r = 1; r < waarden.length; r++) {
+    if (schoon(waarden[r][0]) === sleutel) {
+      blad.getRange(r + 1, 2).setValue(waarde);
+      return;
+    }
+  }
+}
+
+/** Een willekeurige code van 8 tekens, zonder tekens die je makkelijk verwart (0/O, 1/l). */
+function willekeurigeCode() {
+  var tekens = 'abcdefghjkmnpqrstuvwxyz23456789';
+  var code = '';
+  for (var i = 0; i < 8; i++) code += tekens.charAt(Math.floor(Math.random() * tekens.length));
+  return code;
+}
