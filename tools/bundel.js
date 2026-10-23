@@ -16,7 +16,9 @@ const MAP = path.join(ROOT, 'apps-script');
 const UIT = path.join(ROOT, 'madrigal-script.gs');
 
 function maakBundel() {
-  const bestanden = fs.readdirSync(MAP).filter((f) => f.endsWith('.js')).sort();
+  // Menu.js eerst: dan staat installeer() bovenaan de keuzelijst in Apps Script.
+  const bestanden = fs.readdirSync(MAP).filter((f) => f.endsWith('.js')).sort()
+    .sort((a, b) => (b === 'Menu.js') - (a === 'Menu.js'));
   const delen = [
     '/**',
     ' * madrigal-script.gs',
