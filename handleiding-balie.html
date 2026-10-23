@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Handleiding balie · Project Madrigal</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Past op één A4 bij afdrukken. */
+    .handleiding { max-width: 48rem; margin: 0 auto; }
+    .handleiding h2 { font-size: 1.15rem; margin: 1rem 0 .3rem; }
+    .handleiding ol, .handleiding ul { margin: 0; padding-left: 1.3rem; }
+    .handleiding p { margin: .3rem 0; }
+    .kolommen { display: grid; gap: 0 1.5rem; grid-template-columns: 1fr; }
+    @media (min-width: 40rem) { .kolommen { grid-template-columns: 1fr 1fr; } }
+    @media print {
+      @page { size: A4; margin: 12mm; }
+      body { font-size: 9.5pt; line-height: 1.35; }
+      .handleiding h1 { font-size: 15pt; }
+      .handleiding h2 { font-size: 10.5pt; margin-top: 6pt; }
+      .kolommen { grid-template-columns: 1fr 1fr; }
+      main { padding: 0; }
+    }
+  </style>
+</head>
+<body>
+  <main class="handleiding">
+    <p class="geen-print"><a href="balie.html">← Naar het uitleenscherm</a> · <button type="button" class="knop tweede" onclick="window.print()">Afdrukken</button></p>
+    <h1>Aan de balie: zo werkt het uitleenscherm</h1>
+    <p>Open <strong>balie.html</strong> op de smartphone of laptop van de bib. Elke handeling duurt hooguit een halve minuut.</p>
+
+    <div class="kolommen">
+      <section>
+        <h2>Eén keer per toestel: aanmelden</h2>
+        <p>Vul de code van de balie in en je voornaam. Het toestel onthoudt de code. Wissel je van vrijwilliger? Tik op <strong>Andere vrijwilliger</strong>.</p>
+
+        <h2>Uitlenen</h2>
+        <ol>
+          <li>Tik op <strong>Uitlenen</strong>.</li>
+          <li>Zoek het boek (titel, auteur, ISBN of nummer op het etiket) en tik op het exemplaar.</li>
+          <li>Typ het lenersnummer of de voornaam en tik op de lener.</li>
+          <li>Kijk de borg na (5 euro, cash of QR) en een eventuele gift.</li>
+          <li>Tik op <strong>Bevestig</strong>. Zeg de datum die groot verschijnt: <em>"Breng terug tegen vrijdag ..."</em></li>
+        </ol>
+
+        <h2>Terugbrengen</h2>
+        <ol>
+          <li>Tik op <strong>Terugbrengen</strong> en zoek het boek of de lener.</li>
+          <li>Duid aan of je de borg teruggaf en bevestig.</li>
+          <li>Verschijnt er een paars vak <em>"Leg dit boek apart voor lener ..."</em>? Leg het boek apart met een briefje: lenersnummer en voornaam.</li>
+        </ol>
+
+        <h2>Verlengen</h2>
+        <p>Op vraag van de lener. Zoek de uitlening en bevestig. Het boek krijgt 4 weken extra, tot een openingsdag.</p>
+      </section>
+
+      <section>
+        <h2>Reserveren</h2>
+        <p>Is een boek uitgeleend? Tik op <strong>Reserveren</strong>, kies boek en lener. Komt het boek terug, dan zegt het scherm dat je het apart moet leggen. Het ligt 2 openingsdagen klaar.</p>
+
+        <h2>Nieuwe lener</h2>
+        <ol>
+          <li>Tik op <strong>Nieuwe lener</strong>. Vul voornaam en telefoon of e-mail in.</li>
+          <li>Laat de lener de privacyverklaring lezen en vink de toestemming aan.</li>
+          <li>Schrijf het lenersnummer dat verschijnt op een kaartje voor de lener.</li>
+        </ol>
+
+        <h2>"Let op": een grens</h2>
+        <p>Bijvoorbeeld een derde boek, of een boek dat te laat is. Twijfel je? Tik op <strong>Annuleren</strong>. Is er een goede reden? Tik op <strong>Toch doorgaan</strong> en schrijf kort waarom. Het bestuur leest mee.</p>
+
+        <h2>Kleuren en tekst</h2>
+        <ul>
+          <li><strong>✓ Op tijd</strong> (groen)</li>
+          <li><strong>⏳ Vervalt binnenkort</strong> (oranje)</li>
+          <li><strong>! Te laat</strong> (rood)</li>
+          <li><strong>↻ Verlengd</strong> (paars)</li>
+        </ul>
+
+        <h2>Privacy</h2>
+        <p>Je ziet enkel voornaam en lenersnummer. Vraagt iemand naar contactgegevens of wil een lener gegevens laten wissen? Verwijs naar het bestuur.</p>
+
+        <h2>Werkt het niet?</h2>
+        <p>Tik op <strong>Vernieuw</strong>. Geen internet? Noteer op papier: datum, exemplaarnummer, lenersnummer, borg en betaalwijze. Geef het briefje aan het bestuur.</p>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
