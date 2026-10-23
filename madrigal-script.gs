@@ -27,6 +27,7 @@ var ACTIES = {
   reserveren: 'balie',
   annuleerReservatie: 'balie',
   nieuweLener: 'balie',
+  roosterOverzicht: 'balie',
   bestuurData: 'bestuur',
   borgTerugbetaald: 'bestuur',
   herinneringVerstuurd: 'bestuur',
@@ -185,6 +186,9 @@ var STANDAARD_INSTELLINGEN = [
   ['waarschuwing_dagen_voor_vervaldatum', 7, 'Vanaf hoeveel dagen voor de vervaldatum een uitlening "vervalt binnenkort" krijgt.'],
   ['ophaaltermijn_openingsdagen', 2, 'Hoeveel openingsdagen een gereserveerd boek apart blijft liggen. Daarna gaat het naar de volgende in de wachtrij.'],
   ['toegangscode_balie', '', 'Code voor de vrijwilligers aan de balie. Wijzig ze als ze uitlekt.'],
+  ['rooster_url', '', 'Optioneel. De URL van de web-app van het vrijwilligersrooster (eindigt op /exec). Dan tonen de balie en het bestuur het rooster.'],
+  ['rooster_code', '', 'De toegangscode voor vrijwilligers van het rooster. Blijft op de server, de browser ziet ze nooit.'],
+  ['rooster_link', 'https://projectmadrigal.github.io/rooster/', 'Adres van de roostertool, voor de knop "Beschikbaarheid invullen".'],
   ['code_bestuur', '', 'Code voor het bestuursscherm. Geef ze enkel aan het bestuur.'],
   ['bewaartermijn_afgesloten_uitleningen_maanden', 12, 'Na hoeveel maanden de koppeling tussen een teruggebrachte uitlening en de lener gewist wordt.'],
   ['goodreads_shelf', '', 'Naam van de Goodreads-shelf met de boeken van Madrigal, precies zoals op Goodreads. Leeg: alle boeken uit de export.'],
@@ -255,6 +259,10 @@ var DATUMKOLOMMEN = [
 ];
 
 var OUDE_SITE = 'https://www.projectmadrigal.be/';
+
+var ROOSTER_CACHE_SLEUTEL = 'rooster_v1';
+
+var ROOSTER_CACHE_SECONDEN = 10 * 60;
 
 var SITE_CACHE_SLEUTEL = 'site_v1';
 
@@ -691,6 +699,37 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
 }
 
 /**
+ * Zet de antwoorden van de roostertool (actie "maand") om naar één lijst avonden
+ * vanaf vandaag. Een maand zonder gepubliceerd rooster toont enkel de avonden.
+ * antwoorden: lijst van { maand, avonden: [{ datum, status, event }], rooster: [...] of null }
+ */
+function bouwRoosterOverzicht(antwoorden, vandaag) {
+  var avonden = [];
+  var nietGepubliceerd = [];
+  antwoorden.forEach(function (a) {
+    if (!a || !a.ok) return;
+    var perDatum = {};
+    (a.rooster || []).forEach(function (r) { perDatum[r.datum] = r; });
+    if (!a.rooster) nietGepubliceerd.push(a.maand);
+    (a.avonden || []).forEach(function (av) {
+      if (String(av.datum) < vandaag) return;
+      var r = perDatum[av.datum] || {};
+      avonden.push({
+        datum: av.datum,
+        status: av.status || 'open',
+        event: schoon(av.event),
+        vrijwilligers: r.vrijwilligers || [],
+        backups: r.backups || [],
+        afgemeld: r.afgemeld || [],
+        gepubliceerd: !!a.rooster
+      });
+    });
+  });
+  avonden.sort(function (x, y) { return x.datum < y.datum ? -1 : 1; });
+  return { avonden: avonden, nietGepubliceerd: nietGepubliceerd };
+}
+
+/**
  * Bouwt de inhoud van de startpagina (zonder de spreadsheet aan te raken).
  * tabellen: { nieuws, agenda, faq } met de rijen van die tabbladen.
  * staat: zoals in Uitlenen.js (voor de aanraders en hun beschikbaarheid).
@@ -987,6 +1026,18 @@ function haalOudeTabel(db, tabel) {
   });
   if (antwoord.getResponseCode() !== 200) return [];
   try { return JSON.parse(antwoord.getContentText()) || []; } catch (e) { return []; }
+}
+
+/** Vraagt één maand op bij de roostertool. */
+function haalRoosterMaand(url, code, maand) {
+  var antwoord = UrlFetchApp.fetch(url, {
+    method: 'post',
+    contentType: 'text/plain',
+    payload: JSON.stringify({ actie: 'maand', code: code, maand: maand }),
+    muteHttpExceptions: true,
+    followRedirects: true
+  });
+  try { return JSON.parse(antwoord.getContentText()); } catch (e) { return { ok: false, fout: 'Het rooster gaf een onverwacht antwoord.' }; }
 }
 
 /** Moet het script voor dit boek nog een beschrijving zoeken? */
@@ -2059,6 +2110,39 @@ function rolVoorCode(code, inst) {
   return '';
 }
 
+/** "2026-10" en de maand erna. */
+function roosterMaanden(vandaag) {
+  var j = Number(vandaag.slice(0, 4)), m = Number(vandaag.slice(5, 7));
+  var volgende = m === 12 ? (j + 1) + '-01' : j + '-' + tweeCijfers(m + 1);
+  return [vandaag.slice(0, 7), volgende];
+}
+
+/** Actie voor balie en bestuur: het rooster van deze en volgende maand. */
+function roosterOverzicht() {
+  var inst = leesInstellingen();
+  var link = schoon(inst.rooster_link) || 'https://projectmadrigal.github.io/rooster/';
+  var url = schoon(inst.rooster_url), code = schoon(inst.rooster_code);
+  if (!/^https:\/\/script\.google\.com\//.test(url) || !code) {
+    return { ok: true, data: { gekoppeld: false, link: link } };
+  }
+  var cache = CacheService.getScriptCache();
+  var bewaard = cache.get(ROOSTER_CACHE_SLEUTEL);
+  if (bewaard) return { ok: true, data: JSON.parse(bewaard) };
+
+  var vandaag = vandaagTekst();
+  var antwoorden = roosterMaanden(vandaag).map(function (m) { return haalRoosterMaand(url, code, m); });
+  var fout = antwoorden.filter(function (a) { return !a || !a.ok; })[0];
+  if (fout && fout.codeFout) return { ok: false, fout: 'De rooster_code in Instellingen klopt niet. Gebruik de toegangscode voor vrijwilligers van het rooster.' };
+  if (fout && antwoorden.every(function (a) { return !a || !a.ok; })) return { ok: false, fout: 'Het rooster kon niet laden: ' + (fout.fout || 'onbekende fout') };
+
+  var data = bouwRoosterOverzicht(antwoorden, vandaag);
+  data.gekoppeld = true;
+  data.link = link;
+  data.vandaag = vandaag;
+  try { cache.put(ROOSTER_CACHE_SLEUTEL, JSON.stringify(data), ROOSTER_CACHE_SECONDEN); } catch (e) { /* te groot: dan zonder cache */ }
+  return { ok: true, data: data };
+}
+
 /** Menu en nachtelijke planning: voert de opruiming uit op de spreadsheet. */
 function ruimOp() {
   var lock = LockService.getScriptLock();
@@ -2865,6 +2949,7 @@ function voegToe(lijst, obj) {
 /** Voert een actie uit. Wijzigende acties gebeuren onder een slot, zodat twee balies elkaar niet storen. */
 function voerActieUit(actie, invoer, rol) {
   if (actie === 'aanmelden') return { ok: true, rol: rol };
+  if (actie === 'roosterOverzicht') return roosterOverzicht(); // leest enkel, geen slot nodig
 
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) return { ok: false, fout: 'Het is even druk. Probeer het over een paar seconden opnieuw.' };

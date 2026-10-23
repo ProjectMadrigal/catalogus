@@ -194,12 +194,21 @@
       ['Verlengen', '↻', toonVerlengen],
       ['Reserveren', '⧗', toonReserveren],
       ['Lener opzoeken', '🔍', toonLenerOpzoeken],
-      ['Nieuwe lener', '＋', toonNieuweLener]
+      ['Nieuwe lener', '＋', toonNieuweLener],
+      ['Rooster', '📅', toonRooster]
     ];
     D.vervang(werkvlak, el('h2', { class: 'verborgen' }, 'Menu'), el('nav', { class: 'menu-raster', 'aria-label': 'Wat wil je doen?' },
       knoppen.map(function (k) {
         return el('button', { type: 'button', class: 'knop', onclick: function () { k[2](); } }, el('span', { 'aria-hidden': 'true' }, k[1]), k[0]);
       })));
+  }
+
+  /* ---------- Rooster ---------- */
+
+  function toonRooster() {
+    var vak = el('div');
+    scherm('Rooster', el('p', {}, 'Wie staat er de komende vrijdagen in de bib?'), vak);
+    B.toonRooster(vak);
   }
 
   /* ---------- Uitlenen ---------- */
