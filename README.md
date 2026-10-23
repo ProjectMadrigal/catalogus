@@ -72,7 +72,8 @@ GitHub Pages (index.html, balie.html, bestuur.html)
 
 1. Open de stockspreadsheet in Google Drive, met het Google-account van het vrijwilligersrooster.
 2. Kies **Bestand > Een kopie maken**. Noem de kopie bijvoorbeeld `Madrigal catalogus`.
-3. Deel de kopie **enkel met het bestuur**. Ze bevat straks leners en contactgegevens. Deel ze niet met alle vrijwilligers: zij werken via het uitleenscherm.
+3. Zet de tijdzone van de spreadsheet goed: **Bestand > Instellingen > Tijdzone**, kies `(GMT+01:00) Brussel` en klik op **Instellingen opslaan**. Anders kloppen de datums en tijdstippen niet.
+4. Deel de kopie **enkel met het bestuur**. Ze bevat straks leners en contactgegevens. Deel ze niet met alle vrijwilligers: zij werken via het uitleenscherm.
 
 **Het script installeren**
 
