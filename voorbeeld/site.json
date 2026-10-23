@@ -93,7 +93,8 @@
    "r": [
     "Sam"
    ],
-   "vrij": true
+   "vrij": true,
+   "n": 0
   },
   {
    "id": "B0002",
@@ -104,7 +105,8 @@
    "r": [
     "Robin"
    ],
-   "vrij": true
+   "vrij": true,
+   "n": 0
   },
   {
    "id": "B0003",
@@ -116,7 +118,8 @@
     "Sam",
     "Kim"
    ],
-   "vrij": true
+   "vrij": true,
+   "n": 0
   },
   {
    "id": "B0004",
@@ -127,7 +130,8 @@
    "r": [
     "Sam"
    ],
-   "vrij": false
+   "vrij": false,
+   "n": 0
   },
   {
    "id": "B0005",
@@ -138,7 +142,8 @@
    "r": [
     "Robin"
    ],
-   "vrij": true
+   "vrij": true,
+   "n": 0
   },
   {
    "id": "B0006",
@@ -150,7 +155,8 @@
     "Sam",
     "Kim"
    ],
-   "vrij": true
+   "vrij": true,
+   "n": 0
   },
   {
    "id": "B0007",
@@ -158,10 +164,9 @@
    "a": "Peeters, Lien",
    "c": "",
    "s": "boek",
-   "r": [
-    "Sam"
-   ],
-   "vrij": true
+   "r": [],
+   "vrij": true,
+   "n": 1
   },
   {
    "id": "B0008",
@@ -169,10 +174,9 @@
    "a": "Reyes, Alex",
    "c": "",
    "s": "boek",
-   "r": [
-    "Robin"
-   ],
-   "vrij": false
+   "r": [],
+   "vrij": false,
+   "n": 1
   }
  ]
 }

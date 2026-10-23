@@ -99,7 +99,7 @@
   function aanrader(b) {
     var beeld = b.c ? el('img', { class: 'cover', src: b.c, alt: '', loading: 'lazy' }) : D.plaatshouder(b);
     if (b.c) beeld.addEventListener('error', function () { beeld.replaceWith(D.plaatshouder(b)); });
-    var door = (b.r || []).length ? T.t('aanraderVan', { naam: b.r.join(', ') }) : '';
+    var door = (b.r || []).length ? T.t('aanraderVan', { naam: b.r.join(', ') }) : (b.n ? T.t('nieuwBinnen') : '');
     return el('li', { class: 'aanrader' },
       el('a', { href: 'boeken.html#/boek/' + encodeURIComponent(b.id) },
         beeld,

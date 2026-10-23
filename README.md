@@ -179,6 +179,8 @@ De Catalogus is nu de enige bron. Stock en Zines heb je niet meer nodig.
 | `uitleenbaar` | nee = niet uitleenbaar (bv. zines te koop) |
 | `publiek` | nee = niet zichtbaar in de publieke catalogus, wel uitleenbaar aan de balie |
 | `beschrijving`, `cover_url` | korte beschrijving en link naar de cover |
+| `startpagina` | leeg = automatisch, **ja** = altijd bij de Aanraders op de startpagina, **nee** = nooit |
+| `toegevoegd_op` | de dag waarop het boek in de Catalogus kwam. Het script vult dit zelf in. |
 | `herkomst` (grijs) | **nooit publiek**: donatie, bruikleen, gift, schenker, interne notities |
 | `isbn_origineel`, `bron_sleutel`, `ol_gecontroleerd` (grijs) | hulpkolommen voor het script |
 
@@ -441,9 +443,18 @@ De website heeft de opmaak van de oude website (projectmadrigal.be), maar alle i
 | `openingsuren`, `openingsuren_en` | de openingsuren zoals ze op de startpagina staan |
 | `mail_algemeen`, `mail_events` | de mailadressen onder "Kom eens langs" |
 | `aanraders_verbergen` | namen van wie de aanraders niet op de startpagina staan |
+| `nieuw_op_startpagina_dagen` | hoeveel dagen een nieuw boek bij de Aanraders staat (0 = nooit automatisch) |
 | `tekst_welkom_en`, `tekst_uitleg_lenen_en`, `tekst_privacy_en` | de Engelse versie van de teksten op de pagina Boeken |
 
-**Aanraders.** De startpagina toont tot 12 boeken met een naam in de kolom `aanrader` van de Catalogus. Beschikbare boeken komen eerst, de volgorde wisselt elke dag. Wil je de aanraders van iemand tijdelijk niet op de startpagina? Zet die naam in de instelling `aanraders_verbergen` (meerdere namen gescheiden door komma's). Het label en de filter in de catalogus blijven. Wis de naam om ze terug te tonen.
+**Aanraders.** De startpagina toont tot 12 boeken uit de Catalogus. Beschikbare boeken komen eerst, de volgorde wisselt elke dag. Een boek komt in aanmerking als:
+
+- iemand het aanraadt: er staat een naam in de kolom `aanrader`. Het label wordt "Aanrader van ...".
+- het nieuw binnen is: het kwam minder dan `nieuw_op_startpagina_dagen` dagen geleden in de Catalogus (standaard 60). Het label wordt "Nieuw binnen". Boeken van de eerste opbouw tellen niet als nieuw.
+- je zelf **ja** zet in de kolom `startpagina`.
+
+Zet je **nee** in de kolom `startpagina`, dan staat het boek nooit op de startpagina, ook niet als het nieuw is of iemand het aanraadt.
+
+Wil je de aanraders van iemand tijdelijk niet op de startpagina? Zet die naam in de instelling `aanraders_verbergen` (meerdere namen gescheiden door komma's). Het label en de filter in de catalogus blijven. Wis de naam om ze terug te tonen.
 
 **Vaste teksten en de pagina Over ons.** De knoppen, menu's en titels staan in `i18n.js`. De tekst van Over ons staat rechtstreeks in `over-ons.html`, met een blok `data-taal="nl"` en een blok `data-taal="en"`. Pas je de ene taal aan, pas dan ook de andere aan.
 

@@ -15,7 +15,7 @@ var KOLOMMEN = {
   'Catalogus': [
     'boek_id', 'soort', 'titel', 'auteur', 'isbn', 'uitgeverij', 'jaartal', 'taal', 'paginas',
     'uitvoering', 'nieuwstaat', 'aanrader', 'genre', 'extra_onderwerpen', 'klassieker', 'aantal',
-    'uitleenbaar', 'publiek', 'beschrijving', 'cover_url',
+    'uitleenbaar', 'publiek', 'beschrijving', 'cover_url', 'startpagina', 'toegevoegd_op',
     // Vanaf hier: nooit publiek.
     'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd'
   ],
@@ -43,7 +43,7 @@ var KOLOMMEN = {
 var DATUMKOLOMMEN = [
   'datum_inschrijving', 'datum_uit', 'oorspronkelijke_vervaldatum', 'vervaldatum', 'datum_terug',
   'datum_verlenging', 'borg_terugbetaald', 'laatste_herinnering', 'datum_reservatie', 'datum_klaar',
-  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd'
+  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd', 'toegevoegd_op'
 ];
 
 /** Het actieve spreadsheetbestand. */

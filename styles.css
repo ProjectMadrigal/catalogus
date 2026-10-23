@@ -274,7 +274,7 @@ textarea { min-height: 6rem; }
 }
 .ph-vlak::before { content: ""; position: absolute; left: 17cqw; right: 10cqw; top: 9cqw; border-top: max(1px, 1.2cqw) solid currentColor; opacity: .6; }
 .ph-titel {
-  font-size: 11cqw; font-weight: 700; line-height: 1.15; overflow-wrap: break-word;
+  font-size: 10cqw; font-weight: 700; line-height: 1.15; overflow-wrap: break-word;
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden;
 }
 .ph-auteur { font-size: 8cqw; line-height: 1.2; opacity: .85; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
