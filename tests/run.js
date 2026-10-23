@@ -304,6 +304,41 @@ test('rooster: deze en volgende maand, vanaf vandaag, ongepubliceerde maand zond
   gelijk(d.nietGepubliceerd, ['2026-11']);
 });
 
+test('ordenen: elke instelling staat in precies één groep', () => {
+  const inGroep = [];
+  M.INSTELLING_GROEPEN.forEach((g) => g[1].forEach((s) => inGroep.push(s)));
+  const sleutels = M.STANDAARD_INSTELLINGEN.map((r) => r[0]);
+  gelijk(sleutels.filter((s) => !inGroep.includes(s)), []);
+  gelijk(inGroep.filter((s, i) => inGroep.indexOf(s) !== i), []);
+  gelijk(inGroep.filter((s) => !sleutels.includes(s)), []);
+});
+test('ordenen: waarden blijven, oude koppen weg, onbekende sleutels naar Overige', () => {
+  const r = M.ordenInstellingRijen([
+    ['max_verlengingen', 3, 'oude uitleg'],
+    ['── OUDE KOP ──', '', ''],
+    ['', '', ''],
+    ['eigen_notitie', 'iets', 'zelf toegevoegd'],
+    ['toegangscode_balie', 'geheim1', '']
+  ]);
+  const waarde = (s) => r.rijen.find((x) => x[0] === s);
+  assert.strictEqual(r.rijen[0][0], '── TOEGANG ──');
+  assert.strictEqual(waarde('toegangscode_balie')[1], 'geheim1');
+  assert.strictEqual(waarde('max_verlengingen')[1], 3);
+  assert.notStrictEqual(waarde('max_verlengingen')[2], 'oude uitleg');
+  assert.strictEqual(waarde('uitleentermijn_weken')[1], 4);
+  assert.strictEqual(waarde('eigen_notitie')[1], 'iets');
+  assert.strictEqual(r.rijen[r.rijen.length - 2][0], '── OVERIGE ──');
+  assert.ok(!r.rijen.some((x) => x[0] === '── OUDE KOP ──' || x[0] === ''));
+  r.koppen.forEach((i) => assert.ok(M.isInstellingKop(r.rijen[i][0])));
+  // Nog eens ordenen verandert niets.
+  gelijk(M.ordenInstellingRijen(r.rijen).rijen, r.rijen);
+});
+test('ordenen: tabbladen per gebruik, onbekende achteraan', () => {
+  const v = M.tabbladVolgorde(['Instellingen', 'Oud uitleenblad', 'Catalogus', 'Uitleningen', 'Logboek', 'Stock']);
+  gelijk(v.map((t) => t.naam), ['Uitleningen', 'Catalogus', 'Instellingen', 'Logboek', 'Stock', 'Oud uitleenblad']);
+  assert.strictEqual(v[v.length - 1].kleur, null);
+});
+
 test('Google Books: cover in https, enkel lege velden, eigen cover blijft', () => {
   const info = { imageLinks: { thumbnail: 'http://books.google.com/books/content?id=abc&printsec=frontcover&img=1&zoom=1&edge=curl' }, language: 'nl', pageCount: 120, publisher: 'Verzonnen BV', publishedDate: '1999-05-01', description: '<b>Een</b> verzonnen boek.' };
   const v = M.verwerkGoogleBooks({ isbn: '9780306406157', cover_url: '', uitgeverij: 'Bestaand', jaartal: '', paginas: '', taal: '', beschrijving: '' }, info);
