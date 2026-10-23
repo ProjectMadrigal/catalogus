@@ -1,0 +1,13 @@
+# Nooit gegevens in deze publieke repository: geen exports van boeken, leners of schenkers.
+*.csv
+*.xlsx
+*.xls
+*.ods
+*.tsv
+export/
+gegevens/
+node_modules/
+.DS_Store
+
+# Reservekopieën van git (git bundle), horen niet in de repository.
+*.bundle
