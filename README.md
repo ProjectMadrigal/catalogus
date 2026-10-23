@@ -1,190 +1,109 @@
-# Catalogus en uitleensysteem van Project Madrigal
+# Project Madrigal: website, catalogus en uitleensysteem
 
-Project Madrigal is een queer bibliotheek in Antwerpen, gedragen door vrijwilligers. Deze repository bevat de volledige website en het uitleensysteem:
+Project Madrigal is een queer bibliotheek in Antwerpen, gedragen door vrijwilligers. Deze handleiding is geschreven voor vrijwilligers en bestuursleden **zonder technische kennis**. Je hebt niets te installeren: alles gebeurt in je browser, in de Google-spreadsheet en op GitHub.
 
 | Scherm | Voor wie | Adres |
 | --- | --- | --- |
-| **Startpagina** | iedereen: nieuws, agenda, aanraders, veelgestelde vragen, adres | `index.html` |
-| **Boeken** (de catalogus) | iedereen, zonder account | `boeken.html` |
-| **Over ons** | iedereen | `over-ons.html` |
-| **Uitleenscherm** | vrijwilligers aan de balie (met code) | `balie.html` |
-| **Bestuursscherm** | het bestuur (met een aparte code) | `bestuur.html` |
+| **Startpagina** | iedereen: nieuws, agenda, aanraders, veelgestelde vragen, adres | https://projectmadrigal.github.io/ |
+| **Boeken** (de catalogus) | iedereen, zonder account | https://projectmadrigal.github.io/boeken.html |
+| **Over ons** | iedereen | https://projectmadrigal.github.io/over-ons.html |
+| **Uitleenscherm** | vrijwilligers aan de balie (met code) | https://projectmadrigal.github.io/balie.html |
+| **Bestuursscherm** | het bestuur (met een aparte code) | https://projectmadrigal.github.io/bestuur.html |
+| **Rooster** | vrijwilligers en planner (aparte tool) | https://projectmadrigal.github.io/rooster/ |
 
-Daarnaast is er een **handleiding van één pagina** voor de balie, om af te drukken: `handleiding-balie.html`.
+Daarnaast is er een **handleiding van één pagina** voor de balie, om af te drukken: [`handleiding-balie.html`](handleiding-balie.html).
+
+**Nieuw hier?** Lees eerst [Deel A: dagelijks gebruik](#deel-a-dagelijks-gebruik). Deel C beschrijft de installatie: die is al gebeurd, je hebt ze enkel nodig om alles opnieuw op te zetten.
 
 ## Inhoud
 
-1. [Wat de tool doet](#1-wat-de-tool-doet)
-2. [Hoe het in elkaar zit](#2-hoe-het-in-elkaar-zit)
-3. [Een kopie van de stockspreadsheet maken en het script installeren](#3-een-kopie-van-de-stockspreadsheet-maken-en-het-script-installeren)
-4. [De Goodreads-export maken en als tabblad plakken](#4-de-goodreads-export-maken-en-als-tabblad-plakken)
-5. [De catalogus opbouwen: de functies in volgorde](#5-de-catalogus-opbouwen-de-functies-in-volgorde)
-6. [De vertaaltabel Onderwerpen nakijken](#6-de-vertaaltabel-onderwerpen-nakijken)
-7. [Lopende uitleningen overnemen uit het oude uitleenblad](#7-lopende-uitleningen-overnemen-uit-het-oude-uitleenblad)
-8. [Het script publiceren als web-app](#8-het-script-publiceren-als-web-app)
-9. [GitHub Pages aanzetten](#9-github-pages-aanzetten)
-10. [Een nieuw boek toevoegen](#10-een-nieuw-boek-toevoegen)
-11. [Werken aan de balie](#11-werken-aan-de-balie)
-12. [Na een wijziging in het script: een nieuwe versie publiceren](#12-na-een-wijziging-in-het-script-een-nieuwe-versie-publiceren)
-13. [Privacy en veiligheid](#13-privacy-en-veiligheid)
-14. [Wat te doen als iets niet werkt](#14-wat-te-doen-als-iets-niet-werkt)
-15. [Waar alles staat, voor een volgende beheerder](#15-waar-alles-staat-voor-een-volgende-beheerder)
-16. [De website: nieuws, agenda, vragen en Engelse teksten](#16-de-website-nieuws-agenda-vragen-en-engelse-teksten)
-17. [Het vrijwilligersrooster in de balie en het bestuursscherm](#17-het-vrijwilligersrooster-in-de-balie-en-het-bestuursscherm)
-18. [Orde in de spreadsheet](#18-orde-in-de-spreadsheet)
+**Deel A. Dagelijks gebruik**
+
+1. [Waar staat wat](#a1-waar-staat-wat)
+2. [Een nieuw boek toevoegen](#a2-een-nieuw-boek-toevoegen)
+3. [Aanraders en nieuwe boeken op de startpagina](#a3-aanraders-en-nieuwe-boeken-op-de-startpagina)
+4. [Nieuws, agenda en veelgestelde vragen](#a4-nieuws-agenda-en-veelgestelde-vragen)
+5. [Teksten, adres en openingsuren aanpassen](#a5-teksten-adres-en-openingsuren-aanpassen)
+6. [Werken aan de balie](#a6-werken-aan-de-balie)
+7. [Het bestuursscherm](#a7-het-bestuursscherm)
+8. [Wat te doen als iets niet werkt](#a8-wat-te-doen-als-iets-niet-werkt)
+
+**Deel B. Achtergrond**
+
+1. [Wat de tool doet](#b1-wat-de-tool-doet)
+2. [Hoe het in elkaar zit](#b2-hoe-het-in-elkaar-zit)
+3. [Privacy en veiligheid](#b3-privacy-en-veiligheid)
+4. [Woordenlijst](#b4-woordenlijst)
+
+**Deel C. Eenmalige installatie (al gebeurd)**
+
+1. [De spreadsheet en het script installeren](#c1-de-spreadsheet-en-het-script-installeren)
+2. [De catalogus opbouwen](#c2-de-catalogus-opbouwen)
+3. [De vertaaltabel Onderwerpen nakijken](#c3-de-vertaaltabel-onderwerpen-nakijken)
+4. [Lopende uitleningen overnemen uit het oude uitleenblad](#c4-lopende-uitleningen-overnemen-uit-het-oude-uitleenblad)
+5. [Het script publiceren als web-app](#c5-het-script-publiceren-als-web-app)
+6. [De website online zetten met GitHub Pages](#c6-de-website-online-zetten-met-github-pages)
+7. [Nieuws, agenda en vragen overnemen van de oude website](#c7-nieuws-agenda-en-vragen-overnemen-van-de-oude-website)
+8. [Het rooster koppelen](#c8-het-rooster-koppelen)
+9. [Het eigen domein projectmadrigal.be](#c9-het-eigen-domein-projectmadrigalbe)
+
+**Deel D. Voor een beheerder**
+
+1. [Een nieuwe versie van het script publiceren](#d1-een-nieuwe-versie-van-het-script-publiceren)
+2. [Orde in de spreadsheet](#d2-orde-in-de-spreadsheet)
+3. [De website zelf aanpassen](#d3-de-website-zelf-aanpassen)
+4. [Waar alles staat](#d4-waar-alles-staat)
 
 ---
 
-## 1. Wat de tool doet
+# Deel A. Dagelijks gebruik
 
-**De publieke catalogus**
+## A1. Waar staat wat
 
-- Je zoekt op titel, auteur, uitgeverij of ISBN. Tikfouten, hoofdletters, accenten en lidwoorden (de, het, the, le, ...) maken niet uit.
-- Je filtert op onderwerp, taal, nieuw of tweedehands, uitvoering, periode van uitgave, aanrader, en "enkel beschikbaar".
-- Je sorteert op titel, auteur of jaartal.
-- Elk boek toont een label: **beschikbaar**, **uitgeleend** (met de verwachte terugkeer), **gereserveerd** of **niet uitleenbaar**. Bij meerdere exemplaren: "1 van 2 beschikbaar".
-- Elk boek heeft een eigen pagina met een vaste link, om te delen.
-- De catalogus toont nooit wie een boek leent, waar een boek vandaan komt, of interne notities.
+Bijna alles beheer je in **de Google-spreadsheet van de catalogus**, in het Google-account van Madrigal. Deel die spreadsheet enkel met het bestuur: ze bevat leners en contactgegevens.
 
-**Het uitleenscherm** vervangt het papieren uitleenblad en het oude digitale uitleenblad. Een vrijwilliger leent uit, neemt terug, verlengt, reserveert, zoekt een lener op en schrijft nieuwe leners in. Een vrijwilliger ziet van een lener enkel de voornaam en het lenersnummer.
+De tabbladen hebben een kleur per groep:
 
-**Het bestuursscherm** toont wat te laat is (met contactgegevens en een herinnering om te kopiëren), wat binnenkort vervalt, alle lopende uitleningen, de borgen en giften, de reservaties, de uitzonderingen, de leners en eenvoudige cijfers.
+| Kleur | Tabbladen | Waarvoor |
+| --- | --- | --- |
+| paars | Uitleningen, Reservaties, Leners, Uitzonderingen | wat de balie registreert. Pas dit enkel aan als je weet wat je doet. |
+| geel | Catalogus, Onderwerpen, Na te kijken | de boeken en de filters op de website |
+| petrol | Nieuws, Agenda, Veelgestelde vragen | de inhoud van de startpagina |
+| zwart | Instellingen, Logboek | teksten, codes, regels, en een logboek van wat het script deed |
+| grijs | Stock, Zines, Goodreads-export | de oude bronnen, zelden nodig |
 
-**Grenzen en uitzonderingen.** De tool bewaakt een paar regels: maximum 2 boeken per lener, 1 verlenging, niet verlengen als iemand anders wacht, niet uitlenen aan iemand met een boek te laat, en niet uitlenen van een boek dat voor iemand anders klaarligt. Een vrijwilliger mag zo'n grens bewust overschrijden, maar moet dan een reden invullen. Het bestuur ziet die reden.
+Bovenaan de spreadsheet staat het menu **Madrigal**. Zie je het niet? Vernieuw de pagina en wacht 20 seconden.
 
-## 2. Hoe het in elkaar zit
+**Een wijziging in de spreadsheet staat na een minuut op de website.** Je hoeft niets te publiceren. Zie je ze niet, vernieuw de website dan met **Ctrl+F5** (op een Mac Cmd+Shift+R).
 
-```
-Google-spreadsheet (catalogus, leners, uitleningen)
-        │  alle gegevens blijven hier, in Google
-        ▼
-Google Apps Script (de code in de map apps-script/)
-        │  publiceert een "web-app": een adres dat gegevens doorgeeft
-        ▼
-GitHub Pages (index.html, boeken.html, over-ons.html, balie.html, bestuur.html)
-           de schermen die je in de browser ziet
-```
+## A2. Een nieuw boek toevoegen
 
-- **Alles is gratis**: een Google-spreadsheet met Apps Script, en GitHub Pages.
-- **Alle gegevens blijven in Google.** Deze repository is publiek en bevat enkel code. Er komen hier nooit gegevens van boeken, leners of schenkers in. Ook de tests en de voorbeelden gebruiken verzonnen gegevens.
-- De publieke catalogus vraagt de web-app enkel de publieke velden. Die bewaart het script een tijdje (tot 6 uur) in zijn geheugen, zodat 2.500 boeken snel laden. Bij elke uitlening en elke wijziging in de spreadsheet ververst dat geheugen vanzelf.
+1. Open het tabblad **Catalogus**.
+2. Voeg onderaan een rij toe. Vul minstens het **ISBN** in, liefst ook titel en auteur. Laat `boek_id` leeg.
+3. Zet bij een zine `zine` in de kolom `soort`.
+4. Kies **Madrigal > Nieuwe boeken verwerken**. Het script:
+   - geeft het boek een vaste boek-ID (B0001, B0002, ... en Z0001 voor zines);
+   - maakt ISBN, taal en uitvoering netjes;
+   - zoekt de ontbrekende gegevens, een cover en een beschrijving op bij Goodreads (als dat tabblad er nog is), Open Library en Google Books;
+   - vertaalt de beschrijving naar het Nederlands en het Engels;
+   - zet het boek 60 dagen bij de Aanraders op de startpagina, met het label "Nieuw binnen".
 
-## 3. Een kopie van de stockspreadsheet maken en het script installeren
+   Dat opzoeken gebeurt in porties en duurt een paar minuten. Rechtsonder verschijnt telkens een melding. Je hoeft niets te doen.
+5. Kijk het genre en de filtergroepen na, en eventueel het tabblad **Na te kijken**.
+6. Schrijf het **exemplaarnummer** op het etiket van het boek, bijvoorbeeld `B0012-1`. Aan de balie zoek je daar het snelst op.
 
-> Werk altijd eerst op een **kopie**. Het origineel blijft intact tot alles getest is.
+**Zelf een cover toevoegen.** Vond het script geen cover? Zoek het boek online op, bijvoorbeeld op Goodreads of de website van de uitgeverij. Klik met de rechtermuisknop op de cover en kies **Afbeeldingsadres kopiëren**. Plak dat adres in de kolom `cover_url`. Het moet beginnen met `https://`. Zonder cover toont de website een gekleurde omslag met de titel.
 
-**De kopie maken**
+**Zelf een beschrijving schrijven.** Typ ze in de kolom `beschrijving`. Het script overschrijft nooit wat je zelf invult. Wil je ook een Engelse versie, typ die in `beschrijving_en`, of laat ze leeg en kies **Madrigal > 7. Vertaal de beschrijvingen**.
 
-1. Open de stockspreadsheet in Google Drive, met het Google-account van het vrijwilligersrooster.
-2. Kies **Bestand > Een kopie maken**. Noem de kopie bijvoorbeeld `Madrigal catalogus`.
-3. Zet de tijdzone van de spreadsheet goed: **Bestand > Instellingen > Tijdzone**, kies `(GMT+01:00) Brussel` en klik op **Instellingen opslaan**. Anders kloppen de datums en tijdstippen niet.
-4. Deel de kopie **enkel met het bestuur**. Ze bevat straks leners en contactgegevens. Deel ze niet met alle vrijwilligers: zij werken via het uitleenscherm.
+**Nog meer:**
 
-**Het script installeren**
+- Een extra exemplaar van een boek dat er al is? Verhoog het getal in de kolom `aantal`.
+- Een boek uit de publieke catalogus halen zonder het te verwijderen? Zet `publiek` op **nee**. Aan de balie kan je het nog uitlenen.
+- Een boek dat niet uitgeleend mag worden? Zet `uitleenbaar` op **nee**.
+- Een boek in de filtergroep Klassiekers? Zet **ja** in de kolom `klassieker`.
 
-1. Open de kopie. Kies **Extensies > Apps Script**. Er opent een nieuw venster met een bestand `Code.gs`.
-2. Klik links op het tandwiel **Projectinstellingen**. Zie je links enkel icoontjes? Ga er met de muis over, dan verschijnen de namen.
-   - Zet de **tijdzone** op `(GMT+01:00) Brussel`. Dat is de enige instelling die je hier nodig hebt.
-   - Zie je ook een vakje **"appsscript.json-manifestbestand weergeven in editor"**? Dan mag je het aanvinken en in de Editor de inhoud van `appsscript.json` vervangen door die van [`apps-script/appsscript.json`](apps-script/appsscript.json). Zie je het vakje niet? Sla het dan over. Het script werkt ook zonder.
-3. Ga terug naar de **Editor** (het icoon `< >`).
-4. Open op GitHub het bestand [`madrigal-script.gs`](madrigal-script.gs). Daarin staat alle code in één bestand.
-   - Klik rechtsboven op het icoon **Copy raw file** (twee blaadjes over elkaar). Nu staat alles in je klembord.
-   - Ga terug naar Apps Script en klik in `Code.gs`.
-   - Selecteer alles wat er staat (Ctrl+A, op een Mac Cmd+A) en plak (Ctrl+V, op een Mac Cmd+V).
-5. Klik op **Opslaan** (het diskette-icoon).
-6. Ga terug naar de spreadsheet en **vernieuw** de pagina. Na een paar seconden verschijnt het menu **Madrigal**.
-
-**Installeren**
-
-1. Kies **Madrigal > 1. Installeer tabbladen**. Zie je het menu niet? Kies dan in Apps Script bovenaan, naast **Uitvoeren**, de functie **installeer** en klik op **Uitvoeren**.
-2. De eerste keer vraagt Google om toestemming. Kies je account, klik op **Geavanceerd** en daarna op **Ga naar ... (onveilig)**. Dat "onveilig" betekent enkel dat Google het script niet zelf nagekeken heeft. Het is jouw eigen script.
-3. De tabbladen **Instellingen, Catalogus, Onderwerpen, Leners, Uitleningen, Reservaties, Uitzonderingen, Na te kijken** en **Logboek** verschijnen. Stock, Zines, Sheet2 en Sheet3 blijven ongemoeid.
-4. Open het tabblad **Instellingen**. De codes voor de balie en het bestuur zijn willekeurig aangemaakt. Pas ze aan als je wil, en kijk de teksten na (welkom, uitleg over lenen, privacy, herinneringen). Vul in de privacytekst het mailadres van het bestuur in.
-
-Je mag "Installeer tabbladen" later opnieuw uitvoeren. Bestaande tabbladen, gegevens en instellingen blijven staan. Enkel wat ontbreekt, komt erbij.
-
-## 4. De Goodreads-export maken en als tabblad plakken
-
-Goodreads heeft voor niche-titels vaak completere gegevens. Er is geen open koppeling meer, dus je maakt een export.
-
-1. Meld je aan op Goodreads met het account van de shelf.
-2. Ga naar **My Books**. Klik links onderaan op **Import and export**.
-3. Klik op **Export Library**. Na even wachten verschijnt een link naar een CSV-bestand. Download het.
-4. Maak in de spreadsheet een nieuw tabblad met precies de naam **`Goodreads-export`**.
-5. Klik in dat tabblad op cel A1. Kies **Bestand > Importeren > Uploaden**, kies het CSV-bestand, en kies **"Huidige blad vervangen"**.
-6. Zet in het tabblad **Instellingen** bij `goodreads_shelf` de naam van de Madrigal-shelf, precies zoals op Goodreads. De export bevat je volledige bibliotheek: met deze instelling gebruikt het script enkel de boeken op die shelf.
-7. Verwijder het tabblad `Goodreads-export` nadat je "Vul aan uit Goodreads" uitvoerde. Het bevat ook de rest van je persoonlijke bibliotheek, met je beoordelingen.
-8. Bewaar het CSV-bestand niet in deze repository.
-
-Goed om te weten: de export van Goodreads bevat geen taal en geen beschrijving. Die vult Open Library later aan.
-
-## 5. De catalogus opbouwen: de functies in volgorde
-
-Voer de functies uit via het menu **Madrigal**, in deze volgorde. Elke functie mag je meermaals uitvoeren: er komt niets dubbel, en wat je met de hand verbeterde, blijft staan.
-
-**Stap 1. Madrigal > 2. Bouw de catalogus uit Stock en Zines**
-
-- Leest Stock en Zines en schrijft één nette lijst naar het tabblad **Catalogus**.
-- Slaat lege rijen en herhaalde kopregels over. Negeert het selectievakje in kolom A.
-- Maakt ISBN's netjes: spaties en streepjes weg, ISBN-10 wordt ISBN-13, het controlecijfer wordt nagekeken. Een ongeldig ISBN komt in de kolom `isbn_origineel`, zodat je het kan nakijken.
-- Maakt taal, uitvoering en ja/nee eenvormig.
-- Geeft elk boek een vaste **boek-ID** (B0001, B0002, ... en Z0001 voor zines). Die verandert nooit.
-- Zet de herkomst in een aparte kolom die nooit publiek wordt. Staat er "niet op site" in de herkomst, dan krijgt het boek `publiek = nee`.
-- Zines met genre "verkoop" krijgen `uitleenbaar = nee`.
-- Vult de vertaaltabel **Onderwerpen** met alle genres.
-
-**Stap 2. Madrigal > 3. Vul aan uit Goodreads**
-
-- Koppelt eerst op ISBN, anders op titel en achternaam van de auteur.
-- Vult enkel **lege** velden aan: uitgeverij, jaartal en pagina's. Bestaande waarden worden nooit overschreven.
-- Staat er al een waarde in de Catalogus, dan wint de Catalogus altijd: de stocklijst beschrijft het boek in de kast.
-- Naar **Na te kijken** gaan enkel een koppeling op alleen de titel (de auteur verschilt), en een ISBN uit Goodreads voor boeken zonder ISBN. Zet zo'n ISBN enkel in de Catalogus als het klopt met jouw uitgave.
-
-**Stap 3. Madrigal > 4. Vul aan uit Open Library**
-
-- Zoekt voor boeken met een ISBN op wat nog ontbreekt (uitgeverij, jaartal, pagina's, taal, beschrijving) en een link naar de cover.
-- Een script mag hoogstens 6 minuten draaien. Daarom werkt dit in porties: na ongeveer 4,5 minuten stopt het en gaat het een minuut later vanzelf verder. Bij 2.500 boeken duurt dat ongeveer een half uur. Je hoeft niets te doen. Rechtsonder verschijnt telkens een melding.
-- Het script wacht tussen twee opvragingen, zoals Open Library vraagt.
-- Elk opgezocht boek krijgt een datum in de kolom `ol_gecontroleerd`. Wil je een boek opnieuw laten opzoeken? Maak die cel leeg.
-
-**Stap 3b. Ontbrekende covers bij Google Books (vanzelf)**
-
-- Zodra Open Library klaar is, start het script vanzelf **5. Zoek ontbrekende covers bij Google Books**. Je kan het ook zelf starten via het menu.
-- Het zoekt enkel bij boeken met een ISBN die nog geen cover hebben, en vult daarnaast enkel lege velden aan.
-- Zonder sleutel staat Google een beperkt aantal opvragingen per dag toe. Is die limiet bereikt, dan gaat het script 6 uur later vanzelf verder. Het Logboek toont de stand.
-- Wil je het sneller? Maak een gratis sleutel voor de Google Books-API in de Google Cloud Console en zet ze in Instellingen bij `google_books_api_key`. Dat is niet nodig.
-- Elk opgezocht boek krijgt een datum in de kolom `gb_gecontroleerd`. Maak die cel leeg om een boek opnieuw te laten opzoeken.
-
-**Stap 3c. Ontbrekende beschrijvingen (vanzelf)**
-
-- Zodra Google Books klaar is, start het script vanzelf **6. Zoek ontbrekende beschrijvingen**. Je kan het ook zelf starten via het menu.
-- Het zoekt een beschrijving voor elk boek met een ISBN waar de kolom `beschrijving` leeg is: eerst bij Google Books, daarna bij Open Library.
-- Goodreads geeft geen beschrijvingen: niet in de export, en Goodreads heeft geen open API meer.
-- De beschrijving staat in de taal van de bron, meestal Engels. Een beschrijving die je zelf invult of verbetert, overschrijft het script nooit.
-- Zines en boeken zonder ISBN vul je zelf in.
-- Is de daglimiet van Google op, dan zoekt het script verder bij Open Library en probeert het Google 6 uur later opnieuw. Met een `google_books_api_key` gebeurt dat zelden.
-- Elk opgezocht boek krijgt een datum in de kolom `beschrijving_gezocht`. Maak die cel leeg om opnieuw te laten zoeken.
-
-**Stap 3d. Beschrijvingen vertalen (vanzelf)**
-
-- Zodra het script nieuwe beschrijvingen vond, start het vanzelf **7. Vertaal de beschrijvingen**. Je kan het ook zelf starten, bijvoorbeeld voor beschrijvingen die er al stonden.
-- Het vertaalt gratis met Google Translate. De Nederlandse versie komt in `beschrijving`, de Engelse in `beschrijving_en`. De website toont de versie in de taal die de bezoeker kiest.
-- Een beschrijving die al Nederlands is, blijft ongewijzigd. Een Engelse versie die je zelf invulde, blijft staan.
-- Het blijft een automatische vertaling. Lees de beschrijvingen van aanraders en bekende boeken even na en verbeter ze waar nodig.
-- Elk vertaald boek krijgt een datum in de kolom `beschrijving_vertaald`. Pas je de Nederlandse tekst later aan en wil je een nieuwe Engelse vertaling? Maak `beschrijving_en` en `beschrijving_vertaald` leeg en kies **7. Vertaal de beschrijvingen**.
-- Google Translate heeft een daglimiet. Is die bereikt, dan gaat het script de volgende dag vanzelf verder.
-
-**Stap 4. Het tabblad Na te kijken afwerken**
-
-Loop de rijen één voor één af:
-
-- Klopt de waarde uit de bron (kolom `waarde_bron`)? Zet ze dan zelf in de Catalogus.
-- Klopt de waarde in de Catalogus? Laat ze staan.
-- Zet daarna in de kolom `afgehandeld` een **ja**.
-
-De Catalogus is nu de enige bron. Stock en Zines heb je niet meer nodig.
-
-**Wat staat er in de Catalogus?**
+**De kolommen van de Catalogus**
 
 | Kolom | Betekenis |
 | --- | --- |
@@ -193,21 +112,264 @@ De Catalogus is nu de enige bron. Stock en Zines heb je niet meer nodig.
 | `titel`, `auteur`, `isbn`, `uitgeverij`, `jaartal`, `taal`, `paginas`, `uitvoering` | de gegevens van het boek |
 | `nieuwstaat` | ja = nieuw, nee = tweedehands |
 | `aanrader` | de voornaam van wie het boek aanraadt. Wordt het label "Aanrader van ..." |
-| `genre` | het oorspronkelijke genre, vertaald via Onderwerpen |
+| `genre` | het oorspronkelijke genre, vertaald via het tabblad Onderwerpen |
 | `extra_onderwerpen` | extra filtergroepen voor dit boek, gescheiden door komma's |
-| `klassieker` | zet **ja** om het boek in de filtergroep Klassiekers te zetten |
+| `klassieker` | **ja** = in de filtergroep Klassiekers |
 | `aantal` | aantal exemplaren (leeg = 1). Exemplaren heten B0012-1, B0012-2, ... |
 | `uitleenbaar` | nee = niet uitleenbaar (bv. zines te koop) |
-| `publiek` | nee = niet zichtbaar in de publieke catalogus, wel uitleenbaar aan de balie |
-| `beschrijving`, `beschrijving_en`, `cover_url` | korte beschrijving in het Nederlands en het Engels, en link naar de cover |
-| `startpagina` | leeg = automatisch, **ja** = altijd bij de Aanraders op de startpagina, **nee** = nooit |
+| `publiek` | nee = niet zichtbaar op de website, wel uitleenbaar aan de balie |
+| `beschrijving`, `beschrijving_en` | korte beschrijving in het Nederlands en het Engels |
+| `cover_url` | link naar de cover |
+| `startpagina` | leeg = automatisch, **ja** = altijd bij de Aanraders, **nee** = nooit (zie A3) |
 | `toegevoegd_op` | de dag waarop het boek in de Catalogus kwam. Het script vult dit zelf in. |
 | `herkomst` (grijs) | **nooit publiek**: donatie, bruikleen, gift, schenker, interne notities |
-| `isbn_origineel`, `bron_sleutel`, `ol_gecontroleerd` (grijs) | hulpkolommen voor het script |
+| `isbn_origineel`, `bron_sleutel`, `ol_gecontroleerd`, `gb_gecontroleerd`, `beschrijving_gezocht`, `beschrijving_vertaald` (grijs) | hulpkolommen voor het script. Laat ze staan. Maak een datum leeg om een boek opnieuw te laten opzoeken. |
 
-Schrijf het etiket op elk boek met het **exemplaarnummer** (bijvoorbeeld `B0012-1`). Aan de balie zoek je daar het snelst op.
+## A3. Aanraders en nieuwe boeken op de startpagina
 
-## 6. De vertaaltabel Onderwerpen nakijken
+De startpagina toont tot 12 boeken in het blok **Aanraders**. Beschikbare boeken komen eerst, de keuze wisselt elke dag. Een boek komt erbij als:
+
+- iemand het aanraadt: zet een voornaam in de kolom `aanrader`. Het label wordt "Aanrader van ...". Meerdere namen scheid je met een komma.
+- het nieuw binnen is: het kwam minder dan 60 dagen geleden in de Catalogus. Het label wordt "Nieuw binnen".
+- je zelf **ja** zet in de kolom `startpagina`.
+
+Zet je **nee** in de kolom `startpagina`, dan staat het boek nooit op de startpagina.
+
+In het tabblad Instellingen, onder `── STARTPAGINA: AANRADERS ──`:
+
+| Instelling | Wat |
+| --- | --- |
+| `nieuw_op_startpagina_dagen` | hoeveel dagen een nieuw boek bij de Aanraders staat. 0 = nooit automatisch. |
+| `aanraders_verbergen` | namen van wie de aanraders tijdelijk niet op de startpagina staan, bv. `Nance`. Het label en de filter in de catalogus blijven. Wis de naam om ze terug te tonen. |
+
+## A4. Nieuws, agenda en veelgestelde vragen
+
+Elke rij in deze tabbladen is één bericht, event of vraag.
+
+| Tabblad | Kolommen |
+| --- | --- |
+| **Nieuws** | `datum`, `titel`, `titel_en`, `tekst`, `tekst_en`, `afbeelding`, `link`, `publiek` |
+| **Agenda** | `datum`, `uur`, `titel`, `titel_en`, `tekst`, `tekst_en`, `locatie`, `afbeelding`, `link`, `publiek` |
+| **Veelgestelde vragen** | `volgorde`, `vraag`, `vraag_en`, `antwoord`, `antwoord_en`, `publiek` |
+
+- De startpagina toont de 3 nieuwste berichten, de 3 volgende events en het vorige event.
+- Een nieuwe regel binnen een cel maak je met **Ctrl+Enter** of **Alt+Enter**. De website neemt die regels over.
+- De kolommen op `_en` zijn de Engelse versie. Laat je ze leeg, dan toont de Engelse website de Nederlandse tekst.
+- `afbeelding` en `link` zijn volledige adressen die met `https://` beginnen.
+- `volgorde` bij de vragen: 1, 2, 3, ... Een lege volgorde komt achteraan.
+- Zet **nee** in `publiek` om een rij te verbergen zonder ze te wissen.
+- Opmaak zoals vet of een klikbare link kan niet: de website toont gewone tekst.
+- De kolom `bron_id` vult het script zelf in bij wat van de oude website kwam. **Laat die staan**, anders komt een vraag dubbel als iemand de overname opnieuw uitvoert.
+
+## A5. Teksten, adres en openingsuren aanpassen
+
+**In de spreadsheet, tabblad Instellingen** (meteen actief):
+
+| Wat | Instelling |
+| --- | --- |
+| Adres en openingsuren onder "Kom eens langs" | `adres`, `openingsuren`, `openingsuren_en` |
+| Mailadressen onder "Kom eens langs" | `mail_algemeen`, `mail_events` |
+| Welkomst, uitleg over lenen en privacy op de pagina Boeken | `tekst_welkom`, `tekst_uitleg_lenen`, `tekst_privacy` (en de versies op `_en`) |
+| De herinneringen die het bestuur kopieert | `tekst_herinnering`, `tekst_herinnering_binnenkort` |
+| Uitleentermijn, borg, maximum boeken, verlengingen | onder `── UITLENEN ──` en `── BORG EN GIFTEN ──` |
+| Gesloten vrijdagen | `gesloten_data`, bv. `25/12/2026, 1/1/2027` |
+
+**Op GitHub** (vaste teksten van de website):
+
+- De tekst van **Over ons** staat in [`over-ons.html`](over-ons.html), in een Nederlands en een Engels blok. Pas je de ene taal aan, pas dan ook de andere aan.
+- Knoppen, menu's en titels staan in [`i18n.js`](i18n.js), eerst alle Nederlandse, dan alle Engelse.
+
+Hoe je een bestand op GitHub aanpast, staat in [D3](#d3-de-website-zelf-aanpassen).
+
+## A6. Werken aan de balie
+
+Druk de handleiding af: open [`handleiding-balie.html`](handleiding-balie.html) en klik op **Afdrukken**. Ze past op één A4. Leg ze naast de balie.
+
+Kort:
+
+- Open het uitleenscherm. De eerste keer vul je de code van de balie en je voornaam in. Het toestel onthoudt de code.
+- **Uitlenen**: boek zoeken, exemplaar kiezen, lener kiezen, borg aanduiden, bevestigen. De terugbrengdatum verschijnt groot.
+- **Terugbrengen**: boek of lener zoeken, borg aanduiden, bevestigen. Moet het boek apart liggen voor een reservatie, dan zegt het scherm dat.
+- **Verlengen**, **Reserveren**, **Lener opzoeken** en **Nieuwe lener** werken op dezelfde manier.
+- **Rooster**: wie de komende vrijdagen in de bib staat. Je beschikbaarheid invullen doe je in de roostertool zelf, via de knop onderaan.
+- De terugbrengdatum is 4 weken na de uitleendatum, opgeschoven naar de eerstvolgende vrijdag waarop de bib open is.
+
+**Grenzen.** Het scherm waarschuwt bij: meer dan 2 boeken per lener, een tweede verlenging, verlengen terwijl iemand anders wacht, uitlenen aan iemand met een boek te laat, of een boek dat voor iemand anders klaarligt. Je mag zo'n grens bewust overschrijden, maar je vult dan een reden in. Het bestuur ziet die reden.
+
+**Zonder internet?** Noteer op papier de datum, het exemplaarnummer, het lenersnummer, de borg en de betaalwijze. Geef het briefje aan het bestuur.
+
+## A7. Het bestuursscherm
+
+Het bestuursscherm toont:
+
+- wat **te laat** is, met de contactgegevens en een herinnering om te kopiëren of meteen via WhatsApp of mail te versturen;
+- wat **binnenkort vervalt**;
+- alle lopende uitleningen, de borgen en giften, de reservaties, de uitzonderingen (met de reden), de leners en eenvoudige cijfers;
+- het **rooster**.
+
+Verstuurde je een herinnering? Klik op **Herinnering verstuurd**, dan zie je wanneer de laatste herinnering vertrok.
+
+## A8. Wat te doen als iets niet werkt
+
+| Wat je ziet | Wat je doet |
+| --- | --- |
+| Een wijziging verschijnt niet op de website | Wacht een minuut en vernieuw met **Ctrl+F5**. Helpt dat niet: kies **Madrigal > Ververs de publieke catalogus**. |
+| Na een wijziging op GitHub zie je niets | GitHub heeft een paar minuten nodig. Vernieuw daarna met **Ctrl+F5**. |
+| De startpagina toont geen nieuws, agenda of aanraders | De web-app draait een oude versie van het script. Publiceer een nieuwe versie, zie [D1](#d1-een-nieuwe-versie-van-het-script-publiceren). |
+| "Je ziet verzonnen voorbeeldboeken" | Het adres van de web-app ontbreekt in `config.js`. Zie [C5](#c5-het-script-publiceren-als-web-app). |
+| "De catalogus kon niet laden" | Kijk of het adres in `config.js` klopt en eindigt op `/exec`, en of de web-app op "Iedereen" staat. |
+| "De code klopt niet" | Kijk de code na in Instellingen. Hoofdletters tellen mee. |
+| "Het rooster is nog niet gekoppeld" | Vul `rooster_url` en `rooster_code` in, zie [C8](#c8-het-rooster-koppelen). |
+| Het menu Madrigal verschijnt niet | Wacht 20 seconden na het vernieuwen. Ben je met meerdere Google-accounts aangemeld? Open de spreadsheet in een privévenster met enkel het Madrigal-account. |
+| "Het tabblad Catalogus bestaat niet" | Je startte in Apps Script een andere functie dan **installeer**. Kies **installeer** in de keuzelijst naast **Uitvoeren**. |
+| Het opzoeken van boekgegevens stopt halverwege | Normaal: het gaat na een minuut vanzelf verder. Bij een daglimiet van Google na 6 uur. Het Logboek toont de stand. |
+| "Er ging iets mis: ..." | Kijk in het tabblad **Logboek**, en in Apps Script bij **Uitvoeringen** (links, het lijstje). |
+| Iets anders | Noteer wat je deed en wat je zag, en geef dat aan de beheerder. |
+
+---
+
+# Deel B. Achtergrond
+
+## B1. Wat de tool doet
+
+**De publieke website**
+
+- Een startpagina met nieuws, agenda, aanraders, veelgestelde vragen en het adres.
+- Een catalogus waarin je zoekt op titel, auteur, uitgeverij of ISBN. Tikfouten, hoofdletters, accenten en lidwoorden (de, het, the, le, ...) maken niet uit.
+- Filters op onderwerp, taal, nieuw of tweedehands, uitvoering, periode van uitgave, aanrader en "enkel beschikbaar". Sorteren op titel, auteur of jaartal. 30 boeken per pagina.
+- Elk boek toont een label: **beschikbaar**, **uitgeleend** (met de verwachte terugkeer), **gereserveerd** of **niet uitleenbaar**. Bij meerdere exemplaren: "1 van 2 beschikbaar". Elk boek heeft een eigen pagina met een vaste link, om te delen.
+- Alles in het Nederlands en het Engels, met een lichte en een donkere modus.
+- De website toont nooit wie een boek leent, waar een boek vandaan komt, of interne notities.
+
+**Het uitleenscherm** vervangt het papieren uitleenblad en het oude digitale uitleenblad. Een vrijwilliger ziet van een lener enkel de voornaam en het lenersnummer.
+
+**Het bestuursscherm** toont ook contactgegevens, herinneringen, borgen en uitzonderingen.
+
+## B2. Hoe het in elkaar zit
+
+```
+Google-spreadsheet van de catalogus (boeken, leners, uitleningen, nieuws, instellingen)
+        │  alle gegevens blijven hier, in het Google-account van Madrigal
+        ▼
+Google Apps Script (een klein programma bij de spreadsheet)
+        │  publiceert een "web-app": een adres dat gegevens doorgeeft
+        ▼
+GitHub Pages (deze repository)
+           de pagina's die je in de browser ziet
+
+Het rooster is een aparte tool, met een eigen spreadsheet, script en repository (rooster).
+Het uitleenscherm en het bestuursscherm tonen dat rooster.
+```
+
+- **Alles is gratis**: een Google-spreadsheet met Apps Script, en GitHub Pages.
+- **Alle gegevens blijven in Google.** Deze repository is publiek en bevat enkel code. Er komen hier nooit gegevens van boeken, leners of schenkers in. Ook de tests en de voorbeelden gebruiken verzonnen gegevens.
+- De website vraagt de web-app enkel de publieke velden. Het script bewaart die tot 6 uur in zijn geheugen, zodat de catalogus snel laadt. Bij elke uitlening en elke wijziging in de spreadsheet ververst dat geheugen vanzelf.
+
+## B3. Privacy en veiligheid
+
+**Welke gegevens bewaren we?** Van een lener enkel: voornaam, eventueel achternaam, telefoon en/of e-mail, de datum van inschrijving, de toestemming en een lenersnummer. Niets meer.
+
+**Wie ziet wat?**
+
+| Wie | Ziet |
+| --- | --- |
+| Iedereen (website) | boeken en hun beschikbaarheid, nooit leners, herkomst of notities |
+| Vrijwilligers (uitleenscherm) | voornaam en lenersnummer, nooit contactgegevens |
+| Bestuur (bestuursscherm en spreadsheet) | ook contactgegevens, borgen en uitzonderingen |
+
+**Hoe lang?** Elke nacht om 3 uur draait een opruiming:
+
+- 12 maanden nadat een boek terug is, wist het script de koppeling tussen de uitlening en de lener. De uitlening blijft voor de cijfers, zonder lener.
+- Een lener die op **inactief** staat, niets meer in huis heeft en 12 maanden niets leende, wordt volledig gewist.
+- De termijn staat in Instellingen bij `bewaartermijn_afgesloten_uitleningen_maanden`.
+
+Wil iemand zijn of haar gegevens laten wissen? Zet de lener op inactief in het bestuursscherm. Moet het meteen? Verwijder de rij in het tabblad Leners, nadat alle boeken terug zijn.
+
+**De codes zijn een eenvoudige drempel, geen echte beveiliging.** Ze houden nieuwsgierigen weg, maar wie de code kent, komt binnen. Daarom:
+
+- Geef de code van het bestuur enkel aan het bestuur.
+- Wijzig een code in Instellingen als ze uitlekt, of als een vrijwilliger stopt. Op de toestellen moet je dan opnieuw aanmelden.
+- Deel de spreadsheet enkel met het bestuur.
+
+**Geen gegevens in deze repository.** Zet hier nooit exports, schermafdrukken met namen, of kopieën van de spreadsheet. Het bestand `.gitignore` houdt CSV- en Excel-bestanden al tegen.
+
+## B4. Woordenlijst
+
+| Woord | Betekenis |
+| --- | --- |
+| **Repository** | de map met alle bestanden van de website op GitHub. Deze heet `projectmadrigal.github.io`. |
+| **GitHub** | de website waar de bestanden van de website staan. Wat je daar wijzigt, staat na een paar minuten online. |
+| **GitHub Pages** | de gratis dienst van GitHub die de bestanden als website toont. |
+| **Commit** | een wijziging op GitHub bewaren. De knop heet **Commit changes**. |
+| **Apps Script** | een klein programma bij de spreadsheet. Je opent het via **Extensies > Apps Script**. |
+| **Web-app** | het adres van dat programma, dat de website gebruikt om gegevens te vragen. Het eindigt op `/exec`. |
+| **Implementatie, nieuwe versie** | na een wijziging in het script moet je een nieuwe versie van de web-app publiceren, anders blijft de oude draaien. |
+| **Cache** | het tijdelijke geheugen van de browser of het script. Daarom zie je een wijziging soms pas na Ctrl+F5. |
+| **ISBN** | het nummer van een boek, 13 cijfers. Het script zoekt daarmee covers en gegevens op. |
+| **Boek-ID, exemplaarnummer** | de vaste code van een boek (B0012) en van één exemplaar (B0012-1). |
+
+---
+
+# Deel C. Eenmalige installatie (al gebeurd)
+
+Dit deel heb je enkel nodig om alles opnieuw op te zetten, bijvoorbeeld in een nieuw Google-account.
+
+## C1. De spreadsheet en het script installeren
+
+> Werk altijd eerst op een **kopie**. Het origineel blijft intact tot alles getest is.
+
+**De spreadsheet**
+
+1. Open de stockspreadsheet in Google Drive, met het Google-account van Madrigal.
+2. Kies **Bestand > Een kopie maken**. Noem de kopie bijvoorbeeld `Madrigal catalogus`.
+3. Zet de tijdzone goed: **Bestand > Instellingen > Tijdzone**, kies `(GMT+01:00) Brussel` en klik op **Instellingen opslaan**. Anders kloppen de datums niet.
+4. Deel de kopie **enkel met het bestuur**.
+
+**Het script**
+
+1. Open de kopie. Kies **Extensies > Apps Script**. Er opent een nieuw venster met een bestand `Code.gs`.
+2. Klik links op het tandwiel **Projectinstellingen** en zet de **tijdzone** op `(GMT+01:00) Brussel`. Zie je links enkel icoontjes? Ga er met de muis over, dan verschijnen de namen.
+3. Ga terug naar de **Editor** (het icoon `< >`).
+4. Open op GitHub het bestand [`madrigal-script.gs`](madrigal-script.gs). Daarin staat alle code in één bestand.
+   - Klik rechtsboven op het icoon **Copy raw file** (twee blaadjes over elkaar).
+   - Ga terug naar Apps Script en klik in `Code.gs`.
+   - Selecteer alles (Ctrl+A, op een Mac Cmd+A) en plak (Ctrl+V, op een Mac Cmd+V).
+5. Klik op **Opslaan** (het diskette-icoon).
+6. Ga terug naar de spreadsheet en **vernieuw** de pagina. Na een paar seconden verschijnt het menu **Madrigal**.
+
+**Installeren**
+
+1. Kies **Madrigal > 1. Installeer tabbladen**. Zie je het menu niet? Kies dan in Apps Script bovenaan, naast **Uitvoeren**, de functie **installeer** en klik op **Uitvoeren**.
+2. De eerste keer vraagt Google om toestemming. Kies het Madrigal-account, klik op **Geavanceerd** en daarna op **Ga naar ... (onveilig)**. Dat "onveilig" betekent enkel dat Google het script niet zelf nagekeken heeft. Het is jullie eigen script.
+3. De tabbladen verschijnen: Uitleningen, Reservaties, Leners, Uitzonderingen, Catalogus, Onderwerpen, Na te kijken, Nieuws, Agenda, Veelgestelde vragen, Instellingen en Logboek. Stock en Zines blijven ongemoeid.
+4. Open het tabblad **Instellingen**. De codes voor de balie en het bestuur zijn willekeurig aangemaakt. Pas ze aan als je wil, en kijk de teksten na. Vul in de privacytekst het mailadres van het bestuur in.
+
+Je mag "Installeer tabbladen" later opnieuw uitvoeren. Bestaande tabbladen, gegevens en instellingen blijven staan. Enkel wat ontbreekt, komt erbij.
+
+## C2. De catalogus opbouwen
+
+**De Goodreads-export (optioneel).** Goodreads heeft voor niche-titels vaak completere gegevens.
+
+1. Meld je aan op Goodreads met het account van de shelf. Ga naar **My Books > Import and export > Export Library** en download het CSV-bestand.
+2. Maak in de spreadsheet een nieuw tabblad met precies de naam **`Goodreads-export`**. Klik op cel A1, kies **Bestand > Importeren > Uploaden**, kies het bestand en kies **"Huidige blad vervangen"**.
+3. Zet in Instellingen bij `goodreads_shelf` de naam van de Madrigal-shelf, precies zoals op Goodreads. Zo gebruikt het script enkel de boeken op die shelf.
+4. Verwijder het tabblad `Goodreads-export` nadat je stap 2 hieronder uitvoerde: het bevat ook de rest van je persoonlijke bibliotheek. Bewaar het CSV-bestand nooit in deze repository.
+
+**De stappen in het menu Madrigal**, in deze volgorde. Elke stap mag je opnieuw uitvoeren: er komt niets dubbel, en wat je met de hand verbeterde, blijft staan.
+
+1. **2. Bouw de catalogus uit Stock en Zines.** Leest Stock en Zines en schrijft één nette lijst naar de Catalogus. Maakt ISBN's netjes (een ongeldig ISBN komt in `isbn_origineel`), geeft elk boek een vaste boek-ID, zet de herkomst in een aparte kolom die nooit publiek wordt, en vult de vertaaltabel Onderwerpen. Staat er "niet op site" in de herkomst, dan krijgt het boek `publiek = nee`. Zines met genre "verkoop" krijgen `uitleenbaar = nee`.
+2. **3. Vul aan uit Goodreads.** Vult enkel lege velden aan: uitgeverij, jaartal en pagina's. De stocklijst wint altijd. Twijfelgevallen gaan naar **Na te kijken**.
+3. **4. Vul aan uit Open Library.** Zoekt voor boeken met een ISBN wat nog ontbreekt, en een cover. Dit werkt in porties van een paar minuten en gaat vanzelf verder. Daarna starten vanzelf:
+   - **5. Zoek ontbrekende covers bij Google Books**;
+   - **6. Zoek ontbrekende beschrijvingen** (Google Books, dan Open Library);
+   - **7. Vertaal de beschrijvingen** naar het Nederlands en het Engels, gratis met Google Translate. Het blijft een automatische vertaling: lees de beschrijvingen van aanraders even na.
+
+   Zonder sleutel geeft Google een beperkt aantal opvragingen per dag. Is die limiet bereikt, dan gaat het script 6 uur later vanzelf verder. Sneller? Maak een gratis sleutel voor de Google Books-API in de Google Cloud Console en zet ze in Instellingen bij `google_books_api_key`.
+4. **Het tabblad Na te kijken.** Klopt de waarde uit de bron (`waarde_bron`)? Zet ze zelf in de Catalogus. Zet daarna **ja** in de kolom `afgehandeld`.
+
+De Catalogus is nu de enige bron. Stock en Zines heb je niet meer nodig.
+
+## C3. De vertaaltabel Onderwerpen nakijken
 
 De filters op de website gebruiken **filtergroepen**: Gender, Seksualiteit, Feminisme, Fictie, Klassiekers, Geschiedenis en maatschappij, Biografie, Poëzie, Graphic novel, Young adult, Pulp, Erotica en BDSM, Zines.
 
@@ -220,192 +382,168 @@ Het tabblad **Onderwerpen** vertaalt elk genre uit de stocklijst naar een of mee
 | roman lesbisch | Fictie, Seksualiteit | 51 |
 
 - Het script stelt zelf een filtergroep voor. **Kijk elke rij na** en pas aan waar nodig. Meerdere groepen scheid je met een komma.
-- Varianten in schrijfwijze (erotica en Erotica) staan samen op één rij.
 - "Klassiekers" bestaat niet als genre: zet in de Catalogus **ja** in de kolom `klassieker`.
-- Een boek in een extra groep zetten? Gebruik de kolom `extra_onderwerpen` in de Catalogus.
-- Een nieuwe filtergroep maken? Typ gewoon een nieuwe naam in de kolom `filtergroepen`. Ze verschijnt vanzelf op de website.
+- Een nieuwe filtergroep maken? Typ een nieuwe naam in de kolom `filtergroepen`. Ze verschijnt vanzelf op de website.
 - Komen er nieuwe genres bij? Kies **Madrigal > Werk de vertaaltabel Onderwerpen bij**.
 
-## 7. Lopende uitleningen overnemen uit het oude uitleenblad
+## C4. Lopende uitleningen overnemen uit het oude uitleenblad
 
-Het oude digitale uitleenblad bevat persoonsgegevens. Neem **enkel de lopende uitleningen** over. De historiek blijft in het oude blad.
+Neem **enkel de lopende uitleningen** over. De historiek blijft in het oude blad.
 
-1. **Kies een vaste datum** waarop het papieren uitleenblad en het oude digitale blad stoppen, bijvoorbeeld een vrijdag. Spreek die af met het bestuur en de vrijwilligers.
+1. Kies een vaste datum waarop het papieren en het oude digitale uitleenblad stoppen. Spreek die af met het bestuur en de vrijwilligers.
 2. Zorg dat het oude blad bijgewerkt is: elk teruggebracht boek heeft een datum in "boek terug op...".
-3. Kies in de nieuwe spreadsheet **Madrigal > Neem lopende uitleningen over uit het oude blad**.
-4. Plak de link naar het oude uitleenblad en klik op **OK**.
-5. Het script:
-   - neemt enkel rijen zonder datum in "boek terug op..." over.
-   - zoekt het boek in de Catalogus op titel en auteur, met een tolerante vergelijking.
-   - maakt per persoon één lener aan, ook als die meerdere boeken heeft (herkend op e-mail of telefoon).
-   - neemt de borg, de betaalwijze, de afgesproken terugbrengdatum en de laatste herinnering mee.
-6. Kijk het tabblad **Na te kijken** na. Twijfelgevallen (bron "Overzetten") vermelden het lenersnummer, de datums en de borg. Registreer die uitleningen zelf via het uitleenscherm.
-7. Overgenomen leners hebben `toestemming_privacy = onbekend`. Vraag hun toestemming bij het volgende bezoek en zet dan **ja** in het tabblad Leners.
-8. Vanaf de afgesproken datum gebruikt iedereen enkel nog het uitleenscherm. Zet het oude blad op "alleen lezen" en verwijder het na de bewaartermijn.
+3. Kies **Madrigal > Neem lopende uitleningen over uit het oude blad**, plak de link naar het oude uitleenblad en klik op **OK**.
+4. Het script neemt enkel rijen zonder terugbrengdatum over, zoekt het boek op titel en auteur, maakt per persoon één lener aan, en neemt de borg, de betaalwijze, de terugbrengdatum en de laatste herinnering mee.
+5. Kijk **Na te kijken** na (bron "Overzetten") en registreer die uitleningen zelf via het uitleenscherm.
+6. Overgenomen leners hebben `toestemming_privacy = onbekend`. Vraag hun toestemming bij het volgende bezoek en zet dan **ja** in het tabblad Leners.
+7. Zet het oude blad op "alleen lezen" en verwijder het na de bewaartermijn.
 
-Je mag deze functie opnieuw uitvoeren: wat al overgenomen is, komt er niet dubbel in.
-
-## 8. Het script publiceren als web-app
+## C5. Het script publiceren als web-app
 
 1. Open in de spreadsheet **Extensies > Apps Script**.
 2. Klik rechtsboven op **Implementeren > Nieuwe implementatie**.
 3. Klik op het tandwiel naast "Type selecteren" en kies **Web-app**.
-4. Vul in:
-   - Beschrijving: `Catalogus Madrigal`
-   - Uitvoeren als: **Ik** (jouw account)
-   - Wie heeft toegang: **Iedereen**
+4. Vul in: beschrijving `Catalogus Madrigal`, uitvoeren als **Ik**, toegang **Iedereen**.
 5. Klik op **Implementeren** en geef toestemming als Google erom vraagt.
 6. Kopieer de **URL van de web-app**. Ze eindigt op `/exec`.
-7. Open op GitHub het bestand [`config.js`](config.js), klik op het potlood (**Edit**), en plak de URL tussen de aanhalingstekens:
+7. Open op GitHub het bestand [`config.js`](config.js), klik op het potlood (**Edit**), en plak de URL tussen de aanhalingstekens achter `apiUrl:`.
+8. Klik op **Commit changes**. Na een paar minuten toont de website de echte catalogus.
 
-   ```js
-   apiUrl: 'https://script.google.com/macros/s/.../exec',
-   ```
+"Iedereen" betekent: iedereen kan het **publieke** deel opvragen. De rest vraagt een code (zie [B3](#b3-privacy-en-veiligheid)).
 
-8. Klik op **Commit changes**. Na een minuut toont de website de echte catalogus.
+## C6. De website online zetten met GitHub Pages
 
-"Iedereen" betekent: iedereen kan het **publieke** deel opvragen. De afgeschermde delen vragen een code (zie [privacy en veiligheid](#13-privacy-en-veiligheid)).
-
-## 9. GitHub Pages aanzetten
-
-1. Ga op GitHub naar de repository **projectmadrigal.github.io** van de organisatie (vroeger heette ze **catalogus**).
+1. Ga op GitHub naar de repository **projectmadrigal.github.io** van de organisatie ProjectMadrigal.
 2. Klik op **Settings > Pages**.
-3. Bij "Build and deployment": kies **Source: Deploy from a branch**, branch **main**, map **/ (root)**. Klik op **Save**.
-4. Na een paar minuten staat de website online op `https://projectmadrigal.github.io/`. De catalogus staat op `boeken.html`.
-   - Het uitleenscherm: `https://projectmadrigal.github.io/balie.html`
-   - Het bestuursscherm: `https://projectmadrigal.github.io/bestuur.html`
+3. Kies bij "Build and deployment" **Deploy from a branch**, branch **main**, map **/ (root)**. Klik op **Save**.
+4. Na een paar minuten staat de website online op https://projectmadrigal.github.io/.
 
-Waarom die naam? Een repository die precies `<naam van de organisatie>.github.io` heet, krijgt het korte adres zonder extra map. Heet de repository anders, dan komt die naam achteraan in het adres (zoals vroeger `/catalogus/`). Heet de organisatie anders, dan staat die naam vooraan.
+Waarom die naam? Een repository die precies `<naam van de organisatie>.github.io` heet, krijgt het korte adres. Een andere repository van dezelfde organisatie, zoals **rooster**, komt op `https://projectmadrigal.github.io/rooster/`. Hernoem de repository dus niet, anders verandert het adres.
 
-**Op het beginscherm zetten.** Open de catalogus op een smartphone en kies in het menu van de browser **Toevoegen aan beginscherm**. Doe dat op de smartphone van de balie ook voor `balie.html`.
+**Op het beginscherm zetten.** Open de website op een smartphone en kies in het menu van de browser **Toevoegen aan beginscherm**. Doe dat op de smartphone van de balie voor het uitleenscherm.
 
-## 10. Een nieuw boek toevoegen
+## C7. Nieuws, agenda en vragen overnemen van de oude website
 
-1. Open het tabblad **Catalogus**.
-2. Voeg onderaan een rij toe. Vul minstens het **ISBN** in, liefst ook titel en auteur. Laat `boek_id` leeg.
-3. Zet bij een zine `zine` in de kolom `soort`.
-4. Kies **Madrigal > Nieuwe boeken verwerken**. Het script:
-   - geeft het boek een boek-ID.
-   - maakt ISBN, taal en uitvoering netjes.
-   - vult aan uit Goodreads (als dat tabblad er nog is) en uit Open Library.
-5. Kijk het genre, de filtergroepen en eventueel **Na te kijken** na.
-6. Schrijf het exemplaarnummer op het etiket.
+Kies **Madrigal > Neem nieuws, agenda en vragen over van de oude website**. Het script haalt alles op en zet het in de tabbladen Nieuws, Agenda en Veelgestelde vragen. Opnieuw uitvoeren maakt niets dubbel.
 
-**Zelf een cover toevoegen.** Vond geen enkele bron een cover? Zoek het boek online op, bijvoorbeeld op Goodreads of de website van de uitgeverij. Klik met de rechtermuisknop op de cover en kies **Afbeeldingsadres kopiëren**. Plak dat adres in de kolom `cover_url` van het boek. Het adres moet beginnen met `https://`. Een cover die je zelf invult, overschrijft het script nooit.
+- Kijk de teksten daarna na: opmaak zoals vet en links verdwijnt.
+- De afbeeldingen blijven op de server van de oude website staan. Zet ze op een andere plaats voor je die server opzegt, en pas de link in de kolom `afbeelding` aan.
 
-Een extra exemplaar van een boek dat er al is? Verhoog het getal in de kolom `aantal`.
+## C8. Het rooster koppelen
 
-Een boek uit de publieke catalogus halen zonder het te verwijderen? Zet `publiek` op **nee**.
+Het rooster is een aparte tool (repository **rooster**, met een eigen handleiding). Om het rooster te tonen in het uitleenscherm en het bestuursscherm, vul je in de Instellingen van de catalogus, onder `── ROOSTER ──`, in:
 
-## 11. Werken aan de balie
+| Instelling | Wat |
+| --- | --- |
+| `rooster_url` | de URL van de web-app van het rooster. Je vindt ze in de roosterspreadsheet via Extensies > Apps Script > Implementeren > Implementaties beheren. Ze eindigt op `/exec`. |
+| `rooster_code` | de toegangscode voor vrijwilligers van het rooster (`toegangscode_vrijwilligers` in de Instellingen van de roosterspreadsheet). Niet de code van de planner. |
+| `rooster_link` | het adres van de roostertool, standaard `https://projectmadrigal.github.io/rooster/` |
 
-Druk de handleiding af: open **`handleiding-balie.html`** en klik op **Afdrukken**. Ze past op één A4. Leg ze naast de balie.
+De code blijft op de server van Google: de browser ziet ze nooit. Verander je de code in het rooster, pas ze dan ook hier aan. Een wijziging in het rooster verschijnt na hoogstens 10 minuten in de balie en het bestuur.
 
-Kort:
+## C9. Het eigen domein projectmadrigal.be
 
-- Open `balie.html`. De eerste keer vul je de code van de balie en je voornaam in. Het toestel onthoudt de code.
-- **Uitlenen**: boek zoeken, exemplaar kiezen, lener kiezen, borg aanduiden, bevestigen. De terugbrengdatum verschijnt groot.
-- **Terugbrengen**: boek of lener zoeken, borg aanduiden, bevestigen. Moet het boek apart liggen voor een reservatie, dan zegt het scherm dat.
-- **Verlengen**, **Reserveren**, **Lener opzoeken** en **Nieuwe lener** werken op dezelfde manier.
-- De vervaldatum is altijd 4 weken na de uitleendatum, opgeschoven naar de eerstvolgende vrijdag waarop de bib open is. Gesloten vrijdagen zet je in Instellingen bij `gesloten_data`, bijvoorbeeld `25/12/2026, 1/1/2027`.
+Wil je dat projectmadrigal.be naar deze website wijst:
 
-## 12. Na een wijziging in het script: een nieuwe versie publiceren
+1. Ga op GitHub naar **Settings > Pages > Custom domain**, vul `www.projectmadrigal.be` in en klik op **Save**.
+2. Pas bij je domeinregistrar de DNS aan: een `CNAME`-record voor `www` naar `projectmadrigal.github.io`, en voor het domein zonder www de vier `A`-records van GitHub Pages: `185.199.108.153`, `185.199.109.153`, `185.199.110.153` en `185.199.111.153`.
+3. Vink **Enforce HTTPS** aan zodra GitHub dat toelaat. Dat duurt soms een dag.
 
-Pas je iets aan in de code van Apps Script, dan ziet de web-app dat pas na een nieuwe versie.
+Doe dit pas als de oude website weg mag: vanaf dat moment toont projectmadrigal.be de nieuwe website. Oude links zoals `/boeken` sturen vanzelf door naar de juiste pagina.
 
-1. Kopieer opnieuw het volledige bestand `madrigal-script.gs` van GitHub, vervang alles in `Code.gs` en klik op **Opslaan**.
-2. Klik op **Implementeren > Implementaties beheren**.
-3. Klik op het **potlood** bij je web-app.
-4. Kies bij Versie: **Nieuwe versie**. Klik op **Implementeren**.
+---
 
-De URL blijft dezelfde. Je hoeft `config.js` niet aan te passen.
+# Deel D. Voor een beheerder
+
+## D1. Een nieuwe versie van het script publiceren
+
+Verandert er iets in de code van Apps Script, dan ziet de web-app dat pas na een nieuwe versie.
+
+1. Open op GitHub [`madrigal-script.gs`](madrigal-script.gs), kopieer alles (**Copy raw file**), vervang alles in `Code.gs` en klik op **Opslaan**.
+2. Kies in de spreadsheet **Madrigal > 1. Installeer tabbladen**. Zo komen nieuwe kolommen en instellingen erbij. Wat er al staat, blijft.
+3. Klik in Apps Script op **Implementeren > Implementaties beheren**.
+4. Klik op het **potlood** bij je web-app.
+5. Kies bij Versie: **Nieuwe versie**. Klik op **Implementeren**.
+
+De URL blijft dezelfde. Je hoeft `config.js` niet aan te passen. Vraagt Google opnieuw toestemming, klik dan op **Toestaan**.
 
 Een wijziging in de **spreadsheet** (een boek, een instelling, een tekst) vraagt geen nieuwe versie. Die is meteen actief.
 
-Een grens toevoegen of wijzigen? Alles staat in [`apps-script/Grenzen.js`](apps-script/Grenzen.js), met uitleg bovenaan.
+## D2. Orde in de spreadsheet
 
-## 13. Privacy en veiligheid
+De tabbladen staan in een vaste volgorde met een kleur per groep (zie [A1](#a1-waar-staat-wat)). De instellingen staan per thema onder een tussenkop, bijvoorbeeld `── UITLENEN ──`. Een Engelse tekst staat vlak onder de Nederlandse. De tussenkoppen zijn geen instellingen.
 
-**Welke gegevens bewaren we?** Van een lener enkel: voornaam, eventueel achternaam, telefoon en/of e-mail, de datum van inschrijving, de toestemming en een lenersnummer. Niets meer.
+"Installeer tabbladen" ordent alles opnieuw. Wil je enkel ordenen, kies dan **Madrigal > Orden tabbladen en instellingen**. Waarden die je invulde, blijven altijd staan. Een instelling die je zelf toevoegde, komt onder `── OVERIGE ──`.
 
-**Wie ziet wat?**
+## D3. De website zelf aanpassen
 
-| Wie | Ziet |
+**Een klein ding wijzigen, zonder iets te installeren:**
+
+1. Open het bestand op GitHub, bijvoorbeeld [`i18n.js`](i18n.js).
+2. Klik rechtsboven op het **potlood** (Edit this file).
+3. Pas de tekst aan. Laat aanhalingstekens, komma's en haakjes staan.
+4. Klik op **Commit changes** en bevestig.
+5. Na een paar minuten staat de wijziging online. Vernieuw met **Ctrl+F5**.
+
+GitHub controleert elke wijziging automatisch (het tabblad **Actions**). Een rood kruisje betekent dat er iets misging: draai de wijziging terug of vraag hulp.
+
+| Wat | Bestand |
 | --- | --- |
-| Iedereen (publieke catalogus) | boeken en hun beschikbaarheid, nooit leners, herkomst of notities |
-| Vrijwilligers (balie) | voornaam en lenersnummer, nooit contactgegevens |
-| Bestuur (bestuursscherm en spreadsheet) | ook contactgegevens, borgen en uitzonderingen |
+| Vaste teksten en knoppen (Nederlands en Engels) | [`i18n.js`](i18n.js) |
+| Tekst, team en foto's op Over ons | [`over-ons.html`](over-ons.html), foto's in `assets/team/` |
+| Kleuren | [`styles.css`](styles.css), bovenaan bij de regels die met `--kleur-` beginnen |
+| Menu, Instagram en de voet onderaan | [`layout.js`](layout.js) |
+| De grenzen aan de balie | [`apps-script/Grenzen.js`](apps-script/Grenzen.js), met uitleg bovenaan. Daarna `madrigal-script.gs` opnieuw maken (zie hieronder) en [D1](#d1-een-nieuwe-versie-van-het-script-publiceren). |
 
-**Hoe lang?** Elke nacht om 3 uur draait een opruiming:
+**Met hulp van Claude.** In deze repository staat [`CLAUDE.md`](CLAUDE.md): een samenvatting die Claude bij een nieuwe sessie automatisch leest. Begin per opdracht een nieuwe sessie en beschrijf alles wat je wil in één bericht.
 
-- 12 maanden nadat een boek terug is, wist het script de koppeling tussen de uitlening en de lener. De uitlening blijft voor de cijfers, zonder lener.
-- Een lener die op **inactief** staat, niets meer in huis heeft en 12 maanden niets leende, wordt volledig gewist.
-- De termijn staat in Instellingen bij `bewaartermijn_afgesloten_uitleningen_maanden`.
+**Voor wie de code aanpast.** Installeer [Node.js](https://nodejs.org) en voer in deze map uit:
 
-Wil iemand zijn gegevens laten wissen? Zet de lener op inactief in het bestuursscherm. Moet het meteen? Verwijder de rij in het tabblad Leners, nadat alle boeken terug zijn.
+```
+node tools/bundel.js
+node tests/run.js
+```
 
-**De codes zijn een eenvoudige drempel, geen echte beveiliging.** Ze houden nieuwsgierigen weg, maar wie de code kent, komt binnen. Daarom:
+`tools/bundel.js` maakt `madrigal-script.gs` opnieuw uit de map `apps-script/`. Pas `madrigal-script.gs` nooit met de hand aan. Alle tests moeten "ok" tonen.
 
-- Geef de code van het bestuur enkel aan het bestuur.
-- Wijzig een code in Instellingen als ze uitlekt, of als een vrijwilliger stopt. Op de toestellen moet je dan opnieuw aanmelden.
-- Deel de spreadsheet enkel met het bestuur.
-- Het script controleert elke invoer en elke code, en wacht even bij een verkeerde code.
+## D4. Waar alles staat
 
-**Geen gegevens in deze repository.** Zet hier nooit exports, schermafdrukken met namen, of kopieën van de spreadsheet. Het bestand `.gitignore` houdt CSV- en Excel-bestanden al tegen.
-
-## 14. Wat te doen als iets niet werkt
-
-| Wat je ziet | Wat je doet |
-| --- | --- |
-| "Je ziet verzonnen voorbeeldboeken" | `apiUrl` in `config.js` is leeg. Zie [stap 8](#8-het-script-publiceren-als-web-app). |
-| "De catalogus kon niet laden" | Kijk of de URL in `config.js` klopt en eindigt op `/exec`. Kijk of de web-app op "Iedereen" staat. |
-| Een wijziging in de spreadsheet verschijnt niet op de website | Kies **Madrigal > Ververs de publieke catalogus** en vernieuw de website. |
-| "De code klopt niet" | Kijk de code na in Instellingen (hoofdletters tellen mee). |
-| Een wijziging in het script werkt niet | Publiceer een nieuwe versie, zie [stap 12](#12-na-een-wijziging-in-het-script-een-nieuwe-versie-publiceren). |
-| Het menu Madrigal verschijnt niet | Wacht 20 seconden na het vernieuwen. Ben je met meerdere Google-accounts aangemeld? Open de spreadsheet in een privévenster met enkel het Madrigal-account. Kijk in Apps Script of de code opgeslagen is zonder rode foutmelding. Lukt het nog niet? Start **installeer** rechtstreeks in Apps Script. |
-| "Het tabblad Catalogus bestaat niet" | Je startte in Apps Script een andere functie dan **installeer**. Kies **installeer** in de keuzelijst naast **Uitvoeren**. |
-| Open Library stopt halverwege | Normaal: het gaat na een minuut vanzelf verder. Staat het al lang stil? Kies opnieuw **Vul aan uit Open Library**. |
-| "Er ging iets mis: ..." | Kijk in het tabblad **Logboek** en in Apps Script bij **Uitvoeringen** (links, het lijstje). |
-| Iets anders | Kijk in het Logboek. Noteer wat je deed en wat je zag, en geef dat aan de beheerder. |
-
-Aan de balie zonder internet: noteer op papier de datum, het exemplaarnummer, het lenersnummer, de borg en de betaalwijze. Geef het briefje aan het bestuur.
-
-## 15. Waar alles staat, voor een volgende beheerder
-
-**In Google (het account van het vrijwilligersrooster)**
+**In Google (het account van Madrigal)**
 
 - De spreadsheet `Madrigal catalogus`: alle gegevens.
 - Het Apps Script-project, via Extensies > Apps Script in die spreadsheet.
 - De web-app: Implementeren > Implementaties beheren.
-- Twee geplande taken (Apps Script > Triggers, het wekkertje): `ruimOp` elke nacht, en `bijWijziging` bij elke wijziging.
+- Geplande taken (Apps Script > Triggers, het wekkertje): `ruimOp` elke nacht, `bijWijziging` bij elke wijziging, en tijdelijke taken die het opzoeken van boekgegevens vanzelf laten verdergaan.
+- De roosterspreadsheet, met een eigen Apps Script-project.
 
 **In deze repository**
 
 | Bestand | Wat erin staat |
 | --- | --- |
-| `index.html`, `home.js` | de startpagina: nieuws, agenda, aanraders, vragen, adres |
+| `index.html`, `home.js` | de startpagina |
 | `boeken.html`, `app.js` | de publieke catalogus |
-| `over-ons.html` | de pagina Over ons (tekst rechtstreeks in de HTML, in het Nederlands en het Engels) |
+| `over-ons.html` | de pagina Over ons |
 | `layout.js` | de kop (menu, taal, donkere modus) en de voet van elke publieke pagina |
-| `i18n.js` | alle vaste teksten van de website in het Nederlands en het Engels |
+| `i18n.js` | alle vaste teksten in het Nederlands en het Engels |
 | `404.html` | stuurt adressen van de oude website door (bv. `/boeken`) |
 | `assets/` | logo, lettertype (Geist Mono) en foto's |
 | `zoeken.js` | zoeken met tikfouten, zonder hoofdletters, accenten en lidwoorden |
-| `filters.js` | de filters en het sorteren (een filter toevoegen: zie uitleg bovenaan) |
+| `filters.js` | de filters en het sorteren |
 | `balie.html`, `balie.js` | het uitleenscherm |
 | `bestuur.html`, `bestuur.js` | het bestuursscherm |
-| `beheer.js` | gedeeld door balie en bestuur: aanmelden, grenzen, statuslabels |
+| `beheer.js` | gedeeld door balie en bestuur: aanmelden, statuslabels, het rooster |
 | `api.js` | praat met de web-app |
-| `dom.js` | kleine hulpfuncties om pagina's te bouwen |
+| `dom.js` | kleine hulpfuncties om pagina's te bouwen, en de tijdelijke covers |
 | `config.js` | de URL van de web-app |
-| `styles.css` | kleuren, lettertypes en opmaak (variabelen bovenaan) |
-| `manifest.json`, `icons/` | om de site op het beginscherm te zetten |
+| `styles.css` | kleuren, lettertypes en opmaak |
+| `manifest.json`, `icons/`, `favicon.ico` | om de site op het beginscherm te zetten |
 | `handleiding-balie.html` | handleiding van één pagina om af te drukken |
-| `voorbeeld/catalogus.json`, `voorbeeld/site.json` | verzonnen voorbeeldboeken en -nieuws, voor als de web-app nog niet gekoppeld is |
-| `apps-script/` | alle code van Google Apps Script |
-| `madrigal-script.gs` | dezelfde code in één bestand, om in Apps Script te plakken. Pas het niet met de hand aan. |
-| `tools/bundel.js` | maakt `madrigal-script.gs` opnieuw na een wijziging in `apps-script/` |
+| `voorbeeld/` | verzonnen voorbeeldboeken en -nieuws, voor als de web-app nog niet gekoppeld is |
+| `apps-script/` | alle code van Google Apps Script, per onderwerp |
+| `madrigal-script.gs` | dezelfde code in één bestand, om in Apps Script te plakken |
+| `tools/bundel.js` | maakt `madrigal-script.gs` opnieuw |
 | `tests/` | tests met verzonnen gegevens |
+| `CLAUDE.md` | samenvatting voor Claude |
 
 **De Apps Script-bestanden**
 
@@ -413,122 +551,20 @@ Aan de balie zonder internet: noteer op papier de datum, het exemplaarnummer, he
 | --- | --- |
 | `Menu.js` | het menu Madrigal en de installatie |
 | `Instellingen.js` | standaardwaarden en uitleg van de instellingen |
-| `Catalogus.js` | opbouw van de Catalogus en de vertaaltabel Onderwerpen |
-| `Goodreads.js`, `OpenLibrary.js` | aanvullen uit Goodreads en Open Library |
-| `GoogleBooks.js`, `Beschrijvingen.js` | covers uit Google Books, beschrijvingen uit Google Books en Open Library |
-| `Grenzen.js` | **de grenzen**, met uitleg om er een toe te voegen |
+| `Ordenen.js` | de volgorde van de tabbladen en de thema's in Instellingen |
+| `Catalogus.js` | opbouw van de Catalogus, nieuwe boeken en de vertaaltabel Onderwerpen |
+| `Goodreads.js`, `OpenLibrary.js`, `GoogleBooks.js` | gegevens en covers aanvullen |
+| `Beschrijvingen.js` | beschrijvingen zoeken en vertalen |
+| `Grenzen.js` | **de grenzen** aan de balie, met uitleg om er een toe te voegen |
 | `Uitlenen.js` | uitlenen, terugbrengen, verlengen, reserveren, leners |
-| `Datums.js` | vervaldatums, openingsdagen en statusteksten |
-| `Publiek.js` | welke velden publiek zijn |
+| `Datums.js` | terugbrengdatums, openingsdagen en statusteksten |
+| `Publiek.js` | welke velden van een boek publiek zijn |
+| `Site.js` | de inhoud van de startpagina |
 | `Bestuur.js` | gegevens voor het uitleenscherm en het bestuursscherm |
+| `Rooster.js` | het vrijwilligersrooster ophalen |
 | `Privacy.js` | de nachtelijke opruiming |
 | `Overzetten.js` | eenmalig: lopende uitleningen uit het oude blad |
+| `OudeSite.js` | eenmalig: nieuws, agenda en vragen van de oude website |
 | `Api.js` | de web-app: het publieke en de afgeschermde eindpunten |
-| `Site.js` | de inhoud van de startpagina (`?actie=site`) |
-| `OudeSite.js` | eenmalig: nieuws, agenda en vragen overnemen van de oude website |
-| `Rooster.js` | het vrijwilligersrooster ophalen voor de balie en het bestuur |
-| `Ordenen.js` | de volgorde van de tabbladen en de thema's in Instellingen |
 | `Opslag.js` | lezen en schrijven van de tabbladen |
 | `Hulp.js` | hulpfuncties voor tekst, ISBN en datums |
-
-**De tests uitvoeren** (voor wie de code aanpast): installeer [Node.js](https://nodejs.org) en voer in deze map uit:
-
-```
-node tests/run.js
-```
-
-Pas je iets aan in `apps-script/`? Voer dan eerst `node tools/bundel.js` uit, zodat `madrigal-script.gs` mee verandert. Alle tests moeten "ok" tonen. GitHub voert ze ook automatisch uit bij elke wijziging (zie het tabblad **Actions**).
-
-## 16. De website: nieuws, agenda, vragen en Engelse teksten
-
-De website heeft de opmaak van de oude website (projectmadrigal.be), maar alle inhoud komt uit de spreadsheet. Je hebt geen aparte beheeromgeving meer nodig.
-
-**De tabbladen.** `installeer` maakt drie tabbladen aan:
-
-| Tabblad | Kolommen |
-| --- | --- |
-| **Nieuws** | `datum`, `titel`, `titel_en`, `tekst`, `tekst_en`, `afbeelding`, `link`, `publiek` |
-| **Agenda** | `datum`, `uur`, `titel`, `titel_en`, `tekst`, `tekst_en`, `locatie`, `afbeelding`, `link`, `publiek` |
-| **Veelgestelde vragen** | `volgorde`, `vraag`, `vraag_en`, `antwoord`, `antwoord_en`, `publiek` |
-
-- De startpagina toont de 3 nieuwste berichten, de 3 volgende events en het vorige event.
-- Zet **nee** in `publiek` om een rij te verbergen zonder ze te wissen.
-- `afbeelding` en `link` zijn volledige adressen die met `https://` beginnen.
-- Laat je een kolom op `_en` leeg, dan toont de Engelse versie de Nederlandse tekst.
-- De kolom `bron_id` vult het script zelf in. Laat die staan.
-
-**Overnemen van de oude website.** Kies in het menu **Madrigal > Neem nieuws, agenda en vragen over van de oude website**. Het script haalt alles op en zet het in de drie tabbladen. Opnieuw uitvoeren maakt niets dubbel. Kijk de teksten daarna na: opmaak zoals vet en links verdwijnt. De afbeeldingen blijven op de server van de oude website staan. Zet ze op een andere plaats voor je die server opzegt, en pas de link in de kolom `afbeelding` aan.
-
-**Instellingen voor de website.** In het tabblad Instellingen:
-
-| Instelling | Wat |
-| --- | --- |
-| `adres` | het adres, elke regel op een nieuwe lijn (Alt+Enter in een cel) |
-| `openingsuren`, `openingsuren_en` | de openingsuren zoals ze op de startpagina staan |
-| `mail_algemeen`, `mail_events` | de mailadressen onder "Kom eens langs" |
-| `aanraders_verbergen` | namen van wie de aanraders niet op de startpagina staan |
-| `nieuw_op_startpagina_dagen` | hoeveel dagen een nieuw boek bij de Aanraders staat (0 = nooit automatisch) |
-| `tekst_welkom_en`, `tekst_uitleg_lenen_en`, `tekst_privacy_en` | de Engelse versie van de teksten op de pagina Boeken |
-
-**Aanraders.** De startpagina toont tot 12 boeken uit de Catalogus. Beschikbare boeken komen eerst, de volgorde wisselt elke dag. Een boek komt in aanmerking als:
-
-- iemand het aanraadt: er staat een naam in de kolom `aanrader`. Het label wordt "Aanrader van ...".
-- het nieuw binnen is: het kwam minder dan `nieuw_op_startpagina_dagen` dagen geleden in de Catalogus (standaard 60). Het label wordt "Nieuw binnen". Boeken van de eerste opbouw tellen niet als nieuw.
-- je zelf **ja** zet in de kolom `startpagina`.
-
-Zet je **nee** in de kolom `startpagina`, dan staat het boek nooit op de startpagina, ook niet als het nieuw is of iemand het aanraadt.
-
-Wil je de aanraders van iemand tijdelijk niet op de startpagina? Zet die naam in de instelling `aanraders_verbergen` (meerdere namen gescheiden door komma's). Het label en de filter in de catalogus blijven. Wis de naam om ze terug te tonen.
-
-**Vaste teksten en de pagina Over ons.** De knoppen, menu's en titels staan in `i18n.js`. De tekst van Over ons staat rechtstreeks in `over-ons.html`, met een blok `data-taal="nl"` en een blok `data-taal="en"`. Pas je de ene taal aan, pas dan ook de andere aan.
-
-**Na een wijziging in het script** publiceer je een nieuwe versie van de web-app (zie [hoofdstuk 12](#12-na-een-wijziging-in-het-script-een-nieuwe-versie-publiceren)). Anders kent de web-app `?actie=site` niet en blijft de startpagina leeg.
-
-**Het eigen domein projectmadrigal.be.** Wil je dat projectmadrigal.be naar deze website wijst:
-
-1. Ga op GitHub naar **Settings > Pages > Custom domain**, vul `www.projectmadrigal.be` in en klik op **Save**.
-2. Pas bij je domeinregistrar de DNS aan: een `CNAME`-record voor `www` naar `projectmadrigal.github.io`, en voor het domein zonder www de vier `A`-records van GitHub Pages (`185.199.108.153`, `185.199.109.153`, `185.199.110.153`, `185.199.111.153`).
-3. Vink **Enforce HTTPS** aan zodra GitHub dat toelaat (dat duurt soms een dag).
-
-Doe dit pas als de nieuwe website klaar is: vanaf dat moment toont projectmadrigal.be de nieuwe website en niet langer de oude.
-
-## 17. Het vrijwilligersrooster in de balie en het bestuursscherm
-
-Het rooster zelf is een aparte tool, met een eigen repository (**rooster**), spreadsheet en script. Daar duiden vrijwilligers aan wanneer ze kunnen en maakt de coördinator het rooster. Het uitleenscherm (knop **Rooster**) en het bestuursscherm (onderdeel **Rooster**) tonen dat rooster om te bekijken:
-
-- elke avond van deze en volgende maand, vanaf vandaag;
-- wie in de bib staat en wie back-up is, met het event van die avond;
-- gesloten avonden en workshops;
-- wie zich afmeldde (doorgestreept);
-- een melding als het rooster van een maand nog niet gepubliceerd is;
-- een knop **Beschikbaarheid invullen of afmelden** die de roostertool opent.
-
-**Koppelen.** Vul in het tabblad Instellingen van de catalogus in:
-
-| Instelling | Wat |
-| --- | --- |
-| `rooster_url` | de URL van de web-app van het rooster. Je vindt ze in de spreadsheet van het rooster via Extensies > Apps Script > Implementeren > Implementaties beheren. Ze eindigt op `/exec`. |
-| `rooster_code` | de toegangscode voor vrijwilligers van het rooster (`toegangscode_vrijwilligers` in de Instellingen van het rooster) |
-| `rooster_link` | het adres van de roostertool, standaard `https://projectmadrigal.github.io/rooster/` |
-
-De code blijft op de server van Google: de browser ziet ze nooit. Verander je de code in het rooster, pas ze dan ook hier aan.
-
-Het script bewaart het rooster 10 minuten in zijn geheugen. Een wijziging in het rooster zie je dus na hoogstens 10 minuten.
-
-## 18. Orde in de spreadsheet
-
-**Tabbladen.** Ze staan in een vaste volgorde, met een kleur per groep:
-
-| Kleur | Groep | Tabbladen |
-| --- | --- | --- |
-| paars | Uitlenen | Uitleningen, Reservaties, Leners, Uitzonderingen |
-| geel | Collectie | Catalogus, Onderwerpen, Na te kijken |
-| petrol | Website | Nieuws, Agenda, Veelgestelde vragen |
-| zwart | Beheer | Instellingen, Logboek |
-| grijs | Bronnen (zelden nodig) | Stock, Zines, Goodreads-export |
-
-Andere tabbladen komen achteraan, in hun eigen volgorde.
-
-**Instellingen.** Ze staan per thema onder een tussenkop, bijvoorbeeld `── UITLENEN ──`. Een Engelse tekst staat vlak onder de Nederlandse. De tussenkoppen zijn geen instellingen: laat ze staan of wis ze, dat maakt niet uit.
-
-"Installeer tabbladen" ordent alles opnieuw. Wil je enkel ordenen, kies dan **Madrigal > Orden tabbladen en instellingen**. Waarden die je invulde, blijven altijd staan. Een instelling die je zelf toevoegde, komt onder `── OVERIGE ──`.
