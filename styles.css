@@ -437,6 +437,11 @@ main.website { max-width: none; padding: 0; }
 .kaarten > * { flex: 1 1 100%; max-width: 30rem; }
 .kaarten > p { text-align: center; max-width: none; }
 #nieuws-titel, #agenda-titel, #aanraders-titel, #faq-titel { text-align: center; }
+/* Nieuws en agenda: twee kolommen op een groot scherm. Is er geen nieuws, dan neemt de agenda de hele breedte. */
+.binnen.naast-elkaar { max-width: 72rem; display: grid; gap: 1.5rem; grid-template-columns: 1fr; align-items: start; }
+.naast-elkaar .kaarten > * { max-width: none; }
+.naast-elkaar .kolom { padding: 1.2rem; border-radius: var(--hoek); }
+.kolom-geel { background: var(--kleur-geel); color: var(--kleur-op-geel); }
 .nieuwskaart { background: var(--kleur-vlak); color: var(--kleur-tekst); border-radius: var(--hoek); overflow: hidden; }
 .nieuwskaart img { width: 100%; max-height: 22rem; object-fit: cover; display: block; }
 .nieuwskaart .inhoud { padding: 1rem 1.2rem; }
@@ -488,6 +493,7 @@ main.website { max-width: none; padding: 0; }
 
 @media (min-width: 40rem) {
   .kaarten > article { flex-basis: calc(50% - .5rem); }
+  .naast-elkaar .kaarten > article { flex-basis: 100%; }
   .contact { grid-template-columns: 1fr 1fr; }
   .duo { grid-template-columns: 1fr 1fr; }
   .filterraster { grid-template-columns: repeat(2, 1fr); }
@@ -504,6 +510,7 @@ main.website { max-width: none; padding: 0; }
   .kopknoppen { padding: 0; }
 }
 @media (min-width: 64rem) {
+  .binnen.naast-elkaar { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); }
   .filterraster { grid-template-columns: repeat(4, 1fr); }
   .boekenlijst { grid-template-columns: repeat(3, 1fr); }
 }
