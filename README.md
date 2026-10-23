@@ -30,6 +30,7 @@ Daarnaast is er een **handleiding van één pagina** voor de balie, om af te dru
 14. [Wat te doen als iets niet werkt](#14-wat-te-doen-als-iets-niet-werkt)
 15. [Waar alles staat, voor een volgende beheerder](#15-waar-alles-staat-voor-een-volgende-beheerder)
 16. [De website: nieuws, agenda, vragen en Engelse teksten](#16-de-website-nieuws-agenda-vragen-en-engelse-teksten)
+17. [Het vrijwilligersrooster in de balie en het bestuursscherm](#17-het-vrijwilligersrooster-in-de-balie-en-het-bestuursscherm)
 
 ---
 
@@ -424,6 +425,7 @@ Aan de balie zonder internet: noteer op papier de datum, het exemplaarnummer, he
 | `Api.js` | de web-app: het publieke en de afgeschermde eindpunten |
 | `Site.js` | de inhoud van de startpagina (`?actie=site`) |
 | `OudeSite.js` | eenmalig: nieuws, agenda en vragen overnemen van de oude website |
+| `Rooster.js` | het vrijwilligersrooster ophalen voor de balie en het bestuur |
 | `Opslag.js` | lezen en schrijven van de tabbladen |
 | `Hulp.js` | hulpfuncties voor tekst, ISBN en datums |
 
@@ -487,3 +489,26 @@ Wil je de aanraders van iemand tijdelijk niet op de startpagina? Zet die naam in
 3. Vink **Enforce HTTPS** aan zodra GitHub dat toelaat (dat duurt soms een dag).
 
 Doe dit pas als de nieuwe website klaar is: vanaf dat moment toont projectmadrigal.be de nieuwe website en niet langer de oude.
+
+## 17. Het vrijwilligersrooster in de balie en het bestuursscherm
+
+Het rooster zelf is een aparte tool, met een eigen repository (**rooster**), spreadsheet en script. Daar duiden vrijwilligers aan wanneer ze kunnen en maakt de coördinator het rooster. Het uitleenscherm (knop **Rooster**) en het bestuursscherm (onderdeel **Rooster**) tonen dat rooster om te bekijken:
+
+- elke avond van deze en volgende maand, vanaf vandaag;
+- wie in de bib staat en wie back-up is, met het event van die avond;
+- gesloten avonden en workshops;
+- wie zich afmeldde (doorgestreept);
+- een melding als het rooster van een maand nog niet gepubliceerd is;
+- een knop **Beschikbaarheid invullen of afmelden** die de roostertool opent.
+
+**Koppelen.** Vul in het tabblad Instellingen van de catalogus in:
+
+| Instelling | Wat |
+| --- | --- |
+| `rooster_url` | de URL van de web-app van het rooster. Je vindt ze in de spreadsheet van het rooster via Extensies > Apps Script > Implementeren > Implementaties beheren. Ze eindigt op `/exec`. |
+| `rooster_code` | de toegangscode voor vrijwilligers van het rooster (`toegangscode_vrijwilligers` in de Instellingen van het rooster) |
+| `rooster_link` | het adres van de roostertool, standaard `https://projectmadrigal.github.io/rooster/` |
+
+De code blijft op de server van Google: de browser ziet ze nooit. Verander je de code in het rooster, pas ze dan ook hier aan.
+
+Het script bewaart het rooster 10 minuten in zijn geheugen. Een wijziging in het rooster zie je dus na hoogstens 10 minuten.

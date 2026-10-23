@@ -289,6 +289,21 @@ test('beschrijvingen vertalen: Nederlands blijft, Engels komt in beschrijving_en
   assert.strictEqual(M.schoonMetRegels('  Regel  1 \r\n\n\n\n Regel 2 '), 'Regel 1\n\nRegel 2');
 });
 
+test('rooster: deze en volgende maand, vanaf vandaag, ongepubliceerde maand zonder namen', () => {
+  gelijk(M.roosterMaanden('2026-12-18'), ['2026-12', '2027-01']);
+  const d = M.bouwRoosterOverzicht([
+    { ok: true, maand: '2026-10', avonden: [{ datum: '2026-10-16', status: 'open', event: '' }, { datum: '2026-10-30', status: 'open', event: 'Praatcafé' }],
+      rooster: [{ datum: '2026-10-30', vrijwilligers: ['Sam', 'Lou'], backups: [], afgemeld: ['Lou'] }] },
+    { ok: true, maand: '2026-11', avonden: [{ datum: '2026-11-06', status: 'gesloten', event: '' }], rooster: null }
+  ], '2026-10-23');
+  gelijk(d.avonden.map((a) => a.datum), ['2026-10-30', '2026-11-06']);
+  gelijk(d.avonden[0].vrijwilligers, ['Sam', 'Lou']);
+  gelijk(d.avonden[0].afgemeld, ['Lou']);
+  assert.strictEqual(d.avonden[0].event, 'Praatcafé');
+  assert.strictEqual(d.avonden[1].gepubliceerd, false);
+  gelijk(d.nietGepubliceerd, ['2026-11']);
+});
+
 test('Google Books: cover in https, enkel lege velden, eigen cover blijft', () => {
   const info = { imageLinks: { thumbnail: 'http://books.google.com/books/content?id=abc&printsec=frontcover&img=1&zoom=1&edge=curl' }, language: 'nl', pageCount: 120, publisher: 'Verzonnen BV', publishedDate: '1999-05-01', description: '<b>Een</b> verzonnen boek.' };
   const v = M.verwerkGoogleBooks({ isbn: '9780306406157', cover_url: '', uitgeverij: 'Bestaand', jaartal: '', paginas: '', taal: '', beschrijving: '' }, info);
