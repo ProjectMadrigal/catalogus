@@ -216,8 +216,7 @@
   }
 
   function cover(b, groot) {
-    var letter = (Z.sorteerTekst(b.t).charAt(0) || '?').toUpperCase();
-    var plaatshouder = el('div', { class: 'plaatshouder' + (b.s === 'zine' ? ' zine' : ''), 'aria-hidden': 'true' }, letter);
+    var plaatshouder = D.plaatshouder(b);
     if (!b.c) return plaatshouder;
     var img = el('img', {
       class: 'cover', src: b.c, alt: groot ? t('coverVan', { titel: b.t }) : '', loading: 'lazy', decoding: 'async',
