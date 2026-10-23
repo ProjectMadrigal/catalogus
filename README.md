@@ -31,6 +31,7 @@ Daarnaast is er een **handleiding van één pagina** voor de balie, om af te dru
 15. [Waar alles staat, voor een volgende beheerder](#15-waar-alles-staat-voor-een-volgende-beheerder)
 16. [De website: nieuws, agenda, vragen en Engelse teksten](#16-de-website-nieuws-agenda-vragen-en-engelse-teksten)
 17. [Het vrijwilligersrooster in de balie en het bestuursscherm](#17-het-vrijwilligersrooster-in-de-balie-en-het-bestuursscherm)
+18. [Orde in de spreadsheet](#18-orde-in-de-spreadsheet)
 
 ---
 
@@ -426,6 +427,7 @@ Aan de balie zonder internet: noteer op papier de datum, het exemplaarnummer, he
 | `Site.js` | de inhoud van de startpagina (`?actie=site`) |
 | `OudeSite.js` | eenmalig: nieuws, agenda en vragen overnemen van de oude website |
 | `Rooster.js` | het vrijwilligersrooster ophalen voor de balie en het bestuur |
+| `Ordenen.js` | de volgorde van de tabbladen en de thema's in Instellingen |
 | `Opslag.js` | lezen en schrijven van de tabbladen |
 | `Hulp.js` | hulpfuncties voor tekst, ISBN en datums |
 
@@ -512,3 +514,21 @@ Het rooster zelf is een aparte tool, met een eigen repository (**rooster**), spr
 De code blijft op de server van Google: de browser ziet ze nooit. Verander je de code in het rooster, pas ze dan ook hier aan.
 
 Het script bewaart het rooster 10 minuten in zijn geheugen. Een wijziging in het rooster zie je dus na hoogstens 10 minuten.
+
+## 18. Orde in de spreadsheet
+
+**Tabbladen.** Ze staan in een vaste volgorde, met een kleur per groep:
+
+| Kleur | Groep | Tabbladen |
+| --- | --- | --- |
+| paars | Uitlenen | Uitleningen, Reservaties, Leners, Uitzonderingen |
+| geel | Collectie | Catalogus, Onderwerpen, Na te kijken |
+| petrol | Website | Nieuws, Agenda, Veelgestelde vragen |
+| zwart | Beheer | Instellingen, Logboek |
+| grijs | Bronnen (zelden nodig) | Stock, Zines, Goodreads-export |
+
+Andere tabbladen komen achteraan, in hun eigen volgorde.
+
+**Instellingen.** Ze staan per thema onder een tussenkop, bijvoorbeeld `── UITLENEN ──`. Een Engelse tekst staat vlak onder de Nederlandse. De tussenkoppen zijn geen instellingen: laat ze staan of wis ze, dat maakt niet uit.
+
+"Installeer tabbladen" ordent alles opnieuw. Wil je enkel ordenen, kies dan **Madrigal > Orden tabbladen en instellingen**. Waarden die je invulde, blijven altijd staan. Een instelling die je zelf toevoegde, komt onder `── OVERIGE ──`.

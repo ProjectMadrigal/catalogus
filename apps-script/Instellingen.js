@@ -1,9 +1,10 @@
 /**
  * Instellingen.js
  * De standaardwaarden voor het tabblad Instellingen, en het inlezen ervan.
- * Wil je een nieuwe instelling toevoegen? Zet ze in de lijst hieronder en voer
- * daarna "Installeer tabbladen" uit: ontbrekende sleutels worden aangevuld,
- * bestaande waarden blijven staan.
+ * Wil je een nieuwe instelling toevoegen? Zet ze in de lijst hieronder én in een
+ * groep in Ordenen.js, en voer daarna "Installeer tabbladen" uit: ontbrekende
+ * sleutels worden aangevuld, bestaande waarden blijven staan, en het tabblad
+ * wordt per thema geordend.
  */
 
 var STANDAARD_INSTELLINGEN = [
