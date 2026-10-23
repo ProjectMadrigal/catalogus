@@ -427,7 +427,11 @@ main.website { max-width: none; padding: 0; }
 .hero-zoek input::placeholder { color: #5b5858; }
 .hero-zoek .knop { background: var(--kleur-geel); color: var(--kleur-op-geel); border-color: var(--kleur-geel); }
 
-.kaarten { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+/* Kaarten staan in het midden: één bericht staat dus niet alleen links. */
+.kaarten { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+.kaarten > * { flex: 1 1 100%; max-width: 30rem; }
+.kaarten > p { text-align: center; max-width: none; }
+#nieuws-titel, #agenda-titel, #aanraders-titel, #faq-titel { text-align: center; }
 .nieuwskaart { background: var(--kleur-vlak); color: var(--kleur-tekst); border-radius: var(--hoek); overflow: hidden; }
 .nieuwskaart img { width: 100%; max-height: 22rem; object-fit: cover; display: block; }
 .nieuwskaart .inhoud { padding: 1rem 1.2rem; }
@@ -478,7 +482,7 @@ main.website { max-width: none; padding: 0; }
 /* ---------- Grotere schermen ---------- */
 
 @media (min-width: 40rem) {
-  .kaarten { grid-template-columns: repeat(2, 1fr); }
+  .kaarten > article { flex-basis: calc(50% - .5rem); }
   .contact { grid-template-columns: 1fr 1fr; }
   .duo { grid-template-columns: 1fr 1fr; }
   .filterraster { grid-template-columns: repeat(2, 1fr); }
