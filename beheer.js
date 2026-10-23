@@ -172,8 +172,71 @@
     D.vervang(container, el('div', { class: 'melding ' + type, role: type === 'fout' ? 'alert' : 'status' }, tekst));
   }
 
+  /* ---------- Rooster ---------- */
+
+  var DAGNAMEN = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
+  var MAANDNAMEN = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+  var AVONDSTATUS = { gesloten: 'Gesloten', workshop: 'Workshop', ander: 'Andere activiteit' };
+
+  /** "2026-10-30" wordt "vrijdag 30 oktober". */
+  function langeDatum(iso) {
+    var d = String(iso).split('-').map(Number);
+    var dt = new Date(Date.UTC(d[0], d[1] - 1, d[2]));
+    return DAGNAMEN[dt.getUTCDay()] + ' ' + d[2] + ' ' + MAANDNAMEN[d[1] - 1];
+  }
+
+  /** Een naam, doorgestreept met "afgemeld" als die persoon zich afmeldde. */
+  function roosterNaam(naam, afgemeld) {
+    if (afgemeld.indexOf(naam) === -1) return el('span', {}, naam);
+    return el('span', {}, el('s', {}, naam), ' (afgemeld)');
+  }
+
+  /**
+   * Toont het rooster in een container: elke avond vanaf vandaag, deze en volgende maand.
+   * Laadt het zelf op via de actie roosterOverzicht.
+   */
+  function toonRooster(container) {
+    D.vervang(container, el('p', { class: 'laden' }, 'Het rooster laden...'));
+    voerUit('roosterOverzicht').then(function (r) {
+      if (!r.ok) { melding(container, 'fout', r.fout || 'Het rooster kon niet laden.'); return; }
+      var d = r.data;
+      var knop = el('p', {}, el('a', { class: 'knop tweede', href: d.link, target: '_blank', rel: 'noopener' }, 'Beschikbaarheid invullen of afmelden'));
+      if (!d.gekoppeld) {
+        D.vervang(container,
+          el('div', { class: 'melding info' }, 'Het rooster is nog niet gekoppeld. Het bestuur vult in de spreadsheet bij Instellingen rooster_url en rooster_code in.'),
+          knop);
+        return;
+      }
+      var maandenZonder = d.nietGepubliceerd.map(function (m) { return MAANDNAMEN[Number(m.slice(5, 7)) - 1]; });
+      var kaarten = d.avonden.map(function (a, i) {
+        var dicht = AVONDSTATUS[a.status];
+        var inhoud = [el('h3', {}, (i === 0 && a.datum === d.vandaag ? 'Vandaag, ' : '') + langeDatum(a.datum))];
+        if (a.event) inhoud.push(el('p', {}, 'Event: ' + a.event));
+        if (dicht) {
+          inhoud.push(el('p', { class: 'labels' }, D.statusLabel('gesloten', dicht)));
+        } else if (!a.gepubliceerd) {
+          inhoud.push(el('p', { class: 'hulptekst' }, 'Nog niet ingepland.'));
+        } else {
+          var namen = function (lijst) {
+            if (!lijst.length) return [el('em', {}, 'niemand')];
+            var uit = [];
+            lijst.forEach(function (n, j) { if (j) uit.push(', '); uit.push(roosterNaam(n, a.afgemeld)); });
+            return uit;
+          };
+          inhoud.push(el('p', {}, el('strong', {}, 'Bib: '), namen(a.vrijwilligers)));
+          inhoud.push(el('p', {}, el('strong', {}, 'Back-up: '), namen(a.backups)));
+        }
+        return el('li', { class: 'kaart rooster-avond' + (dicht ? ' dicht' : '') }, inhoud);
+      });
+      D.vervang(container,
+        maandenZonder.length ? el('div', { class: 'melding info' }, 'Het rooster van ' + maandenZonder.join(' en ') + ' is nog niet gepubliceerd.') : null,
+        kaarten.length ? el('ul', { class: 'kaartlijst' }, kaarten) : el('p', {}, 'Er staan geen avonden meer gepland deze en volgende maand.'),
+        knop);
+    });
+  }
+
   root.MadrigalBeheer = {
     aanmelden: aanmelden, afmelden: afmelden, wisselWie: wisselWie, voerUit: voerUit,
-    uitleenStatus: uitleenStatus, melding: melding, sessie: sessie
+    uitleenStatus: uitleenStatus, melding: melding, sessie: sessie, toonRooster: toonRooster
   };
 })(window);

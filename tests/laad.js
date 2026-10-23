@@ -23,6 +23,7 @@ const SCRIPTS = [
   'apps-script/OpenLibrary.js',
   'apps-script/GoogleBooks.js',
   'apps-script/Beschrijvingen.js',
+  'apps-script/Rooster.js',
   'apps-script/Grenzen.js',
   'apps-script/Uitlenen.js',
   'apps-script/Publiek.js',
