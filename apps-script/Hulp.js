@@ -18,6 +18,12 @@ function schoon(waarde) {
   return String(waarde).replace(/\s+/g, ' ').trim();
 }
 
+/** Zoals schoon, maar regeleinden en lege regels (alinea's) blijven. */
+function schoonMetRegels(waarde) {
+  if (waarde === null || waarde === undefined) return '';
+  return String(waarde).replace(/\r/g, '').replace(/[ \t]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{3,}/g, '\n\n').trim();
+}
+
 /** Kleine letters, zonder accenten en leestekens. "Émile Zola!" wordt "emile zola". */
 function normaliseerTekst(waarde) {
   return schoon(waarde)
