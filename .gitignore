@@ -8,3 +8,6 @@ export/
 gegevens/
 node_modules/
 .DS_Store
+
+# Reservekopieën van git (git bundle), horen niet in de repository.
+*.bundle
