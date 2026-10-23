@@ -30,6 +30,7 @@ function installeer() {
     if (rij[0] === 'toegangscode_balie' || rij[0] === 'code_bestuur') waarde = willekeurigeCode();
     inst.appendRow([rij[0], waarde, rij[2]]);
   });
+  ordenInstellingen(ss); // per thema, met tussenkoppen (zie Ordenen.js)
   inst.setColumnWidth(1, 280);
   inst.setColumnWidth(2, 380);
   inst.setColumnWidth(3, 480);
@@ -69,6 +70,7 @@ function installeer() {
   ScriptApp.newTrigger('ruimOp').timeBased().everyDays(1).atHour(3).create();
   ScriptApp.newTrigger('bijWijziging').forSpreadsheet(ss).onEdit().create();
 
+  ordenTabbladen(ss);
   logboek('menu', 'installeer', 'tabbladen klaar');
   meld('De tabbladen staan klaar. Kijk in Instellingen de codes en teksten na.');
 }
@@ -91,6 +93,7 @@ function onOpen() {
     .addItem('Neem lopende uitleningen over uit het oude blad', 'neemUitleningenOver')
     .addItem('Neem nieuws, agenda en vragen over van de oude website', 'importeerOudeSite')
     .addItem('Privacy-opruiming nu uitvoeren', 'ruimOp')
+    .addItem('Orden tabbladen en instellingen', 'ordenAlles')
     .addSeparator()
     .addItem('Catalogus wissen en opnieuw opbouwen (enkel bij de start)', 'herbouwCatalogus')
     .addToUi();
