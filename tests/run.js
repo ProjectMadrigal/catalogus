@@ -263,6 +263,19 @@ test('vult enkel lege velden en bouwt de cover-link', () => {
   assert.strictEqual(v.beschrijving, 'Een verzonnen beschrijving.');
 });
 
+test('beschrijvingen: netjes gemaakt, enkel zoeken waar nodig', () => {
+  const ol = 'Een verzonnen roman over een zee.\n\nTweede alinea met een [link](https://voorbeeld.test).\n\n----------\nZie ook: [1]\n[1]: https://voorbeeld.test';
+  assert.strictEqual(M.maakBeschrijvingNetjes(ol), 'Een verzonnen roman over een zee.\n\nTweede alinea met een link.');
+  assert.strictEqual(M.maakBeschrijvingNetjes('<p>Een <b>vet</b> boek&amp;meer</p>'), 'Een vet boek&meer');
+  const lang = M.maakBeschrijvingNetjes('woord '.repeat(400));
+  assert.ok(lang.length <= 1000 && lang.endsWith('...'));
+  assert.strictEqual(M.olTekst({ value: 'Tekst' }), 'Tekst');
+  assert.strictEqual(M.heeftBeschrijvingNodig({ isbn: '9780306406157', beschrijving: '', beschrijving_gezocht: '' }), true);
+  assert.strictEqual(M.heeftBeschrijvingNodig({ isbn: '9780306406157', beschrijving: 'Eigen tekst', beschrijving_gezocht: '' }), false);
+  assert.strictEqual(M.heeftBeschrijvingNodig({ isbn: '9780306406157', beschrijving: '', beschrijving_gezocht: '2026-10-23' }), false);
+  assert.strictEqual(M.heeftBeschrijvingNodig({ isbn: '', beschrijving: '', beschrijving_gezocht: '' }), false);
+});
+
 test('Google Books: cover in https, enkel lege velden, eigen cover blijft', () => {
   const info = { imageLinks: { thumbnail: 'http://books.google.com/books/content?id=abc&printsec=frontcover&img=1&zoom=1&edge=curl' }, language: 'nl', pageCount: 120, publisher: 'Verzonnen BV', publishedDate: '1999-05-01', description: '<b>Een</b> verzonnen boek.' };
   const v = M.verwerkGoogleBooks({ isbn: '9780306406157', cover_url: '', uitgeverij: 'Bestaand', jaartal: '', paginas: '', taal: '', beschrijving: '' }, info);
