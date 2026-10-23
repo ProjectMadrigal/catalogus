@@ -26,6 +26,7 @@ var ACTIES = {
   reserveren: 'balie',
   annuleerReservatie: 'balie',
   nieuweLener: 'balie',
+  roosterOverzicht: 'balie',
   bestuurData: 'bestuur',
   borgTerugbetaald: 'bestuur',
   herinneringVerstuurd: 'bestuur',
@@ -179,6 +180,7 @@ function doPost(e) {
 /** Voert een actie uit. Wijzigende acties gebeuren onder een slot, zodat twee balies elkaar niet storen. */
 function voerActieUit(actie, invoer, rol) {
   if (actie === 'aanmelden') return { ok: true, rol: rol };
+  if (actie === 'roosterOverzicht') return roosterOverzicht(); // leest enkel, geen slot nodig
 
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) return { ok: false, fout: 'Het is even druk. Probeer het over een paar seconden opnieuw.' };

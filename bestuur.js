@@ -25,7 +25,8 @@
     ['reservaties', 'Reservaties', toonReservaties],
     ['uitzonderingen', 'Uitzonderingen', toonUitzonderingen],
     ['leners', 'Leners', toonLeners],
-    ['cijfers', 'Cijfers', toonCijfers]
+    ['cijfers', 'Cijfers', toonCijfers],
+    ['rooster', 'Rooster', toonRoosterSectie]
   ];
 
   /* ---------- Gegevens en navigatie ---------- */
@@ -122,6 +123,12 @@
       el('p', {}, 'Laatste herinnering: ' + (u.laatste_herinnering ? D.korteDatum(u.laatste_herinnering) : 'nog geen')),
       el('details', {}, el('summary', {}, 'Toon de tekst'), el('p', {}, u.herinnering)),
       el('div', { class: 'knoppen' }, kopieerKnop, verstuurdKnop));
+  }
+
+  function toonRoosterSectie(vak) {
+    var inhoud = el('div');
+    D.vervang(vak, kop('Rooster', 'Wie staat er de komende vrijdagen in de bib? Het rooster zelf maak je in de roostertool.'), inhoud);
+    B.toonRooster(inhoud);
   }
 
   function toonTeLaat(vak) {
