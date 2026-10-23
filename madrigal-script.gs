@@ -81,6 +81,12 @@ var GOODREADS_VELDEN = {
   paginas: ['Number of Pages']
 };
 
+var GB_PAUZE_MS = 400;
+
+var GB_MAX_LOOPTIJD_MS = 4.5 * 60 * 1000;
+
+var GB_TALEN = { nl: 'Nederlands', en: 'Engels', fr: 'Frans', de: 'Duits', es: 'Spaans', it: 'Italiaans', pt: 'Portugees' };
+
 var GRENZEN = [
   {
     id: 'max_boeken',
@@ -176,6 +182,7 @@ var STANDAARD_INSTELLINGEN = [
   ['code_bestuur', '', 'Code voor het bestuursscherm. Geef ze enkel aan het bestuur.'],
   ['bewaartermijn_afgesloten_uitleningen_maanden', 12, 'Na hoeveel maanden de koppeling tussen een teruggebrachte uitlening en de lener gewist wordt.'],
   ['goodreads_shelf', '', 'Naam van de Goodreads-shelf met de boeken van Madrigal, precies zoals op Goodreads. Leeg: alle boeken uit de export.'],
+  ['google_books_api_key', '', 'Optioneel. Een sleutel voor de Google Books-API, zodat covers sneller opgezocht worden. Leeg werkt ook, maar trager.'],
   ['zines_te_koop_uitleenbaar', 'nee', 'nee: zines met genre "verkoop" zijn niet uitleenbaar.'],
   ['tekst_welkom', 'Welkom in de catalogus van Project Madrigal, de queer bib van Antwerpen. Zoek, snuister en kom langs om te lenen.', 'Welkomsttekst bovenaan de publieke catalogus.'],
   ['tekst_uitleg_lenen', 'Je leent gratis, je betaalt enkel 5 euro borg per boek. Die krijg je terug als je het boek terugbrengt. Je mag 2 boeken tegelijk lenen, voor 4 weken. Kom langs op vrijdag tijdens de openingsuren.', 'Uitleg over lenen in de publieke catalogus: wanneer open, hoe lang, hoeveel.'],
@@ -202,7 +209,7 @@ var KOLOMMEN = {
     'uitvoering', 'nieuwstaat', 'aanrader', 'genre', 'extra_onderwerpen', 'klassieker', 'aantal',
     'uitleenbaar', 'publiek', 'beschrijving', 'cover_url',
     // Vanaf hier: nooit publiek.
-    'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd'
+    'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd'
   ],
   'Onderwerpen': ['genre', 'filtergroepen', 'aantal_boeken'],
   'Leners': ['lenersnummer', 'voornaam', 'achternaam', 'telefoon', 'email', 'datum_inschrijving', 'toestemming_privacy', 'actief'],
@@ -224,7 +231,7 @@ var KOLOMMEN = {
 var DATUMKOLOMMEN = [
   'datum_inschrijving', 'datum_uit', 'oorspronkelijke_vervaldatum', 'vervaldatum', 'datum_terug',
   'datum_verlenging', 'borg_terugbetaald', 'laatste_herinnering', 'datum_reservatie', 'datum_klaar',
-  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd'
+  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd'
 ];
 
 var STATUS_WACHT = 'wacht';
@@ -810,6 +817,13 @@ function goodreadsWaarde(rij, kolommen) {
   return '';
 }
 
+/** Heeft dit boek nog een cover nodig van Google Books? */
+function heeftGoogleBooksNodig(boek) {
+  if (!/^\d{13}$/.test(String(boek.isbn || ''))) return false;
+  if (!isLeeg(boek.gb_gecontroleerd)) return false;
+  return isLeeg(boek.cover_url);
+}
+
 /** Heeft dit boek nog iets nodig van Open Library? */
 function heeftOpenLibraryNodig(boek) {
   var isbn = String(boek.isbn || '');
@@ -913,7 +927,7 @@ function installeer() {
   // Niet-publieke kolommen van de Catalogus grijs markeren.
   var cat = ss.getSheetByName('Catalogus');
   var catKop = cat.getRange(1, 1, 1, cat.getLastColumn()).getValues()[0].map(schoon);
-  ['herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd'].forEach(function (k) {
+  ['herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd'].forEach(function (k) {
     var i = catKop.indexOf(k);
     if (i > -1) {
       cat.getRange(1, i + 1).setBackground('#d9d9d9').setNote('Niet publiek. Deze kolom verschijnt nooit op de website.');
@@ -1581,6 +1595,7 @@ function onOpen() {
     .addItem('2. Bouw de catalogus uit Stock en Zines', 'maakCatalogus')
     .addItem('3. Vul aan uit Goodreads', 'vulAanUitGoodreads')
     .addItem('4. Vul aan uit Open Library', 'vulAanUitOpenLibrary')
+    .addItem('5. Zoek ontbrekende covers bij Google Books', 'vulAanUitGoogleBooks')
     .addSeparator()
     .addItem('Nieuwe boeken verwerken', 'verwerkNieuweBoeken')
     .addItem('Werk de vertaaltabel Onderwerpen bij', 'werkOnderwerpenBijMenu')
@@ -2094,6 +2109,33 @@ function verversMenu() {
 }
 
 /**
+ * Haalt uit het antwoord van Google Books (één "volumeInfo") de velden die nog leeg zijn.
+ * Geeft een object veld -> waarde terug.
+ */
+function verwerkGoogleBooks(boek, info) {
+  var v = {};
+  if (!info) return v;
+  var links = info.imageLinks || {};
+  var cover = links.thumbnail || links.smallThumbnail;
+  if (isLeeg(boek.cover_url) && cover) {
+    // Altijd https, zonder het omgekrulde hoekje dat Google soms toevoegt.
+    v.cover_url = String(cover).replace(/^http:/, 'https:').replace(/&edge=curl/, '');
+  }
+  if (isLeeg(boek.uitgeverij) && info.publisher) v.uitgeverij = schoon(info.publisher);
+  if (isLeeg(boek.jaartal) && info.publishedDate) {
+    var m = String(info.publishedDate).match(/\d{4}/);
+    if (m) v.jaartal = Number(m[0]);
+  }
+  if (isLeeg(boek.paginas) && info.pageCount) v.paginas = Number(info.pageCount);
+  if (isLeeg(boek.taal) && GB_TALEN[info.language]) v.taal = GB_TALEN[info.language];
+  if (isLeeg(boek.beschrijving) && info.description) {
+    var b = schoon(String(info.description).replace(/<[^>]*>/g, ' '));
+    if (b) v.beschrijving = b.length > 600 ? b.slice(0, 597).replace(/\s+\S*$/, '') + '...' : b;
+  }
+  return v;
+}
+
+/**
  * Zet de ruwe waarden uit het tabblad om naar bruikbare instellingen.
  * ruw: object met sleutel -> waarde zoals in de spreadsheet.
  * Ontbrekende of onleesbare waarden krijgen de standaardwaarde.
@@ -2498,6 +2540,62 @@ function vulAanUitGoodreads(stil) {
   }
 }
 
+/** Menu: vult covers aan uit Google Books, in porties. */
+function vulAanUitGoogleBooks() {
+  var start = Date.now();
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) {
+    meld('Er loopt al een andere bewerking. Probeer het zo meteen opnieuw.');
+    return;
+  }
+  var verwerkt = 0, aangevuld = 0, rest = 0, limiet = false;
+  try {
+    var sleutel = leesInstellingen().google_books_api_key;
+    var tabel = leesTabel('Catalogus');
+    if (tabel.kop.indexOf('gb_gecontroleerd') === -1) {
+      meld('De kolom gb_gecontroleerd ontbreekt nog in de Catalogus. Voer eerst "installeer" uit.');
+      return;
+    }
+    var vandaag = vandaagTekst();
+    var teDoen = tabel.rijen.filter(heeftGoogleBooksNodig);
+    for (var i = 0; i < teDoen.length; i++) {
+      if (Date.now() - start > GB_MAX_LOOPTIJD_MS) break;
+      var boek = teDoen[i];
+      var url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + boek.isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : '');
+      var antwoord = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+      var code = antwoord.getResponseCode();
+      if (code === 429 || code === 403) { limiet = true; break; } // daglimiet bereikt
+      if (code >= 500) break;                                       // storing bij Google: later verder
+      var data = {};
+      try { data = JSON.parse(antwoord.getContentText()); } catch (e) { data = {}; }
+      var info = data.items && data.items.length ? data.items[0].volumeInfo : null;
+      var velden = verwerkGoogleBooks(boek, info);
+      if (velden.cover_url) aangevuld++;
+      velden.gb_gecontroleerd = vandaag;
+      wijzig(boek, velden);
+      verwerkt++;
+      // Om de 25 boeken bewaren: zo gaat er niets verloren als het script stopt.
+      if (verwerkt % 25 === 0) bewaarTabel(tabel);
+      Utilities.sleep(GB_PAUZE_MS);
+    }
+    bewaarTabel(tabel);
+    rest = tabel.rijen.filter(heeftGoogleBooksNodig).length;
+  } finally {
+    lock.releaseLock();
+  }
+  verwijderTriggers('vulAanUitGoogleBooks');
+  if (rest > 0) {
+    // Bij de daglimiet wachten we een paar uur, anders een minuut.
+    ScriptApp.newTrigger('vulAanUitGoogleBooks').timeBased().after((limiet ? 6 * 60 : 1) * 60 * 1000).create();
+  }
+  if (aangevuld) leegCache();
+  logboek('menu', 'vulAanUitGoogleBooks', verwerkt + ' opgevraagd, ' + aangevuld + ' covers gevonden, ' + rest + ' te gaan' + (limiet ? ' (daglimiet van Google bereikt)' : ''));
+  var tekst = verwerkt + ' boeken opgevraagd bij Google Books, ' + aangevuld + ' covers gevonden.';
+  if (rest > 0) tekst += limiet ? ' De daglimiet van Google is bereikt: over 6 uur gaat het script vanzelf verder.' : ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.';
+  else tekst += ' Alles is verwerkt.';
+  try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
+}
+
 /** Menu: vult de Catalogus aan uit Open Library, in porties. */
 function vulAanUitOpenLibrary() {
   var start = Date.now();
@@ -2547,10 +2645,13 @@ function vulAanUitOpenLibrary() {
     ScriptApp.newTrigger('vulAanUitOpenLibrary').timeBased().after(60 * 1000).create();
   } else {
     leegCache();
+    // Klaar: Google Books zoekt nog covers voor de boeken waar Open Library er geen had.
+    verwijderTriggers('vulAanUitGoogleBooks');
+    ScriptApp.newTrigger('vulAanUitGoogleBooks').timeBased().after(60 * 1000).create();
   }
   logboek('menu', 'vulAanUitOpenLibrary', verwerkt + ' opgevraagd, ' + aangevuld + ' aangevuld, ' + rest + ' te gaan');
   var tekst = verwerkt + ' boeken opgevraagd bij Open Library, ' + aangevuld + ' aangevuld.';
-  tekst += rest > 0 ? ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.' : ' Alles is verwerkt.';
+  tekst += rest > 0 ? ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.' : ' Alles is verwerkt. Google Books zoekt nu nog ontbrekende covers.';
   try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
 }
 

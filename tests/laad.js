@@ -21,6 +21,7 @@ const SCRIPTS = [
   'apps-script/Catalogus.js',
   'apps-script/Goodreads.js',
   'apps-script/OpenLibrary.js',
+  'apps-script/GoogleBooks.js',
   'apps-script/Grenzen.js',
   'apps-script/Uitlenen.js',
   'apps-script/Publiek.js',

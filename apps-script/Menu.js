@@ -56,7 +56,7 @@ function installeer() {
   // Niet-publieke kolommen van de Catalogus grijs markeren.
   var cat = ss.getSheetByName('Catalogus');
   var catKop = cat.getRange(1, 1, 1, cat.getLastColumn()).getValues()[0].map(schoon);
-  ['herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd'].forEach(function (k) {
+  ['herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd'].forEach(function (k) {
     var i = catKop.indexOf(k);
     if (i > -1) {
       cat.getRange(1, i + 1).setBackground('#d9d9d9').setNote('Niet publiek. Deze kolom verschijnt nooit op de website.');
@@ -80,6 +80,7 @@ function onOpen() {
     .addItem('2. Bouw de catalogus uit Stock en Zines', 'maakCatalogus')
     .addItem('3. Vul aan uit Goodreads', 'vulAanUitGoodreads')
     .addItem('4. Vul aan uit Open Library', 'vulAanUitOpenLibrary')
+    .addItem('5. Zoek ontbrekende covers bij Google Books', 'vulAanUitGoogleBooks')
     .addSeparator()
     .addItem('Nieuwe boeken verwerken', 'verwerkNieuweBoeken')
     .addItem('Werk de vertaaltabel Onderwerpen bij', 'werkOnderwerpenBijMenu')

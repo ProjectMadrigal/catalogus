@@ -252,6 +252,20 @@ test('vult enkel lege velden en bouwt de cover-link', () => {
   assert.strictEqual(v.beschrijving, 'Een verzonnen beschrijving.');
 });
 
+test('Google Books: cover in https, enkel lege velden, eigen cover blijft', () => {
+  const info = { imageLinks: { thumbnail: 'http://books.google.com/books/content?id=abc&printsec=frontcover&img=1&zoom=1&edge=curl' }, language: 'nl', pageCount: 120, publisher: 'Verzonnen BV', publishedDate: '1999-05-01', description: '<b>Een</b> verzonnen boek.' };
+  const v = M.verwerkGoogleBooks({ isbn: '9780306406157', cover_url: '', uitgeverij: 'Bestaand', jaartal: '', paginas: '', taal: '', beschrijving: '' }, info);
+  assert.strictEqual(v.cover_url, 'https://books.google.com/books/content?id=abc&printsec=frontcover&img=1&zoom=1');
+  assert.strictEqual(v.uitgeverij, undefined);
+  assert.strictEqual(v.jaartal, 1999);
+  assert.strictEqual(v.taal, 'Nederlands');
+  assert.strictEqual(v.beschrijving, 'Een verzonnen boek.');
+  assert.strictEqual(M.heeftGoogleBooksNodig({ isbn: '9780306406157', cover_url: 'https://voorbeeld.test/eigen.jpg' }), false);
+  assert.strictEqual(M.heeftGoogleBooksNodig({ isbn: '9780306406157', cover_url: '' }), true);
+  assert.strictEqual(M.heeftGoogleBooksNodig({ isbn: '9780306406157', cover_url: '', gb_gecontroleerd: '2026-10-23' }), false);
+  assert.strictEqual(M.verwerkGoogleBooks({ cover_url: 'https://voorbeeld.test/eigen.jpg' }, info).cover_url, undefined);
+});
+
 console.log('\nZoeken en filteren');
 
 const Z = M.MadrigalZoeken;
