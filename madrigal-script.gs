@@ -248,13 +248,15 @@ function aantalExemplaren(boek) {
 }
 
 /**
- * Achternaam uit "Achternaam, Voornaam" of "Voornaam Achternaam", genormaliseerd.
+ * Achternaam uit "Achternaam, Voornaam" of "Voornaam Achternaam", genormaliseerd,
+ * zonder tussenvoegsel.
  * Bij meerdere auteurs (gescheiden door ; of &) nemen we de eerste.
  */
 function achternaam(auteur) {
   var eerste = schoon(auteur).split(/;|&| en | and /)[0];
-  if (eerste.indexOf(',') > -1) return normaliseerTekst(eerste.split(',')[0]);
-  var delen = normaliseerTekst(eerste).split(' ');
+  // "van Babylon, Dirk" en "Babylon, Dirk van" geven allebei "babylon":
+  // we nemen het laatste woord, zodat tussenvoegsels geen rol spelen.
+  var delen = normaliseerTekst(eerste.indexOf(',') > -1 ? eerste.split(',')[0] : eerste).split(' ');
   return delen[delen.length - 1] || '';
 }
 
@@ -1032,7 +1034,9 @@ function koppelGoodreads(catalogus, goodreads) {
       if (isLeeg(waarde)) return;
       if (isLeeg(boek[veld])) {
         aanvullingen.push({ boek: boek, veld: veld, waarde: veld === 'uitgeverij' ? schoon(waarde) : waarde });
-      } else if (!zelfdeWaarde(boek[veld], waarde)) {
+      } else if (manier === 'isbn' && !zelfdeWaarde(boek[veld], waarde)) {
+        // Enkel bij een koppeling op ISBN gaat het om dezelfde uitgave. Bij een koppeling
+        // op titel en auteur is een ander jaartal of aantal pagina's gewoon een andere uitgave.
         naTeKijken.push({
           boek: boek, veld: veld, waarde_catalogus: boek[veld], waarde_bron: waarde,
           opmerking: 'Gekoppeld op ' + manier + '. De Catalogus heeft een andere waarde. Die blijft staan, tenzij je ze zelf aanpast.'
@@ -2487,9 +2491,11 @@ function vulAanUitGoodreads(stil) {
       var v = {}; v[a.veld] = a.waarde;
       wijzig(a.boek, v);
     });
+    // Oude rijen van Goodreads die nog niet afgehandeld zijn, vervangen we door de nieuwe.
+    naTeKijken.rijen = naTeKijken.rijen.filter(function (r) { return r.bron !== 'Goodreads' || jaNee(r.afgehandeld) === 'ja'; });
     var nieuw = voegNaTeKijkenToe(naTeKijken.rijen, resultaat.naTeKijken, 'Goodreads', vandaagTekst());
     bewaarTabel(catalogus);
-    bewaarTabel(naTeKijken);
+    schrijfVolledig(naTeKijken);
     leegCache();
     logboek('menu', 'vulAanUitGoodreads', resultaat.aanvullingen.length + ' velden aangevuld, ' + nieuw + ' na te kijken');
     if (!stil) meld(goodreads.length + ' boeken van Goodreads gebruikt' + (shelf ? ' (shelf "' + shelf + '")' : '') + '. ' +

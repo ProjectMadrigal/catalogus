@@ -6,8 +6,12 @@
  *   1. Koppeling op ISBN: zeker. Lege velden worden aangevuld.
  *   2. Anders koppeling op titel en achternaam van de auteur: ook aangevuld.
  *   3. Enkel de titel komt overeen: twijfel, dat gaat naar "Na te kijken".
- *   4. Staat er al een andere waarde in de Catalogus: die blijft staan,
- *      en beide waarden komen naast elkaar in "Na te kijken".
+ *   4. Staat er al een andere waarde in de Catalogus: die blijft staan.
+ *      Bij een koppeling op ISBN (dezelfde uitgave) komen beide waarden naast
+ *      elkaar in "Na te kijken". Bij een koppeling op titel en auteur niet:
+ *      dan is een verschil meestal gewoon een andere uitgave.
+ *   Bij elke uitvoering vervangt het script de rijen van Goodreads in
+ *   "Na te kijken" die nog niet afgehandeld zijn.
  *
  * De export van Goodreads bevat geen taal en geen beschrijving. Die vult
  * Open Library later aan.
@@ -107,7 +111,9 @@ function koppelGoodreads(catalogus, goodreads) {
       if (isLeeg(waarde)) return;
       if (isLeeg(boek[veld])) {
         aanvullingen.push({ boek: boek, veld: veld, waarde: veld === 'uitgeverij' ? schoon(waarde) : waarde });
-      } else if (!zelfdeWaarde(boek[veld], waarde)) {
+      } else if (manier === 'isbn' && !zelfdeWaarde(boek[veld], waarde)) {
+        // Enkel bij een koppeling op ISBN gaat het om dezelfde uitgave. Bij een koppeling
+        // op titel en auteur is een ander jaartal of aantal pagina's gewoon een andere uitgave.
         naTeKijken.push({
           boek: boek, veld: veld, waarde_catalogus: boek[veld], waarde_bron: waarde,
           opmerking: 'Gekoppeld op ' + manier + '. De Catalogus heeft een andere waarde. Die blijft staan, tenzij je ze zelf aanpast.'
@@ -173,9 +179,11 @@ function vulAanUitGoodreads(stil) {
       var v = {}; v[a.veld] = a.waarde;
       wijzig(a.boek, v);
     });
+    // Oude rijen van Goodreads die nog niet afgehandeld zijn, vervangen we door de nieuwe.
+    naTeKijken.rijen = naTeKijken.rijen.filter(function (r) { return r.bron !== 'Goodreads' || jaNee(r.afgehandeld) === 'ja'; });
     var nieuw = voegNaTeKijkenToe(naTeKijken.rijen, resultaat.naTeKijken, 'Goodreads', vandaagTekst());
     bewaarTabel(catalogus);
-    bewaarTabel(naTeKijken);
+    schrijfVolledig(naTeKijken);
     leegCache();
     logboek('menu', 'vulAanUitGoodreads', resultaat.aanvullingen.length + ' velden aangevuld, ' + nieuw + ' na te kijken');
     if (!stil) meld(goodreads.length + ' boeken van Goodreads gebruikt' + (shelf ? ' (shelf "' + shelf + '")' : '') + '. ' +

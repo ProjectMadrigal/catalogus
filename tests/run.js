@@ -216,6 +216,24 @@ test('Goodreads: enkel boeken van de gekozen shelf', () => {
   assert.strictEqual(M.leesGoodreadsRijen(waarden, '').length, 3);
 });
 
+test('koppeling op titel en auteur: andere uitgave is geen twijfel', () => {
+  const catalogus = [{ boek_id: 'B4', titel: 'Dagen zonder eind', auteur: 'Barry, Sam', isbn: '9780306406157', uitgeverij: 'Uitgeverij A', jaartal: 2016, paginas: 302 }];
+  const gr = [{ Title: 'Dagen zonder eind', 'Author l-f': 'Barry, Sam', ISBN13: '="9780804429573"', Publisher: 'Uitgeverij B', 'Year Published': '2017', 'Number of Pages': '259' }];
+  const r = M.koppelGoodreads(catalogus, gr);
+  assert.strictEqual(r.naTeKijken.length, 0);
+  assert.strictEqual(r.aanvullingen.length, 0);
+});
+test('tussenvoegsel: "van Dijk, Jo" en "Dijk, Jo van" zijn dezelfde auteur', () => {
+  assert.strictEqual(M.achternaam('van Dijk, Jo'), 'dijk');
+  assert.strictEqual(M.achternaam('Dijk, Jo van'), 'dijk');
+  assert.strictEqual(M.achternaam('Jo van Dijk'), 'dijk');
+  const catalogus = [{ boek_id: 'B5', titel: 'De zwarte zee', auteur: 'van Dijk, Jo', isbn: '', uitgeverij: '', jaartal: '', paginas: '' }];
+  const gr = [{ Title: 'De zwarte zee', 'Author l-f': 'Dijk, Jo van', Publisher: 'Huis', 'Year Published': '1986', 'Number of Pages': '420' }];
+  const r = M.koppelGoodreads(catalogus, gr);
+  assert.strictEqual(r.aanvullingen.length, 3);
+  assert.strictEqual(r.naTeKijken.filter((x) => x.veld === 'koppeling').length, 0);
+});
+
 test('Na te kijken: zelfde twijfel twee keer, één rij', () => {
   const rijen = [];
   const item = { boek: { boek_id: 'B1', titel: 'T' }, veld: 'jaartal', waarde_catalogus: 1999, waarde_bron: 2004, opmerking: '' };
