@@ -75,6 +75,8 @@ function leesTabel(naam) {
       if (!kop[k]) continue;
       var w = waarden[r][k];
       if (isDatumObject(w)) w = parseerDatum(w);
+      // Een datum die iemand als tekst typte (20/11/2026), ook omzetten.
+      else if (typeof w === 'string' && w && DATUMKOLOMMEN.indexOf(kop[k]) > -1) w = parseerDatum(w) || w;
       if (!isLeeg(w)) leeg = false;
       obj[kop[k]] = w;
     }
