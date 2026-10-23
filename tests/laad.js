@@ -33,10 +33,18 @@ const SCRIPTS = [
   'filters.js'
 ];
 
+/**
+ * Laadt de code. Met de omgevingsvariabele BUNDEL=1 gebruiken de tests het
+ * samengevoegde madrigal-script.gs in plaats van de losse bestanden, zodat we
+ * zeker zijn dat ook dat bestand correct werkt.
+ */
 function laad() {
   const context = vm.createContext({ console });
   context.globalThis = context;
-  for (const bestand of SCRIPTS) {
+  const lijst = process.env.BUNDEL === '1'
+    ? ['madrigal-script.gs'].concat(SCRIPTS.filter((f) => f.indexOf('apps-script/') !== 0))
+    : SCRIPTS;
+  for (const bestand of lijst) {
     const code = fs.readFileSync(path.join(ROOT, bestand), 'utf8');
     vm.runInContext(code, context, { filename: bestand });
   }

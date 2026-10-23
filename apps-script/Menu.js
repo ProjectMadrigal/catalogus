@@ -1,8 +1,6 @@
 /**
  * Menu.js
  * Het menu "Madrigal" in de spreadsheet, en de installatie van de tabbladen.
- * installeer() staat bewust als eerste functie: Apps Script kiest die dan
- * standaard in de keuzelijst naast "Uitvoeren".
  */
 
 /**
