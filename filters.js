@@ -3,7 +3,7 @@
  * De filters en het sorteren van de catalogus, volledig in de browser.
  * Een filter toevoegen? Voeg een blok toe aan FILTERS met:
  *   sleutel:  korte naam, komt ook in de link (bv. ?taal=Engels)
- *   label:    tekst boven het keuzemenu
+ *   label:    tekst boven het keuzemenu (labelSleutel: de vertaling in i18n.js)
  *   waarden:  functie(boek) die de waarde(n) van dat boek als lijst teruggeeft
  *   volgorde: (optioneel) functie die de keuzes sorteert
  */
@@ -32,19 +32,19 @@
   function alfabetisch(a, b) { return a.localeCompare(b, 'nl'); }
 
   var FILTERS = [
-    { sleutel: 'groep', label: 'Onderwerp', waarden: function (b) { return b.g || []; } /* volgorde: zie catalogus */ },
-    { sleutel: 'taal', label: 'Taal', waarden: function (b) { return b.l ? [b.l] : []; }, volgorde: alfabetisch },
-    { sleutel: 'staat', label: 'Nieuw of tweedehands', waarden: function (b) { return b.n ? [b.n === 'nieuw' ? 'Nieuw' : 'Tweedehands'] : []; }, volgorde: alfabetisch },
-    { sleutel: 'uitvoering', label: 'Uitvoering', waarden: function (b) { return b.v ? [b.v] : []; }, volgorde: alfabetisch },
+    { sleutel: 'groep', labelSleutel: 'fOnderwerp', label: 'Onderwerp', waarden: function (b) { return b.g || []; } /* volgorde: zie catalogus */ },
+    { sleutel: 'taal', labelSleutel: 'fTaal', label: 'Taal', waarden: function (b) { return b.l ? [b.l] : []; }, volgorde: alfabetisch },
+    { sleutel: 'staat', labelSleutel: 'fStaat', label: 'Nieuw of tweedehands', waarden: function (b) { return b.n ? [b.n === 'nieuw' ? 'Nieuw' : 'Tweedehands'] : []; }, volgorde: alfabetisch },
+    { sleutel: 'uitvoering', labelSleutel: 'fUitvoering', label: 'Uitvoering', waarden: function (b) { return b.v ? [b.v] : []; }, volgorde: alfabetisch },
     {
-      sleutel: 'periode', label: 'Periode van uitgave',
+      sleutel: 'periode', labelSleutel: 'fPeriode', label: 'Periode van uitgave',
       waarden: function (b) { var p = periodeVan(b.j); return p ? [p] : []; },
       volgorde: function (a, b) {
         var labels = PERIODES.map(function (p) { return p.label; });
         return labels.indexOf(a) - labels.indexOf(b);
       }
     },
-    { sleutel: 'aanrader', label: 'Aanrader', waarden: function (b) { return (b.r || []).map(function (n) { return 'Aanrader van ' + n; }); }, volgorde: alfabetisch }
+    { sleutel: 'aanrader', labelSleutel: 'fAanrader', label: 'Aanrader', waarden: function (b) { return (b.r || []).map(function (n) { return 'Aanrader van ' + n; }); }, volgorde: alfabetisch }
   ];
 
   /**

@@ -575,6 +575,46 @@ test('lopende uitleningen overnemen: één lener per persoon, twijfel apart', ()
   assert.strictEqual(r2.leners, 0);
 });
 
+console.log('\nWebsite');
+
+test('startpagina: enkel publieke rijen, nieuwste nieuws, komend en vorig event, vragen op volgorde', () => {
+  const s = maakStaat('2026-10-23');
+  s.catalogus[0].aanrader = 'Robin';
+  s.catalogus[3].aanrader = 'Kai'; // niet publiek
+  const d = M.bouwSiteInhoud(s, {
+    nieuws: [
+      { datum: '2026-09-01', titel: 'Oud bericht', tekst: 'a' },
+      { datum: '2026-10-01', titel: 'Nieuw bericht', titel_en: 'New post', tekst: 'Regel 1\nRegel 2' },
+      { datum: '2026-10-10', titel: 'Verborgen', tekst: 'x', publiek: 'nee' }
+    ],
+    agenda: [
+      { datum: '2026-10-02', titel: 'Voorbij' }, { datum: '2026-11-06', uur: '19:00', titel: 'Leesclub' }, { datum: '2026-12-04', titel: 'Later' }
+    ],
+    faq: [{ volgorde: 2, vraag: 'Tweede?', antwoord: 'b' }, { volgorde: 1, vraag: 'Eerste?', antwoord: 'a', antwoord_en: 'A' }]
+  });
+  gelijk(d.nieuws.map((n) => n.titel.nl), ['Nieuw bericht', 'Oud bericht']);
+  assert.strictEqual(d.nieuws[0].titel.en, 'New post');
+  assert.strictEqual(d.nieuws[1].titel.en, 'Oud bericht');
+  assert.strictEqual(d.nieuws[0].tekst.nl, 'Regel 1\nRegel 2');
+  gelijk(d.agenda.komend.map((e) => e.titel.nl), ['Leesclub', 'Later']);
+  assert.strictEqual(d.agenda.vorig.titel.nl, 'Voorbij');
+  gelijk(d.faq.map((f) => f.vraag.nl), ['Eerste?', 'Tweede?']);
+  gelijk(d.aanraders.map((a) => a.id), ['B0001']);
+  assert.ok(JSON.stringify(d).indexOf('Kees Voorbeeld') === -1);
+});
+test('oude website: html wordt tekst, ids voorkomen dubbels', () => {
+  assert.strictEqual(M.htmlNaarTekst('<p>Hallo <b>daar</b></p><p>Tot&nbsp;vrijdag</p>'), 'Hallo daar\nTot vrijdag');
+  const faq = M.zetOudeFaqOm([{ id: 1, order: 1, question: 'Kan ik lenen?', answer: '<p>Ja!</p>' }]);
+  assert.strictEqual(faq[0].antwoord, 'Ja!');
+  const rijen = [];
+  assert.strictEqual(M.voegOudeRijenToe(rijen, faq), 1);
+  assert.strictEqual(M.voegOudeRijenToe(rijen, faq), 0);
+  const ev = M.zetOudeEventsOm([{ id: 7, eventDate: '2026-11-06T18:30:00.000Z', title: 'Leesclub', location: 'Peperfabriek' }]);
+  assert.strictEqual(ev[0].datum, '2026-11-06');
+  assert.strictEqual(ev[0].locatie, 'Peperfabriek');
+  assert.strictEqual(M.oudeAfbeelding('about/x.png', 'https://voorbeeld.supabase.co'), 'https://voorbeeld.supabase.co/storage/v1/object/public/about/x.png');
+});
+
 console.log('\nCellen');
 
 test('formules en telefoonnummers blijven tekst', () => {

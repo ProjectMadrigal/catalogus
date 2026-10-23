@@ -1,21 +1,38 @@
 /*
  * styles.css
- * Vormgeving voor de catalogus, het uitleenscherm en het bestuursscherm.
- * Kleuren en lettertypes staan bovenaan als variabelen. Wil je de stijl
- * aanpassen (bv. als het logo er is)? Begin hier.
+ * Vormgeving van de website, de catalogus, het uitleenscherm en het bestuursscherm,
+ * in de huisstijl van Project Madrigal: geel, paars en donker, met Geist Mono.
+ * Kleuren en lettertypes staan bovenaan als variabelen, voor de lichte en de
+ * donkere modus. Wil je de stijl aanpassen? Begin hier.
  * Alle kleurcombinaties halen minstens WCAG AA (contrast 4,5:1 voor tekst).
  */
+@font-face {
+  font-family: "Geist Mono";
+  src: url("assets/fonts/GeistMono-Variable.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
 :root {
-  /* Basis */
-  --kleur-achtergrond: #faf6f0;
+  /* Huisstijl (zelfde in licht en donker) */
+  --kleur-geel: #ffcd30;
+  --kleur-paars: #6b3597;
+  --kleur-paars-licht: #e7b0ff;
+  --kleur-donker: #1b1b1c;
+  --kleur-op-geel: #1b1b1c;
+  --kleur-op-paars: #ffffff;
+  --kleur-op-donker: #efeff1;
+
+  /* Lichte modus */
+  --kleur-achtergrond: #fafafa;
   --kleur-vlak: #ffffff;
-  --kleur-tekst: #2b2118;
-  --kleur-tekst-zacht: #5c4d40;
-  --kleur-rand: #d8cbbb;
-  --kleur-accent: #8a3f22;        /* terracotta, voor links en knoppen */
-  --kleur-accent-donker: #6b2f17;
+  --kleur-tekst: #1b1b1c;
+  --kleur-tekst-zacht: #4a4650;
+  --kleur-rand: #d6d6d6;
+  --kleur-accent: #6b3597;        /* paars, voor links en knoppen */
+  --kleur-accent-donker: #471786;
   --kleur-accent-tekst: #ffffff;
-  --kleur-focus: #1b5fa8;
+  --kleur-focus: #9c59d1;
 
   /* Status: altijd samen met tekst, nooit enkel kleur */
   --kleur-ok: #1d6b38;            --kleur-ok-vlak: #e2f2e7;
@@ -23,18 +40,45 @@
   --kleur-fout: #a1241a;          --kleur-fout-vlak: #fbe3df;
   --kleur-reservatie: #57368a;    --kleur-reservatie-vlak: #ece4f7;
   --kleur-neutraal: #4d4d4d;      --kleur-neutraal-vlak: #ececec;
-  --kleur-aanrader: #6e3b00;      --kleur-aanrader-vlak: #fde8c8;
+  --kleur-aanrader: #5e4300;      --kleur-aanrader-vlak: #fff1c2;
+  --kleur-plaatshouder: linear-gradient(160deg, #e7b0ff, #c489dd);
+  --kleur-plaatshouder-tekst: #2f0f52;
 
   /* Letters */
-  --letter-tekst: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  --letter-kop: Georgia, "Times New Roman", serif;
-  --letter-grootte: 1.0625rem;
+  --letter-tekst: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --letter-kop: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --letter-grootte: 1rem;
 
   /* Maten */
   --ruimte: 1rem;
-  --hoek: 10px;
+  --hoek: 8px;
   --knop-hoogte: 3rem;
   --breedte-max: 72rem;
+  color-scheme: light;
+}
+
+/* Donkere modus: volgt het toestel, tenzij iemand zelf licht koos. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --kleur-achtergrond: #1b1b1c; --kleur-vlak: #262627; --kleur-tekst: #efeff1; --kleur-tekst-zacht: #c4c1cc;
+    --kleur-rand: #45434a; --kleur-accent: #ffcd30; --kleur-accent-donker: #fdb416; --kleur-accent-tekst: #1b1b1c;
+    --kleur-focus: #e7b0ff;
+    --kleur-ok: #8fe0ad; --kleur-ok-vlak: #173322; --kleur-let-op: #ffd27a; --kleur-let-op-vlak: #3a2e10;
+    --kleur-fout: #ffa59a; --kleur-fout-vlak: #401a16; --kleur-reservatie: #dcbcff; --kleur-reservatie-vlak: #2e2140;
+    --kleur-neutraal: #d2d2d2; --kleur-neutraal-vlak: #333335; --kleur-aanrader: #ffd76a; --kleur-aanrader-vlak: #3a3010;
+    --kleur-plaatshouder: linear-gradient(160deg, #443c5a, #241f31); --kleur-plaatshouder-tekst: #e7b0ff;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --kleur-achtergrond: #1b1b1c; --kleur-vlak: #262627; --kleur-tekst: #efeff1; --kleur-tekst-zacht: #c4c1cc;
+  --kleur-rand: #45434a; --kleur-accent: #ffcd30; --kleur-accent-donker: #fdb416; --kleur-accent-tekst: #1b1b1c;
+  --kleur-focus: #e7b0ff;
+  --kleur-ok: #8fe0ad; --kleur-ok-vlak: #173322; --kleur-let-op: #ffd27a; --kleur-let-op-vlak: #3a2e10;
+  --kleur-fout: #ffa59a; --kleur-fout-vlak: #401a16; --kleur-reservatie: #dcbcff; --kleur-reservatie-vlak: #2e2140;
+  --kleur-neutraal: #d2d2d2; --kleur-neutraal-vlak: #333335; --kleur-aanrader: #ffd76a; --kleur-aanrader-vlak: #3a3010;
+  --kleur-plaatshouder: linear-gradient(160deg, #443c5a, #241f31); --kleur-plaatshouder-tekst: #e7b0ff;
+  color-scheme: dark;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -71,17 +115,15 @@ a:hover { color: var(--kleur-accent-donker); }
 /* ---------- Kop en voet ---------- */
 
 .kop {
-  background: var(--kleur-accent);
-  color: var(--kleur-accent-tekst);
-  padding: .9rem var(--ruimte);
+  background: var(--kleur-donker);
+  color: var(--kleur-op-donker);
+  padding: .7rem var(--ruimte);
+  border-bottom: 4px solid var(--kleur-geel);
 }
 .kop-binnen { max-width: var(--breedte-max); margin: 0 auto; display: flex; align-items: center; gap: .8rem; }
 .kop a { color: inherit; text-decoration: none; }
-.kop .logo {
-  width: 2.6rem; height: 2.6rem; border-radius: 50%; flex: none;
-  background: var(--kleur-accent-tekst); color: var(--kleur-accent);
-  display: grid; place-items: center; font-family: var(--letter-kop); font-weight: bold; font-size: 1.3rem;
-}
+.kop .logo { width: 2.75rem; height: 2.75rem; flex: none; display: block; }
+.kop h1 { font-size: 1.3rem; }
 .kop .ondertitel { margin: 0; font-size: .95rem; opacity: .95; }
 
 main { max-width: var(--breedte-max); margin: 0 auto; padding: var(--ruimte); }
@@ -218,10 +260,10 @@ textarea { min-height: 6rem; }
 .plaatshouder {
   width: 100%; aspect-ratio: 2 / 3; border-radius: 4px;
   display: grid; place-items: center; text-align: center; padding: .3rem;
-  background: linear-gradient(160deg, #e9d7c3, #d6b897);
-  color: var(--kleur-accent-donker); font-family: var(--letter-kop); font-size: 1.6rem; font-weight: bold;
+  background: var(--kleur-plaatshouder);
+  color: var(--kleur-plaatshouder-tekst); font-family: var(--letter-kop); font-size: 1.6rem; font-weight: bold;
 }
-.plaatshouder.zine { background: linear-gradient(160deg, #e6dcf3, #c8b5e6); color: var(--kleur-reservatie); }
+.plaatshouder.zine { background: var(--kleur-geel); color: var(--kleur-op-geel); }
 
 .meer { margin: var(--ruimte) auto; display: flex; }
 
@@ -302,13 +344,123 @@ td.getal, th.getal { text-align: right; }
 .knoppen.klein { margin: 0; gap: .4rem; }
 .knoppen.klein .knop { min-height: 2.6rem; padding: .3rem .8rem; font-size: .95rem; }
 
+/* ---------- Website: kop en menu ---------- */
+
+[data-taal] { display: none; }
+html[lang="nl"] [data-taal="nl"], html[lang="en"] [data-taal="en"] { display: revert; }
+
+.site-kop { background: var(--kleur-donker); color: var(--kleur-op-donker); position: sticky; top: 0; z-index: 20; }
+.site-kop-binnen { max-width: var(--breedte-max); margin: 0 auto; padding: .5rem var(--ruimte); display: flex; align-items: center; flex-wrap: wrap; gap: .5rem 1rem; }
+.merk { display: inline-flex; align-items: center; gap: .6rem; color: var(--kleur-op-donker); text-decoration: none; font-weight: 600; min-height: 3rem; }
+.merk:hover { color: var(--kleur-geel); }
+.merk img { width: 2.75rem; height: 2.75rem; }
+.merk-naam { background: #efeff1; color: #1b1b1c; padding: .1rem .5rem; transform: rotate(-2deg); box-shadow: 2px 2px 0 rgba(0, 0, 0, .4); }
+.menuknop, .ikoonknop {
+  display: inline-flex; align-items: center; justify-content: center; gap: .35rem;
+  min-width: 3rem; min-height: 3rem; padding: .3rem .6rem; border: 0; border-radius: 8px;
+  background: transparent; color: var(--kleur-op-donker); font: inherit; cursor: pointer;
+}
+.menuknop { margin-left: auto; color: var(--kleur-geel); }
+.menuknop:hover, .ikoonknop:hover { background: rgba(255, 255, 255, .08); }
+.menuknop svg, .ikoonknop svg { width: 1.5rem; height: 1.5rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.hoofdmenu { display: none; width: 100%; }
+.menu-open .hoofdmenu { display: block; }
+.hoofdmenu ul { list-style: none; margin: 0; padding: 0; }
+.hoofdmenu a {
+  display: block; padding: .8rem .4rem; color: #c4c1cc; text-decoration: none;
+  border-bottom: 1px solid #333335;
+}
+.hoofdmenu a:hover { color: var(--kleur-geel); }
+.hoofdmenu a[aria-current="page"] { color: #ffffff; box-shadow: inset 4px 0 0 #9c59d1; padding-left: .8rem; }
+.kopknoppen { display: flex; gap: .3rem; padding: .5rem 0; }
+
+/* ---------- Website: secties ---------- */
+
+.sectie { padding: 2.5rem var(--ruimte); }
+.sectie > .binnen { max-width: 60rem; margin: 0 auto; }
+.sectie h2 { margin-top: 0; font-size: 1.6rem; }
+.sectie-paars { background: var(--kleur-paars); color: var(--kleur-op-paars); }
+.sectie-geel { background: var(--kleur-geel); color: var(--kleur-op-geel); }
+.sectie-donker { background: var(--kleur-donker); color: var(--kleur-op-donker); }
+.sectie-paars a, .sectie-donker a { color: var(--kleur-geel); }
+.sectie-geel a { color: var(--kleur-op-geel); }
+.sectie-geel .knop.tweede { background: transparent; color: var(--kleur-op-geel); border-color: var(--kleur-op-geel); }
+.sectie-licht { background: var(--kleur-achtergrond); }
+main.website { max-width: none; padding: 0; }
+
+.hero { text-align: center; padding: 3.5rem var(--ruimte); }
+.hero-tekst { font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 300; margin: 0 0 1.2rem; min-height: 1.3em; }
+.hero-woord { font-weight: 700; }
+.hero-woord::after { content: "|"; font-weight: 300; margin-left: .05em; animation: knipper 1s steps(1) infinite; }
+@keyframes knipper { 50% { opacity: 0; } }
+.hero-zoek { max-width: 32rem; margin: 0 auto; display: flex; gap: .4rem; }
+.hero-zoek input { flex: 1; border: 0; background: #efeff1; color: #1b1b1c; }
+.hero-zoek input::placeholder { color: #5b5858; }
+.hero-zoek .knop { background: var(--kleur-geel); color: var(--kleur-op-geel); border-color: var(--kleur-geel); }
+
+.kaarten { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+.nieuwskaart { background: var(--kleur-vlak); color: var(--kleur-tekst); border-radius: var(--hoek); overflow: hidden; }
+.nieuwskaart img { width: 100%; max-height: 22rem; object-fit: cover; display: block; }
+.nieuwskaart .inhoud { padding: 1rem 1.2rem; }
+.nieuwskaart h3 { font-size: 1.2rem; margin: 0 0 .3rem; }
+.nieuwskaart .datum { color: var(--kleur-tekst-zacht); font-size: .9rem; margin: 0 0 .6rem; }
+.nieuwskaart a { color: var(--kleur-accent); }
+.tekstblok p { white-space: pre-line; }
+
+.aanraders { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); list-style: none; margin: 0; padding: 0; }
+.aanrader a { display: block; color: inherit; text-decoration: none; }
+.aanrader a:hover .aanrader-titel { text-decoration: underline; }
+.aanrader .cover, .aanrader .plaatshouder { box-shadow: 0 4px 12px rgba(0, 0, 0, .25); }
+.aanrader-titel { display: block; font-weight: 700; margin-top: .5rem; font-size: .95rem; }
+.aanrader-auteur { display: block; font-size: .85rem; }
+
+.faq details { border-bottom: 1px solid var(--kleur-rand); padding: .4rem 0; }
+.faq summary { font-weight: 600; }
+.faq details > div { padding: .3rem 0 .8rem; }
+
+.contact { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
+.contact iframe { width: 100%; min-height: 18rem; border: 0; border-radius: var(--hoek); }
+.contact dl { margin: 0; }
+.contact dt { font-weight: 700; margin-top: .8rem; }
+.contact dd { margin: 0; }
+
+.team { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr)); list-style: none; padding: 0; }
+.team li { background: var(--kleur-vlak); border: 1px solid var(--kleur-rand); border-radius: var(--hoek); padding: 1rem; text-align: center; }
+.team img { width: 100%; aspect-ratio: 4 / 5; object-fit: cover; border-radius: 4px; display: block; }
+.team .geen-foto { width: 100%; aspect-ratio: 4 / 5; border-radius: 4px; background: var(--kleur-plaatshouder); display: grid; place-items: center; color: var(--kleur-plaatshouder-tekst); font-size: 2.4rem; font-weight: 700; }
+.team .naam { display: block; font-size: 1.2rem; margin-top: .6rem; }
+.team .vnw { display: inline-block; background: var(--kleur-donker); color: var(--kleur-op-donker); padding: 0 .4rem; font-size: .85rem; }
+.team .rol { display: block; font-size: .9rem; color: var(--kleur-tekst-zacht); }
+.duo { display: grid; gap: 1rem; grid-template-columns: 1fr; }
+.duo figure { margin: 0; }
+.duo img { width: 100%; display: block; border-radius: 4px; }
+.duo figcaption { font-size: .85rem; color: var(--kleur-tekst-zacht); margin-top: .3rem; }
+.paginakop { padding: 2rem var(--ruimte) 1rem; max-width: var(--breedte-max); margin: 0 auto; }
+.paginakop h1 { font-size: clamp(1.6rem, 5vw, 2.2rem); margin: 0 0 .4rem; }
+
+.site-voet { background: var(--kleur-paars); color: var(--kleur-op-paars); margin-top: 0; }
+.site-voet-binnen { max-width: var(--breedte-max); margin: 0 auto; padding: 2rem var(--ruimte); }
+.site-voet a { color: var(--kleur-geel); }
+.site-voet p { margin: .3rem 0; }
+
 /* ---------- Grotere schermen ---------- */
 
 @media (min-width: 40rem) {
+  .kaarten { grid-template-columns: repeat(2, 1fr); }
+  .contact { grid-template-columns: 1fr 1fr; }
+  .duo { grid-template-columns: 1fr 1fr; }
   .filterraster { grid-template-columns: repeat(2, 1fr); }
   .boekenlijst { grid-template-columns: repeat(2, 1fr); }
   .menu-raster { grid-template-columns: repeat(3, 1fr); }
   .detail { grid-template-columns: 12rem 1fr; }
+}
+@media (min-width: 52rem) {
+  .menuknop { display: none; }
+  .hoofdmenu { display: flex !important; width: auto; margin-left: auto; align-items: center; gap: 1rem; }
+  .hoofdmenu ul { display: flex; }
+  .hoofdmenu a { border: 0; padding: 1rem 1.2rem; }
+  .hoofdmenu a[aria-current="page"] { box-shadow: inset 0 -4px 0 #9c59d1; padding-left: 1.2rem; }
+  .kopknoppen { padding: 0; }
 }
 @media (min-width: 64rem) {
   .filterraster { grid-template-columns: repeat(4, 1fr); }
@@ -316,13 +468,14 @@ td.getal, th.getal { text-align: right; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .hero-woord::after { animation: none; }
   * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
 
 /* ---------- Afdrukken ---------- */
 
 @media print {
-  .kop, .voet, .geen-print { display: none !important; }
+  .kop, .voet, .site-kop, .site-voet, .geen-print { display: none !important; }
   body { background: #fff; font-size: 11pt; }
   .blok { border: 0; padding: 0; }
 }

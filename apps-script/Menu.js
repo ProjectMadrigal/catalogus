@@ -87,6 +87,7 @@ function onOpen() {
     .addItem('Ververs de publieke catalogus', 'verversMenu')
     .addSeparator()
     .addItem('Neem lopende uitleningen over uit het oude blad', 'neemUitleningenOver')
+    .addItem('Neem nieuws, agenda en vragen over van de oude website', 'importeerOudeSite')
     .addItem('Privacy-opruiming nu uitvoeren', 'ruimOp')
     .addSeparator()
     .addItem('Catalogus wissen en opnieuw opbouwen (enkel bij de start)', 'herbouwCatalogus')
@@ -107,7 +108,7 @@ function verversMenu() {
 /** Bij elke wijziging met de hand in Catalogus, Onderwerpen of Instellingen: cache leegmaken. */
 function bijWijziging(e) {
   var naam = e && e.range ? e.range.getSheet().getName() : '';
-  if (['Catalogus', 'Onderwerpen', 'Instellingen', 'Uitleningen', 'Reservaties'].indexOf(naam) > -1) leegCache();
+  if (['Catalogus', 'Onderwerpen', 'Instellingen', 'Uitleningen', 'Reservaties', 'Nieuws', 'Agenda', 'Veelgestelde vragen'].indexOf(naam) > -1) leegCache();
 }
 
 /** Opmaak van de kopregel: vet, vastgezet. */
