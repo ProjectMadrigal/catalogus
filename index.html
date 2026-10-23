@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Catalogus · Project Madrigal</title>
+  <meta name="description" content="Zoek in de collectie van Project Madrigal, de queer bibliotheek van Antwerpen: gender, seksualiteit, feminisme en klassiekers uit de gay- en lesbische literatuur.">
+  <meta name="theme-color" content="#8a3f22">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icoon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icoon-192.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="overslaan" href="#inhoud">Ga naar de inhoud</a>
+
+  <header class="kop">
+    <div class="kop-binnen">
+      <a href="#/" class="logo" aria-hidden="true" tabindex="-1">M</a>
+      <div>
+        <h1><a href="#/">Project Madrigal</a></h1>
+        <p class="ondertitel">De catalogus van de queer bib in Antwerpen</p>
+      </div>
+    </div>
+  </header>
+
+  <main id="inhoud" tabindex="-1">
+    <div id="voorbeeld-melding" class="melding let-op" hidden>
+      Je ziet verzonnen voorbeeldboeken. De echte catalogus verschijnt zodra de web-app gekoppeld is.
+    </div>
+
+    <!-- Lijst met zoeken en filters -->
+    <section id="lijst-scherm" aria-labelledby="lijst-titel">
+      <div class="blok" id="intro">
+        <p id="welkom">Welkom in de catalogus van Project Madrigal.</p>
+        <details>
+          <summary>Hoe werkt lenen?</summary>
+          <p id="uitleg-lenen"></p>
+          <p><a href="#/privacy">Wat doen we met je gegevens?</a></p>
+        </details>
+      </div>
+
+      <h2 id="lijst-titel" class="verborgen">Zoeken in de catalogus</h2>
+      <form class="zoekbalk" role="search" id="zoekformulier">
+        <div class="zoekveld">
+          <label for="zoek">Zoek een boek</label>
+          <input type="search" id="zoek" name="q" autocomplete="off" placeholder="Titel, auteur, uitgeverij of ISBN" aria-describedby="zoek-hulp">
+          <p id="zoek-hulp" class="hulptekst">Tikfouten zijn geen probleem.</p>
+        </div>
+        <details class="blok" id="filters">
+          <summary>Filters <span id="filter-teller" class="hulptekst"></span></summary>
+          <div class="filterraster" id="filterraster"></div>
+          <label class="vinkje" for="filter-beschikbaar">
+            <input type="checkbox" id="filter-beschikbaar"> Toon enkel boeken die nu beschikbaar zijn
+          </label>
+          <div class="knoppen">
+            <button type="button" class="knop tweede" id="wis-filters">Wis alle filters</button>
+          </div>
+        </details>
+      </form>
+
+      <div class="lijstkop">
+        <p id="aantal" aria-live="polite" aria-atomic="true">De catalogus laadt...</p>
+        <div class="veld">
+          <label for="sorteer">Sorteer op</label>
+          <select id="sorteer">
+            <option value="relevantie">Beste overeenkomst, anders titel</option>
+            <option value="titel">Titel</option>
+            <option value="auteur">Auteur</option>
+            <option value="jaar-nieuw">Jaartal, nieuwste eerst</option>
+            <option value="jaar-oud">Jaartal, oudste eerst</option>
+          </select>
+        </div>
+      </div>
+
+      <ul class="boekenlijst" id="resultaten"></ul>
+      <p class="laden" id="laden">De catalogus laadt...</p>
+      <button type="button" class="knop tweede meer" id="meer" hidden>Toon meer boeken</button>
+    </section>
+
+    <!-- Detailpagina van één boek -->
+    <section id="detail-scherm" hidden aria-live="polite"></section>
+
+    <!-- Privacy -->
+    <section id="privacy-scherm" hidden>
+      <a class="terug" href="#/">&larr; Terug naar de catalogus</a>
+      <div class="blok">
+        <h2 tabindex="-1">Privacy</h2>
+        <p id="privacy-tekst"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="voet">
+    <p>Project Madrigal is een queer bibliotheek in Antwerpen, gedragen door vrijwilligers. Een groot deel van de collectie komt uit Kartonnen Dozen.</p>
+    <p><a href="#/privacy">Privacy</a> · <a href="balie.html">Voor vrijwilligers</a></p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="dom.js"></script>
+  <script src="zoeken.js"></script>
+  <script src="filters.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
