@@ -25,7 +25,7 @@
 
   /* Lichte modus */
   --kleur-achtergrond: #fafafa;
-  --kleur-sectie-donker: #1b1b1c; --kleur-sectie-lila: #f1e8fa;
+  --kleur-sectie-donker: #1b1b1c; --kleur-sectie-lila: #fbfbfb;
   --kleur-geel-zacht: #fff1c2; --kleur-op-geel-zacht: #1b1b1c;
   --kleur-vlak: #ffffff;
   --kleur-tekst: #1b1b1c;
@@ -419,9 +419,9 @@ html[lang="nl"] [data-taal="nl"], html[lang="en"] [data-taal="en"] { display: re
 .sectie-geel { background: var(--kleur-geel-zacht); color: var(--kleur-op-geel-zacht); }
 .sectie-donker { background: var(--kleur-sectie-donker); color: var(--kleur-op-donker); }
 .sectie-lila { background: var(--kleur-sectie-lila); color: var(--kleur-tekst); }
-/* Een gekleurde streep bovenaan maakt de overgang tussen twee secties duidelijk, ook in de donkere modus. */
-main.website > .sectie:not(:first-child), .site-voet { border-top: 6px solid var(--kleur-geel); }
-main.website > .sectie-lila:not(:first-child), main.website > .sectie-geel:not(:first-child) { border-top-color: var(--kleur-paars); }
+/* Elke sectie is een volledig blok in een eigen kleur, zoals op de oude site:
+   paars, donker, geel, licht, donker. */
+.sectie-aanraders { background: var(--kleur-geel); color: var(--kleur-op-geel); }
 .sectie-paars a, .sectie-donker a { color: var(--kleur-geel); }
 .sectie-geel a { color: var(--kleur-op-geel-zacht); }
 .sectie-geel .knop.tweede { background: transparent; color: var(--kleur-op-geel-zacht); border-color: var(--kleur-op-geel-zacht); }
