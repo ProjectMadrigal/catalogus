@@ -50,7 +50,7 @@
       </form>
 
       <div class="lijstkop">
-        <p id="aantal" aria-live="polite" aria-atomic="true" data-i18n="laden">Even laden...</p>
+        <p id="aantal" aria-live="polite" aria-atomic="true" tabindex="-1" data-i18n="laden">Even laden...</p>
         <div class="veld">
           <label for="sorteer" data-i18n="sorteerOp">Sorteer op</label>
           <select id="sorteer">
@@ -65,7 +65,7 @@
 
       <ul class="boekenlijst" id="resultaten"></ul>
       <p class="laden" id="laden" data-i18n="laden">Even laden...</p>
-      <button type="button" class="knop tweede meer" id="meer" hidden></button>
+      <nav class="paginas" id="paginas" hidden data-i18n-aria-label="paginas"></nav>
     </section>
 
     <!-- Detailpagina van één boek -->
