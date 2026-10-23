@@ -24,7 +24,7 @@
   --kleur-op-donker: #efeff1;
 
   /* Lichte modus */
-  --kleur-achtergrond: #fafafa;
+  --kleur-achtergrond: #f3eef8; /* zacht lila, een tint van het Madrigal-paars */
   --kleur-sectie-donker: #1b1b1c; --kleur-sectie-lila: #fbfbfb;
   --kleur-geel-zacht: #fff1c2; --kleur-op-geel-zacht: #1b1b1c;
   --kleur-vlak: #ffffff;
@@ -62,7 +62,7 @@
 /* Donkere modus: volgt het toestel, tenzij iemand zelf licht koos. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --kleur-achtergrond: #1b1b1c; --kleur-vlak: #262627; --kleur-sectie-donker: #111112; --kleur-sectie-lila: #2a2135; --kleur-geel-zacht: #3a3118; --kleur-op-geel-zacht: #efeff1; --kleur-tekst: #efeff1; --kleur-tekst-zacht: #c4c1cc;
+    --kleur-achtergrond: #221e29; --kleur-vlak: #2d2836; --kleur-sectie-donker: #111112; --kleur-sectie-lila: #2a2135; --kleur-geel-zacht: #3a3118; --kleur-op-geel-zacht: #efeff1; --kleur-tekst: #efeff1; --kleur-tekst-zacht: #c4c1cc;
     --kleur-rand: #45434a; --kleur-accent: #ffcd30; --kleur-accent-donker: #fdb416; --kleur-accent-tekst: #1b1b1c;
     --kleur-focus: #e7b0ff;
     --kleur-ok: #8fe0ad; --kleur-ok-vlak: #173322; --kleur-let-op: #ffd27a; --kleur-let-op-vlak: #3a2e10;
@@ -73,7 +73,7 @@
   }
 }
 :root[data-theme="dark"] {
-  --kleur-achtergrond: #1b1b1c; --kleur-vlak: #262627; --kleur-sectie-donker: #111112; --kleur-sectie-lila: #2a2135; --kleur-geel-zacht: #3a3118; --kleur-op-geel-zacht: #efeff1; --kleur-tekst: #efeff1; --kleur-tekst-zacht: #c4c1cc;
+  --kleur-achtergrond: #221e29; --kleur-vlak: #2d2836; --kleur-sectie-donker: #111112; --kleur-sectie-lila: #2a2135; --kleur-geel-zacht: #3a3118; --kleur-op-geel-zacht: #efeff1; --kleur-tekst: #efeff1; --kleur-tekst-zacht: #c4c1cc;
   --kleur-rand: #45434a; --kleur-accent: #ffcd30; --kleur-accent-donker: #fdb416; --kleur-accent-tekst: #1b1b1c;
   --kleur-focus: #e7b0ff;
   --kleur-ok: #8fe0ad; --kleur-ok-vlak: #173322; --kleur-let-op: #ffd27a; --kleur-let-op-vlak: #3a2e10;
