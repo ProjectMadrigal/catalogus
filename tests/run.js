@@ -531,5 +531,22 @@ test('formules en telefoonnummers blijven tekst', () => {
   assert.strictEqual(M.veiligeCel('Sam'), 'Sam');
 });
 
+console.log('\nEén bestand voor Apps Script');
+
+test('madrigal-script.gs is bijgewerkt (anders: node tools/bundel.js)', () => {
+  const fs = require('fs');
+  const { maakBundel, UIT } = require('../tools/bundel');
+  assert.strictEqual(fs.readFileSync(UIT, 'utf8'), maakBundel());
+});
+test('madrigal-script.gs werkt op zichzelf', () => {
+  const fs = require('fs');
+  const vm = require('vm');
+  const ctx = vm.createContext({});
+  vm.runInContext(fs.readFileSync(require('../tools/bundel').UIT, 'utf8'), ctx);
+  assert.strictEqual(typeof ctx.onOpen, 'function');
+  assert.strictEqual(typeof ctx.doGet, 'function');
+  assert.strictEqual(ctx.normaliseerIsbn('0-306-40615-2').isbn, '9780306406157');
+});
+
 console.log('\n' + geslaagd + ' geslaagd, ' + mislukt.length + ' mislukt');
 if (mislukt.length) process.exit(1);
