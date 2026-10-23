@@ -440,9 +440,10 @@ De website heeft de opmaak van de oude website (projectmadrigal.be), maar alle i
 | `adres` | het adres, elke regel op een nieuwe lijn (Alt+Enter in een cel) |
 | `openingsuren`, `openingsuren_en` | de openingsuren zoals ze op de startpagina staan |
 | `mail_algemeen`, `mail_events` | de mailadressen onder "Kom eens langs" |
+| `aanraders_verbergen` | namen van wie de aanraders niet op de startpagina staan |
 | `tekst_welkom_en`, `tekst_uitleg_lenen_en`, `tekst_privacy_en` | de Engelse versie van de teksten op de pagina Boeken |
 
-**Aanraders.** De startpagina toont tot 12 boeken met een naam in de kolom `aanrader` van de Catalogus. Beschikbare boeken komen eerst, de volgorde wisselt elke dag.
+**Aanraders.** De startpagina toont tot 12 boeken met een naam in de kolom `aanrader` van de Catalogus. Beschikbare boeken komen eerst, de volgorde wisselt elke dag. Wil je de aanraders van iemand tijdelijk niet op de startpagina? Zet die naam in de instelling `aanraders_verbergen` (meerdere namen gescheiden door komma's). Het label en de filter in de catalogus blijven. Wis de naam om ze terug te tonen.
 
 **Vaste teksten en de pagina Over ons.** De knoppen, menu's en titels staan in `i18n.js`. De tekst van Over ons staat rechtstreeks in `over-ons.html`, met een blok `data-taal="nl"` en een blok `data-taal="en"`. Pas je de ene taal aan, pas dan ook de andere aan.
 
