@@ -97,15 +97,8 @@
   }
 
   function aanrader(b) {
-    var letter = (b.t || '?').charAt(0).toUpperCase();
-    var beeld = b.c
-      ? el('img', { class: 'cover', src: b.c, alt: '', loading: 'lazy' })
-      : el('div', { class: 'plaatshouder' + (b.s === 'zine' ? ' zine' : ''), 'aria-hidden': 'true' }, letter);
-    if (b.c) {
-      beeld.addEventListener('error', function () {
-        beeld.replaceWith(el('div', { class: 'plaatshouder' + (b.s === 'zine' ? ' zine' : ''), 'aria-hidden': 'true' }, letter));
-      });
-    }
+    var beeld = b.c ? el('img', { class: 'cover', src: b.c, alt: '', loading: 'lazy' }) : D.plaatshouder(b);
+    if (b.c) beeld.addEventListener('error', function () { beeld.replaceWith(D.plaatshouder(b)); });
     var door = (b.r || []).length ? T.t('aanraderVan', { naam: b.r.join(', ') }) : '';
     return el('li', { class: 'aanrader' },
       el('a', { href: 'boeken.html#/boek/' + encodeURIComponent(b.id) },
