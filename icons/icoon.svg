@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" role="img" aria-label="Project Madrigal">
+  <!-- Plaatshouder tot het logo van Madrigal er is. -->
+  <rect width="100" height="100" fill="#8a3f22"/>
+  <circle cx="50" cy="50" r="38" fill="#faf6f0"/>
+  <text x="50" y="66" text-anchor="middle" font-family="Georgia, serif" font-weight="bold" font-size="46" fill="#8a3f22">M</text>
+</svg>
