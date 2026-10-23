@@ -45,13 +45,15 @@ function titelSleutel(titel) {
 }
 
 /**
- * Achternaam uit "Achternaam, Voornaam" of "Voornaam Achternaam", genormaliseerd.
+ * Achternaam uit "Achternaam, Voornaam" of "Voornaam Achternaam", genormaliseerd,
+ * zonder tussenvoegsel.
  * Bij meerdere auteurs (gescheiden door ; of &) nemen we de eerste.
  */
 function achternaam(auteur) {
   var eerste = schoon(auteur).split(/;|&| en | and /)[0];
-  if (eerste.indexOf(',') > -1) return normaliseerTekst(eerste.split(',')[0]);
-  var delen = normaliseerTekst(eerste).split(' ');
+  // "van Babylon, Dirk" en "Babylon, Dirk van" geven allebei "babylon":
+  // we nemen het laatste woord, zodat tussenvoegsels geen rol spelen.
+  var delen = normaliseerTekst(eerste.indexOf(',') > -1 ? eerste.split(',')[0] : eerste).split(' ');
   return delen[delen.length - 1] || '';
 }
 
