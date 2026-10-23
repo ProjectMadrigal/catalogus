@@ -9,6 +9,7 @@
  *   u   uitgeverij       j  jaartal         l  taal          p  pagina's
  *   v   uitvoering       n  nieuw/tweedehands                r  aanraders (lijst)
  *   g   filtergroepen    s  soort (boek/zine)                d  beschrijving
+ *   de  beschrijving in het Engels (enkel als die verschilt)
  *   c   cover-URL        b  beschikbaarheid { c: code, l: label, t: totaal, v: vrij,
  *                                           d: verwacht terug (datum), k: 1 als te koop }
  */
@@ -37,8 +38,10 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
       i: schoon(rij.isbn), u: schoon(rij.uitgeverij), j: parseerGetal(rij.jaartal) || '',
       l: schoon(rij.taal), p: parseerGetal(rij.paginas) || '', v: schoon(rij.uitvoering),
       n: jaNee(rij.nieuwstaat) === 'ja' ? 'nieuw' : (jaNee(rij.nieuwstaat) === 'nee' ? 'tweedehands' : ''),
-      d: schoon(rij.beschrijving), c: veiligeCoverUrl(rij.cover_url)
+      d: schoonMetRegels(rij.beschrijving), c: veiligeCoverUrl(rij.cover_url)
     };
+    var en = schoonMetRegels(rij.beschrijving_en);
+    if (en && en !== extra.d) extra.de = en;
     Object.keys(extra).forEach(function (k) { if (!isLeeg(extra[k])) boek[k] = extra[k]; });
     var aanraders = splitsLijst(String(rij.aanrader || '').replace(/ en | & /g, ','));
     if (aanraders.length) boek.r = aanraders;

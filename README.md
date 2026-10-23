@@ -163,6 +163,15 @@ Voer de functies uit via het menu **Madrigal**, in deze volgorde. Elke functie m
 - Is de daglimiet van Google op, dan zoekt het script verder bij Open Library en probeert het Google 6 uur later opnieuw. Met een `google_books_api_key` gebeurt dat zelden.
 - Elk opgezocht boek krijgt een datum in de kolom `beschrijving_gezocht`. Maak die cel leeg om opnieuw te laten zoeken.
 
+**Stap 3d. Beschrijvingen vertalen (vanzelf)**
+
+- Zodra het script nieuwe beschrijvingen vond, start het vanzelf **7. Vertaal de beschrijvingen**. Je kan het ook zelf starten, bijvoorbeeld voor beschrijvingen die er al stonden.
+- Het vertaalt gratis met Google Translate. De Nederlandse versie komt in `beschrijving`, de Engelse in `beschrijving_en`. De website toont de versie in de taal die de bezoeker kiest.
+- Een beschrijving die al Nederlands is, blijft ongewijzigd. Een Engelse versie die je zelf invulde, blijft staan.
+- Het blijft een automatische vertaling. Lees de beschrijvingen van aanraders en bekende boeken even na en verbeter ze waar nodig.
+- Elk vertaald boek krijgt een datum in de kolom `beschrijving_vertaald`. Pas je de Nederlandse tekst later aan en wil je een nieuwe Engelse vertaling? Maak `beschrijving_en` en `beschrijving_vertaald` leeg en kies **7. Vertaal de beschrijvingen**.
+- Google Translate heeft een daglimiet. Is die bereikt, dan gaat het script de volgende dag vanzelf verder.
+
 **Stap 4. Het tabblad Na te kijken afwerken**
 
 Loop de rijen één voor één af:
@@ -188,7 +197,7 @@ De Catalogus is nu de enige bron. Stock en Zines heb je niet meer nodig.
 | `aantal` | aantal exemplaren (leeg = 1). Exemplaren heten B0012-1, B0012-2, ... |
 | `uitleenbaar` | nee = niet uitleenbaar (bv. zines te koop) |
 | `publiek` | nee = niet zichtbaar in de publieke catalogus, wel uitleenbaar aan de balie |
-| `beschrijving`, `cover_url` | korte beschrijving en link naar de cover |
+| `beschrijving`, `beschrijving_en`, `cover_url` | korte beschrijving in het Nederlands en het Engels, en link naar de cover |
 | `startpagina` | leeg = automatisch, **ja** = altijd bij de Aanraders op de startpagina, **nee** = nooit |
 | `toegevoegd_op` | de dag waarop het boek in de Catalogus kwam. Het script vult dit zelf in. |
 | `herkomst` (grijs) | **nooit publiek**: donatie, bruikleen, gift, schenker, interne notities |
