@@ -90,7 +90,7 @@ GitHub Pages (index.html, balie.html, bestuur.html)
 
 **Installeren**
 
-1. Kies **Madrigal > 1. Installeer tabbladen**.
+1. Kies **Madrigal > 1. Installeer tabbladen**. Zie je het menu niet? Kies dan in Apps Script bovenaan, naast **Uitvoeren**, de functie **installeer** en klik op **Uitvoeren**.
 2. De eerste keer vraagt Google om toestemming. Kies je account, klik op **Geavanceerd** en daarna op **Ga naar ... (onveilig)**. Dat "onveilig" betekent enkel dat Google het script niet zelf nagekeken heeft. Het is jouw eigen script.
 3. De tabbladen **Instellingen, Catalogus, Onderwerpen, Leners, Uitleningen, Reservaties, Uitzonderingen, Na te kijken** en **Logboek** verschijnen. Stock, Zines, Sheet2 en Sheet3 blijven ongemoeid.
 4. Open het tabblad **Instellingen**. De codes voor de balie en het bestuur zijn willekeurig aangemaakt. Pas ze aan als je wil, en kijk de teksten na (welkom, uitleg over lenen, privacy, herinneringen). Vul in de privacytekst het mailadres van het bestuur in.
@@ -322,7 +322,8 @@ Wil iemand zijn gegevens laten wissen? Zet de lener op inactief in het bestuurss
 | Een wijziging in de spreadsheet verschijnt niet op de website | Kies **Madrigal > Ververs de publieke catalogus** en vernieuw de website. |
 | "De code klopt niet" | Kijk de code na in Instellingen (hoofdletters tellen mee). |
 | Een wijziging in het script werkt niet | Publiceer een nieuwe versie, zie [stap 12](#12-na-een-wijziging-in-het-script-een-nieuwe-versie-publiceren). |
-| Het menu Madrigal verschijnt niet | Vernieuw de spreadsheet. Nog steeds niet? Kijk in Apps Script of alle bestanden er staan en opgeslagen zijn. |
+| Het menu Madrigal verschijnt niet | Wacht 20 seconden na het vernieuwen. Ben je met meerdere Google-accounts aangemeld? Open de spreadsheet in een privévenster met enkel het Madrigal-account. Kijk in Apps Script of de code opgeslagen is zonder rode foutmelding. Lukt het nog niet? Start **installeer** rechtstreeks in Apps Script. |
+| "Het tabblad Catalogus bestaat niet" | Je startte in Apps Script een andere functie dan **installeer**. Kies **installeer** in de keuzelijst naast **Uitvoeren**. |
 | Open Library stopt halverwege | Normaal: het gaat na een minuut vanzelf verder. Staat het al lang stil? Kies opnieuw **Vul aan uit Open Library**. |
 | "Er ging iets mis: ..." | Kijk in het tabblad **Logboek** en in Apps Script bij **Uitvoeringen** (links, het lijstje). |
 | Iets anders | Kijk in het Logboek. Noteer wat je deed en wat je zag, en geef dat aan de beheerder. |
