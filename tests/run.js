@@ -621,6 +621,18 @@ test('publieke catalogus toont geen herkomst, geen niet-publieke boeken en geen 
   assert.strictEqual(zine.b.l, 'Te koop in de bib, niet uitleenbaar');
   gelijk(Array.from(zine.g), ['Zines']);
 });
+test('publieke catalogus: aanraders_verbergen haalt de naam weg bij de boeken', () => {
+  const s = maakStaat();
+  s.catalogus[0].aanrader = 'Robin en Sam';
+  s.catalogus[1].aanrader = 'robin';
+  s.inst.aanraders_verbergen = 'Robin';
+  const p = M.bouwPubliekeCatalogus(s, []);
+  const b0 = p.boeken.find((b) => b.id === String(s.catalogus[0].boek_id));
+  const b1 = p.boeken.find((b) => b.id === String(s.catalogus[1].boek_id));
+  gelijk(b0.r, ['Sam']);
+  assert.strictEqual(b1.r, undefined);
+  assert.ok(JSON.stringify(p).toLowerCase().indexOf('robin') === -1);
+});
 test('publieke catalogus: beschrijving met alinea\'s, Engelse versie enkel als ze verschilt', () => {
   const s = maakStaat();
   s.catalogus[0].beschrijving = 'Een verzonnen roman.\n\nTweede alinea.';
