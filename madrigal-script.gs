@@ -1125,15 +1125,26 @@ function goodreadsIsbn(waarde) {
   return normaliseerIsbn(String(waarde || '').replace(/[="]/g, '')).isbn;
 }
 
-/** Zet de ruwe waarden van het tabblad Goodreads-export om naar objecten. */
-function leesGoodreadsRijen(waarden) {
+/**
+ * Zet de ruwe waarden van het tabblad Goodreads-export om naar objecten.
+ * shelf: (optioneel) enkel boeken op deze shelf. De export bevat je volledige
+ * bibliotheek; de kolommen "Bookshelves" en "Exclusive Shelf" zeggen op welke
+ * shelves een boek staat.
+ */
+function leesGoodreadsRijen(waarden, shelf) {
   if (!waarden.length) return [];
   var kop = waarden[0].map(schoon);
+  var gezocht = normaliseerTekst(shelf);
   return waarden.slice(1).map(function (rij) {
     var obj = {};
     kop.forEach(function (k, i) { if (k) obj[k] = rij[i]; });
     return obj;
-  }).filter(function (o) { return !isLeeg(o.Title); });
+  }).filter(function (o) {
+    if (isLeeg(o.Title)) return false;
+    if (!gezocht) return true;
+    var shelves = splitsLijst(o.Bookshelves).concat([schoon(o['Exclusive Shelf'])]);
+    return shelves.some(function (s) { return normaliseerTekst(s) === gezocht; });
+  });
 }
 
 /** De eerste niet-lege waarde uit een lijst Goodreads-kolommen. */
@@ -1249,7 +1260,12 @@ function vulAanUitGoodreads(stil) {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    var goodreads = leesGoodreadsRijen(blad.getDataRange().getValues());
+    var shelf = leesInstellingen().goodreads_shelf;
+    var goodreads = leesGoodreadsRijen(blad.getDataRange().getValues(), shelf);
+    if (!goodreads.length) {
+      meld(shelf ? 'Ik vond geen boeken op de shelf "' + shelf + '". Kijk in Instellingen of de naam van goodreads_shelf precies klopt.' : 'Het tabblad Goodreads-export is leeg.');
+      return;
+    }
     var catalogus = leesTabel('Catalogus');
     var naTeKijken = leesTabel('Na te kijken');
     var resultaat = koppelGoodreads(catalogus.rijen, goodreads);
@@ -1262,7 +1278,9 @@ function vulAanUitGoodreads(stil) {
     bewaarTabel(naTeKijken);
     leegCache();
     logboek('menu', 'vulAanUitGoodreads', resultaat.aanvullingen.length + ' velden aangevuld, ' + nieuw + ' na te kijken');
-    if (!stil) meld(resultaat.aanvullingen.length + ' velden aangevuld uit Goodreads. ' + nieuw + ' nieuwe twijfelgevallen in "Na te kijken".');
+    if (!stil) meld(goodreads.length + ' boeken van Goodreads gebruikt' + (shelf ? ' (shelf "' + shelf + '")' : '') + '. ' +
+      resultaat.aanvullingen.length + ' velden aangevuld. ' + nieuw + ' nieuwe twijfelgevallen in "Na te kijken". ' +
+      'Je mag het tabblad Goodreads-export nu verwijderen: het bevat ook de rest van je persoonlijke bibliotheek.');
   } finally {
     lock.releaseLock();
   }
@@ -1658,6 +1676,7 @@ var STANDAARD_INSTELLINGEN = [
   ['toegangscode_balie', '', 'Code voor de vrijwilligers aan de balie. Wijzig ze als ze uitlekt.'],
   ['code_bestuur', '', 'Code voor het bestuursscherm. Geef ze enkel aan het bestuur.'],
   ['bewaartermijn_afgesloten_uitleningen_maanden', 12, 'Na hoeveel maanden de koppeling tussen een teruggebrachte uitlening en de lener gewist wordt.'],
+  ['goodreads_shelf', '', 'Naam van de Goodreads-shelf met de boeken van Madrigal, precies zoals op Goodreads. Leeg: alle boeken uit de export.'],
   ['zines_te_koop_uitleenbaar', 'nee', 'nee: zines met genre "verkoop" zijn niet uitleenbaar.'],
   ['tekst_welkom', 'Welkom in de catalogus van Project Madrigal, de queer bib van Antwerpen. Zoek, snuister en kom langs om te lenen.', 'Welkomsttekst bovenaan de publieke catalogus.'],
   ['tekst_uitleg_lenen', 'Je leent gratis, je betaalt enkel 5 euro borg per boek. Die krijg je terug als je het boek terugbrengt. Je mag 2 boeken tegelijk lenen, voor 4 weken. Kom langs op vrijdag tijdens de openingsuren.', 'Uitleg over lenen in de publieke catalogus: wanneer open, hoe lang, hoeveel.'],
