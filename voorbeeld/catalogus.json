@@ -1,0 +1,561 @@
+{
+ "bijgewerkt": "2026-10-23",
+ "teksten": {
+  "welkom": "Welkom in de catalogus van Project Madrigal, de queer bib van Antwerpen. Zoek, snuister en kom langs om te lenen.",
+  "uitleg": "Je leent gratis, je betaalt enkel 5 euro borg per boek. Die krijg je terug als je het boek terugbrengt. Je mag 2 boeken tegelijk lenen, voor 4 weken. Kom langs op vrijdag tijdens de openingsuren.",
+  "privacy": "Dit is een voorbeeldtekst. De echte privacyverklaring staat in het tabblad Instellingen."
+ },
+ "filtergroepen": [
+  "Gender",
+  "Seksualiteit",
+  "Feminisme",
+  "Fictie",
+  "Klassiekers",
+  "Geschiedenis en maatschappij",
+  "Biografie",
+  "Poëzie",
+  "Graphic novel",
+  "Young adult",
+  "Pulp",
+  "Erotica en BDSM",
+  "Zines"
+ ],
+ "boeken": [
+  {
+   "id": "B0001",
+   "t": "De verzonnen zee",
+   "a": "Verbeek, Mira",
+   "g": [
+    "Fictie",
+    "Seksualiteit"
+   ],
+   "s": "boek",
+   "j": 1999,
+   "l": "Nederlands",
+   "u": "Uitgeverij Fictie",
+   "p": 255,
+   "v": "Paperback",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   },
+   "d": "Een verzonnen roman over een vuurtorenwachter die verliefd wordt op de stem op de radio. Dit is een voorbeeldboek."
+  },
+  {
+   "id": "B0002",
+   "t": "Twee kasten vol",
+   "a": "Dewit, Rein",
+   "g": [
+    "Geschiedenis en maatschappij"
+   ],
+   "s": "boek",
+   "j": 2010,
+   "l": "Nederlands",
+   "u": "Huis van Papier",
+   "p": 114,
+   "v": "Paperback",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   }
+  },
+  {
+   "id": "B0003",
+   "t": "Stille lichten",
+   "a": "Aerts, Noor",
+   "g": [
+    "Poëzie"
+   ],
+   "s": "boek",
+   "j": 2018,
+   "l": "Nederlands",
+   "u": "Dichtershuis",
+   "p": 138,
+   "v": "Hardcover",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   }
+  },
+  {
+   "id": "B0004",
+   "t": "The Glass Parade",
+   "a": "Holloway, Jamie",
+   "g": [
+    "Fictie",
+    "Klassiekers"
+   ],
+   "s": "boek",
+   "j": 1978,
+   "l": "Engels",
+   "u": "Northbank Press",
+   "p": 119,
+   "v": "Pocket",
+   "n": "nieuw",
+   "b": {
+    "c": "uitgeleend",
+    "l": "Uitgeleend, verwacht terug op vrijdag 20 november",
+    "t": 1,
+    "v": 0
+   },
+   "r": [
+    "Robin"
+   ]
+  },
+  {
+   "id": "B0005",
+   "t": "Letters to Nobody",
+   "a": "Okafor, Sam",
+   "g": [
+    "Biografie",
+    "Gender"
+   ],
+   "s": "boek",
+   "j": 2021,
+   "l": "Engels",
+   "u": "Lantern Books",
+   "p": 109,
+   "v": "Paperback",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   },
+   "r": [
+    "Kai"
+   ]
+  },
+  {
+   "id": "B0006",
+   "t": "Le jardin des autres",
+   "a": "Moreau, Camille",
+   "g": [
+    "Fictie",
+    "Seksualiteit"
+   ],
+   "s": "boek",
+   "j": 1992,
+   "l": "Frans",
+   "u": "Éditions du Quai",
+   "p": 304,
+   "v": "Paperback",
+   "n": "nieuw",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   }
+  },
+  {
+   "id": "B0007",
+   "t": "Kleine geschiedenis van de roze straat",
+   "a": "Peeters, Lien",
+   "g": [
+    "Geschiedenis en maatschappij",
+    "Seksualiteit"
+   ],
+   "s": "boek",
+   "j": 2005,
+   "l": "Nederlands",
+   "u": "Fictieve Pers",
+   "p": 136,
+   "v": "Pocket",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "1 van 2 beschikbaar",
+    "t": 2,
+    "v": 1
+   }
+  },
+  {
+   "id": "B0008",
+   "t": "Body, Border, Becoming",
+   "a": "Reyes, Alex",
+   "g": [
+    "Gender"
+   ],
+   "s": "boek",
+   "j": 2019,
+   "l": "Engels",
+   "u": "Open Field",
+   "p": 120,
+   "v": "Pocket",
+   "n": "nieuw",
+   "b": {
+    "c": "gereserveerd",
+    "l": "Gereserveerd",
+    "t": 1,
+    "v": 0
+   }
+  },
+  {
+   "id": "B0009",
+   "t": "Zij die schreven",
+   "a": "Vandamme, Els",
+   "g": [
+    "Feminisme",
+    "Klassiekers"
+   ],
+   "s": "boek",
+   "j": 1984,
+   "l": "Nederlands",
+   "u": "Uitgeverij Fictie",
+   "p": 204,
+   "v": "Pocket",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   },
+   "r": [
+    "Robin"
+   ]
+  },
+  {
+   "id": "B0010",
+   "t": "Midnight Leather",
+   "a": "Crane, Dex",
+   "g": [
+    "Pulp",
+    "Erotica en BDSM"
+   ],
+   "s": "boek",
+   "j": 1971,
+   "l": "Engels",
+   "u": "Pulp House",
+   "p": 388,
+   "v": "Paperback",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   }
+  },
+  {
+   "id": "B0011",
+   "t": "Het jaar van de vos",
+   "a": "Claes, Ilo",
+   "g": [
+    "Young adult",
+    "Fictie"
+   ],
+   "s": "boek",
+   "j": 2015,
+   "l": "Nederlands",
+   "u": "Huis van Papier",
+   "p": 389,
+   "v": "Hardcover",
+   "n": "nieuw",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   }
+  },
+  {
+   "id": "B0012",
+   "t": "Ink & Glitter",
+   "a": "Patel, Rowan",
+   "g": [
+    "Graphic novel",
+    "Gender"
+   ],
+   "s": "boek",
+   "j": 2022,
+   "l": "Engels",
+   "u": "Panel Press",
+   "p": 203,
+   "v": "Paperback",
+   "n": "tweedehands",
+   "b": {
+    "c": "uitgeleend",
+    "l": "Uitgeleend, verwacht terug op vrijdag 20 november",
+    "t": 1,
+    "v": 0
+   },
+   "r": [
+    "Kai"
+   ]
+  },
+  {
+   "id": "B0013",
+   "t": "Die andere Stadt",
+   "a": "Bauer, Kim",
+   "g": [
+    "Geschiedenis en maatschappij"
+   ],
+   "s": "boek",
+   "j": 1988,
+   "l": "Duits",
+   "u": "Verlag Erfunden",
+   "p": 158,
+   "v": "Hardcover",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   }
+  },
+  {
+   "id": "B0014",
+   "t": "Zachte rebellie",
+   "a": "Jacobs, Noa",
+   "g": [
+    "Feminisme",
+    "Gender"
+   ],
+   "s": "boek",
+   "j": 2020,
+   "l": "Nederlands",
+   "u": "Fictieve Pers",
+   "p": 163,
+   "v": "Pocket",
+   "n": "nieuw",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   }
+  },
+  {
+   "id": "B0015",
+   "t": "A Room of Our Own Making",
+   "a": "Whitfield, June",
+   "g": [
+    "Feminisme",
+    "Klassiekers"
+   ],
+   "s": "boek",
+   "j": 1966,
+   "l": "Engels",
+   "u": "Northbank Press",
+   "p": 382,
+   "v": "Hardcover",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   },
+   "r": [
+    "Robin"
+   ]
+  },
+  {
+   "id": "B0016",
+   "t": "Brieven aan mijn jongere ik",
+   "a": "Mertens, Jo",
+   "g": [
+    "Biografie"
+   ],
+   "s": "boek",
+   "j": 2017,
+   "l": "Nederlands",
+   "u": "Lantern Books",
+   "p": 182,
+   "v": "Paperback",
+   "n": "tweedehands",
+   "b": {
+    "c": "uitgeleend",
+    "l": "Uitgeleend, verwacht terug op vrijdag 20 november",
+    "t": 1,
+    "v": 0
+   }
+  },
+  {
+   "id": "B0017",
+   "t": "Salt on the Tongue",
+   "a": "Nakamura, Lee",
+   "g": [
+    "Poëzie",
+    "Seksualiteit"
+   ],
+   "s": "boek",
+   "j": 2012,
+   "l": "Engels",
+   "u": "Open Field",
+   "p": 382,
+   "v": "Pocket",
+   "n": "nieuw",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   },
+   "r": [
+    "Kai"
+   ]
+  },
+  {
+   "id": "B0018",
+   "t": "De zomer dat alles kon",
+   "a": "Wouters, Bo",
+   "g": [
+    "Young adult"
+   ],
+   "s": "boek",
+   "j": 2023,
+   "l": "Nederlands",
+   "u": "Huis van Papier",
+   "p": 280,
+   "v": "Paperback",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   }
+  },
+  {
+   "id": "B0019",
+   "t": "Knots and Kindness",
+   "a": "Fairweather, Ash",
+   "g": [
+    "Erotica en BDSM"
+   ],
+   "s": "boek",
+   "j": 2016,
+   "l": "Engels",
+   "u": "Rope & Quill",
+   "p": 122,
+   "v": "Pocket",
+   "n": "nieuw",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   }
+  },
+  {
+   "id": "Z0020",
+   "t": "Glitterbrief #3",
+   "a": "Collectief Fictief",
+   "g": [
+    "Zines"
+   ],
+   "s": "zine",
+   "j": 2024,
+   "l": "Nederlands",
+   "b": {
+    "c": "niet_uitleenbaar",
+    "l": "Te koop in de bib, niet uitleenbaar",
+    "t": 1,
+    "v": 0
+   }
+  },
+  {
+   "id": "B0021",
+   "t": "Morgen is een werkwoord",
+   "a": "Smet, Ari",
+   "g": [
+    "Poëzie",
+    "Feminisme"
+   ],
+   "s": "boek",
+   "j": 1995,
+   "l": "Nederlands",
+   "u": "Dichtershuis",
+   "p": 406,
+   "v": "Paperback",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   }
+  },
+  {
+   "id": "B0022",
+   "t": "Comrades in Lavender",
+   "a": "Rothmann, Eli",
+   "g": [
+    "Geschiedenis en maatschappij",
+    "Klassiekers"
+   ],
+   "s": "boek",
+   "j": 1983,
+   "l": "Engels",
+   "u": "Archive Editions",
+   "p": 362,
+   "v": "Hardcover",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   },
+   "r": [
+    "Robin"
+   ]
+  },
+  {
+   "id": "B0023",
+   "t": "Nuit blanche, cœur rouge",
+   "a": "Lefèvre, Dominique",
+   "g": [
+    "Fictie"
+   ],
+   "s": "boek",
+   "j": 2008,
+   "l": "Frans",
+   "u": "Éditions du Quai",
+   "p": 328,
+   "v": "Pocket",
+   "n": "tweedehands",
+   "b": {
+    "c": "beschikbaar",
+    "l": "Beschikbaar",
+    "t": 1,
+    "v": 1
+   }
+  },
+  {
+   "id": "B0024",
+   "t": "Het boek zonder einde",
+   "a": "Hermans, Pim",
+   "g": [
+    "Fictie"
+   ],
+   "s": "boek",
+   "j": 2001,
+   "l": "Nederlands",
+   "u": "Uitgeverij Fictie",
+   "p": 275,
+   "v": "Hardcover",
+   "n": "nieuw",
+   "b": {
+    "c": "uitgeleend",
+    "l": "Uitgeleend, verwacht terug op vrijdag 20 november",
+    "t": 1,
+    "v": 0
+   }
+  }
+ ]
+}
