@@ -265,7 +265,13 @@ textarea { min-height: 6rem; }
 }
 .plaatshouder.zine { background: var(--kleur-geel); color: var(--kleur-op-geel); }
 
-.meer { margin: var(--ruimte) auto; display: flex; }
+.paginas { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: .4rem; margin: var(--ruimte) 0; }
+.paginas ul { display: flex; flex-wrap: wrap; gap: .3rem; list-style: none; margin: 0; padding: 0; align-items: center; }
+.paginas a, .pagina-stap { display: inline-grid; place-items: center; min-width: 2.75rem; min-height: 2.75rem; padding: 0 .6rem; border: 2px solid var(--kleur-rand); border-radius: var(--hoek); text-decoration: none; color: var(--kleur-accent); background: var(--kleur-vlak); }
+.paginas a:hover { background: var(--kleur-aanrader-vlak); }
+.paginas a[aria-current="page"] { background: var(--kleur-paars); border-color: var(--kleur-paars); color: var(--kleur-op-paars); font-weight: 700; }
+.pagina-stap.uit { color: var(--kleur-tekst-zacht); opacity: .5; }
+@media (max-width: 30rem) { .pagina-woord { display: none; } }
 
 .laden { text-align: center; padding: 2rem 0; color: var(--kleur-tekst-zacht); }
 
