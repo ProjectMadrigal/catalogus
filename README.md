@@ -129,11 +129,13 @@ Bovenaan de spreadsheet staat het menu **Madrigal**. Zie je het niet? Vernieuw d
 
 De startpagina toont tot 12 boeken in het blok **Aanraders**. Beschikbare boeken komen eerst, de keuze wisselt elke dag. Een boek komt erbij als:
 
-- iemand het aanraadt: zet een voornaam in de kolom `aanrader`. Het label wordt "Aanrader van ...". Meerdere namen scheid je met een komma.
+- iemand het aanraadt: zet een voornaam in de kolom `aanrader`. Het label wordt "Aanrader van ...". Meerdere namen scheid je met een komma. Een aanrader komt er enkel als je die zelf invult: het script neemt nooit een aanrader over uit de stocklijst.
 - het nieuw binnen is: het kwam minder dan 60 dagen geleden in de Catalogus. Het label wordt "Nieuw binnen".
 - je zelf **ja** zet in de kolom `startpagina`.
 
 Zet je **nee** in de kolom `startpagina`, dan staat het boek nooit op de startpagina.
+
+**Aanraders uit de oude stocklijst wissen.** Bij de eerste opbouw nam het script de kolom `aanrader` van de stocklijst over. Kies **Madrigal > Wis de aanraders die uit de stocklijst kwamen** om die te wissen. Een aanrader die je zelf invulde of aanpaste, blijft staan.
 
 In het tabblad Instellingen, onder `── STARTPAGINA: AANRADERS ──`:
 
@@ -357,7 +359,7 @@ Je mag "Installeer tabbladen" later opnieuw uitvoeren. Bestaande tabbladen, gege
 
 **De stappen in het menu Madrigal**, in deze volgorde. Elke stap mag je opnieuw uitvoeren: er komt niets dubbel, en wat je met de hand verbeterde, blijft staan.
 
-1. **2. Bouw de catalogus uit Stock en Zines.** Leest Stock en Zines en schrijft één nette lijst naar de Catalogus. Maakt ISBN's netjes (een ongeldig ISBN komt in `isbn_origineel`), geeft elk boek een vaste boek-ID, zet de herkomst in een aparte kolom die nooit publiek wordt, en vult de vertaaltabel Onderwerpen. Staat er "niet op site" in de herkomst, dan krijgt het boek `publiek = nee`. Zines met genre "verkoop" krijgen `uitleenbaar = nee`.
+1. **2. Bouw de catalogus uit Stock en Zines.** Leest Stock en Zines en schrijft één nette lijst naar de Catalogus. Maakt ISBN's netjes (een ongeldig ISBN komt in `isbn_origineel`), geeft elk boek een vaste boek-ID, zet de herkomst in een aparte kolom die nooit publiek wordt, en vult de vertaaltabel Onderwerpen. Staat er "niet op site" in de herkomst, dan krijgt het boek `publiek = nee`. De kolom `aanrader` van de stocklijst neemt het script niet over: aanraders vul je zelf in. Zines met genre "verkoop" krijgen `uitleenbaar = nee`.
 2. **3. Vul aan uit Goodreads.** Vult enkel lege velden aan: uitgeverij, jaartal en pagina's. De stocklijst wint altijd. Twijfelgevallen gaan naar **Na te kijken**.
 3. **4. Vul aan uit Open Library.** Zoekt voor boeken met een ISBN wat nog ontbreekt, en een cover. Dit werkt in porties van een paar minuten en gaat vanzelf verder. Daarna starten vanzelf:
    - **5. Zoek ontbrekende covers bij Google Books**;
