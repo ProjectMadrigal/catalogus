@@ -17,6 +17,8 @@
 /** Bouwt het object dat het publieke eindpunt teruggeeft. */
 function bouwPubliekeCatalogus(staat, onderwerpRijen) {
   var vertaal = vertaalTabel(onderwerpRijen);
+  // Namen in de instelling aanraders_verbergen verschijnen nergens op de website.
+  var verborgen = splitsLijst((staat.inst || {}).aanraders_verbergen).map(normaliseerTekst);
   var boeken = [];
   staat.catalogus.forEach(function (rij) {
     if (isLeeg(rij.boek_id) || isLeeg(rij.titel)) return;
@@ -43,7 +45,9 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
     var en = schoonMetRegels(rij.beschrijving_en);
     if (en && en !== extra.d) extra.de = en;
     Object.keys(extra).forEach(function (k) { if (!isLeeg(extra[k])) boek[k] = extra[k]; });
-    var aanraders = splitsLijst(String(rij.aanrader || '').replace(/ en | & /g, ','));
+    var aanraders = splitsLijst(String(rij.aanrader || '').replace(/ en | & /g, ',')).filter(function (naam) {
+      return verborgen.indexOf(normaliseerTekst(naam)) === -1;
+    });
     if (aanraders.length) boek.r = aanraders;
     boeken.push(boek);
   });

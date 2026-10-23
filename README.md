@@ -140,7 +140,7 @@ In het tabblad Instellingen, onder `── STARTPAGINA: AANRADERS ──`:
 | Instelling | Wat |
 | --- | --- |
 | `nieuw_op_startpagina_dagen` | hoeveel dagen een nieuw boek bij de Aanraders staat. 0 = nooit automatisch. |
-| `aanraders_verbergen` | namen van wie de aanraders tijdelijk niet op de startpagina staan, bv. `Nance`. Het label en de filter in de catalogus blijven. Wis de naam om ze terug te tonen. |
+| `aanraders_verbergen` | namen van wie de aanraders tijdelijk nergens op de website staan, bv. `Nance`: niet op de startpagina, niet als label bij de boeken en niet in de filter Aanrader. De namen blijven in de Catalogus staan. Wis de naam om ze terug te tonen. |
 
 ## A4. Nieuws, agenda en veelgestelde vragen
 
