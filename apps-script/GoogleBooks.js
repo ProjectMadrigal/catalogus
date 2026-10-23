@@ -99,11 +99,15 @@ function vulAanUitGoogleBooks() {
   if (rest > 0) {
     // Bij de daglimiet wachten we een paar uur, anders een minuut.
     ScriptApp.newTrigger('vulAanUitGoogleBooks').timeBased().after((limiet ? 6 * 60 : 1) * 60 * 1000).create();
+  } else {
+    // Klaar: nu de beschrijvingen die nog ontbreken (zie Beschrijvingen.js).
+    verwijderTriggers('vulBeschrijvingenAan');
+    ScriptApp.newTrigger('vulBeschrijvingenAan').timeBased().after(60 * 1000).create();
   }
   if (aangevuld) leegCache();
   logboek('menu', 'vulAanUitGoogleBooks', verwerkt + ' opgevraagd, ' + aangevuld + ' covers gevonden, ' + rest + ' te gaan' + (limiet ? ' (daglimiet van Google bereikt)' : ''));
   var tekst = verwerkt + ' boeken opgevraagd bij Google Books, ' + aangevuld + ' covers gevonden.';
   if (rest > 0) tekst += limiet ? ' De daglimiet van Google is bereikt: over 6 uur gaat het script vanzelf verder.' : ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.';
-  else tekst += ' Alles is verwerkt.';
+  else tekst += ' Alles is verwerkt. Het script zoekt nu nog ontbrekende beschrijvingen.';
   try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
 }

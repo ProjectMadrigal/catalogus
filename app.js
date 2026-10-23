@@ -287,7 +287,7 @@
         (b.r || []).length ? el('ul', { class: 'labels' }, b.r.map(function (n) {
           return el('li', {}, el('a', { class: 'label label-aanrader', href: '#/?aanrader=' + encodeURIComponent('Aanrader van ' + n) }, t('aanraderVan', { naam: n })));
         })) : null,
-        b.d ? el('p', {}, b.d) : null,
+        b.d ? el('p', { class: 'beschrijving' }, b.d) : null,
         el('dl', { class: 'gegevens' }, rijen.map(function (r) { return [el('dt', {}, r[0]), el('dd', {}, String(r[1]))]; })),
         onderwerpen.length ? el('div', {}, el('h3', {}, t('onderwerpen')), el('ul', { class: 'labels' }, onderwerpen)) : null,
         el('div', { class: 'knoppen' }, deelKnop),

@@ -434,7 +434,7 @@ main.website { max-width: none; padding: 0; }
 .nieuwskaart h3 { font-size: 1.2rem; margin: 0 0 .3rem; }
 .nieuwskaart .datum { color: var(--kleur-tekst-zacht); font-size: .9rem; margin: 0 0 .6rem; }
 .nieuwskaart a { color: var(--kleur-accent); }
-.tekstblok p { white-space: pre-line; }
+.tekstblok p, .detail .beschrijving { white-space: pre-line; }
 
 .aanraders { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); list-style: none; margin: 0; padding: 0; }
 .aanrader a { display: block; color: inherit; text-decoration: none; }
