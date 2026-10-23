@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Uitleenscherm · Project Madrigal</title>
+  <meta name="robots" content="noindex">
+  <meta name="theme-color" content="#8a3f22">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icoon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="overslaan" href="#inhoud">Ga naar de inhoud</a>
+  <header class="kop">
+    <div class="kop-binnen">
+      <span class="logo" aria-hidden="true">M</span>
+      <div>
+        <h1>Uitleenscherm</h1>
+        <p class="ondertitel">Project Madrigal, voor de vrijwilligers aan de balie</p>
+      </div>
+    </div>
+  </header>
+
+  <main id="inhoud" tabindex="-1">
+    <!-- Aanmelden -->
+    <section id="aanmelden" class="blok" hidden aria-labelledby="aanmelden-titel">
+      <h2 id="aanmelden-titel">Aanmelden</h2>
+      <p>Vul de code van de balie in. Deze browser onthoudt de code, dus je doet dit maar één keer op dit toestel.</p>
+      <form id="aanmeldformulier" novalidate>
+        <div class="veld">
+          <label for="code">Code van de balie</label>
+          <input type="password" id="code" autocomplete="off" required>
+        </div>
+        <div class="veld">
+          <label for="wie">Jouw voornaam <span class="hulptekst">(zo weet het bestuur wie wat deed)</span></label>
+          <input type="text" id="wie" autocomplete="given-name" maxlength="40" required>
+        </div>
+        <div id="aanmeld-melding" class="melding fout" role="alert" hidden></div>
+        <button type="submit" class="knop breed">Aanmelden</button>
+      </form>
+    </section>
+
+    <!-- Het uitleenscherm zelf -->
+    <section id="app" hidden>
+      <div class="bovenbalk">
+        <p id="balie-info">Gegevens laden...</p>
+        <div class="knoppen klein">
+          <button type="button" class="knop tweede" id="vernieuw">Vernieuw</button>
+          <button type="button" class="knop tweede" id="wissel">Andere vrijwilliger</button>
+          <button type="button" class="knop tweede" id="afmelden">Afmelden</button>
+        </div>
+      </div>
+      <div id="apart-lijst"></div>
+      <div id="werkvlak"></div>
+    </section>
+  </main>
+
+  <!-- Melding bij een overschreden grens -->
+  <dialog id="grens-dialoog" aria-labelledby="grens-titel">
+    <h2 id="grens-titel">Let op</h2>
+    <ul id="grens-meldingen"></ul>
+    <p>Wil je toch doorgaan? Schrijf dan kort waarom. Het bestuur ziet deze reden.</p>
+    <div class="veld">
+      <label for="grens-reden">Reden <span class="hulptekst">(verplicht)</span></label>
+      <textarea id="grens-reden" maxlength="300"></textarea>
+      <p id="grens-fout" class="melding fout" hidden>Vul een reden in om toch door te gaan.</p>
+    </div>
+    <div class="knoppen">
+      <button type="button" class="knop tweede" id="grens-annuleren">Annuleren</button>
+      <button type="button" class="knop" id="grens-doorgaan">Toch doorgaan</button>
+    </div>
+  </dialog>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="dom.js"></script>
+  <script src="zoeken.js"></script>
+  <script src="beheer.js"></script>
+  <script src="balie.js"></script>
+</body>
+</html>
