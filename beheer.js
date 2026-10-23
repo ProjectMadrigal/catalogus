@@ -26,7 +26,7 @@
 
   /**
    * Toont het aanmeldformulier, of meldt meteen aan met de bewaarde code.
-   * opties: { codeSleutel, vereisteRol ('balie' of 'bestuur'), bijAangemeld(rol) }
+   * opties: { codeSleutel, reserveSleutel (optioneel), vereisteRol ('balie' of 'bestuur'), bijAangemeld(rol) }
    */
   function aanmelden(opties) {
     sessie.codeSleutel = opties.codeSleutel;
@@ -72,7 +72,8 @@
       probeer(code, wie, false).then(function () { knop.disabled = false; codeVeld.value = ''; });
     });
 
-    var bewaard = lees(opties.codeSleutel);
+    // Het bestuur mag ook de balie gebruiken: dan volstaat de bewaarde bestuurscode.
+    var bewaard = lees(opties.codeSleutel) || (opties.reserveSleutel ? lees(opties.reserveSleutel) : '');
     if (bewaard && lees(SLEUTEL_WIE)) probeer(bewaard, lees(SLEUTEL_WIE), true);
     else document.getElementById('aanmelden').hidden = false;
   }

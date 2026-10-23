@@ -531,6 +531,7 @@
 
   B.aanmelden({
     codeSleutel: 'madrigal_code_balie',
+    reserveSleutel: 'madrigal_code_bestuur',
     vereisteRol: 'balie',
     bijAangemeld: function () {
       laad().then(function () { if (data) toonMenu(); });
