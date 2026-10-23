@@ -561,6 +561,23 @@ test('madrigal-script.gs is bijgewerkt (anders: node tools/bundel.js)', () => {
   const { maakBundel, UIT } = require('../tools/bundel');
   assert.strictEqual(fs.readFileSync(UIT, 'utf8'), maakBundel());
 });
+test('madrigal-script.gs bevat elke functie precies één keer, alfabetisch', () => {
+  const fs = require('fs');
+  const path = require('path');
+  const { knip, MAP, UIT } = require('../tools/bundel');
+  let namen = [];
+  fs.readdirSync(MAP).filter((f) => f.endsWith('.js')).forEach((f) => {
+    namen = namen.concat(knip(fs.readFileSync(path.join(MAP, f), 'utf8'), f).filter((x) => x.soort === 'function').map((x) => x.naam));
+  });
+  const inBundel = (fs.readFileSync(UIT, 'utf8').match(/^function ([A-Za-z0-9_$]+)/gm) || []).map((r) => r.slice(9));
+  gelijk(inBundel.slice().sort(), namen.slice().sort());
+  gelijk(inBundel, inBundel.slice().sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase())));
+  // Geen code buiten functies en vaste waarden die verloren kan gaan.
+  const alleCode = fs.readdirSync(MAP).filter((f) => f.endsWith('.js'))
+    .map((f) => fs.readFileSync(path.join(MAP, f), 'utf8')).join('\n');
+  const losseRegels = alleCode.split('\n').filter((r) => /^[A-Za-z]/.test(r) && !/^(function|var) /.test(r));
+  gelijk(losseRegels, []);
+});
 test('madrigal-script.gs werkt op zichzelf', () => {
   const fs = require('fs');
   const vm = require('vm');
