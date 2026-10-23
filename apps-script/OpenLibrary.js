@@ -106,10 +106,13 @@ function vulAanUitOpenLibrary() {
     ScriptApp.newTrigger('vulAanUitOpenLibrary').timeBased().after(60 * 1000).create();
   } else {
     leegCache();
+    // Klaar: Google Books zoekt nog covers voor de boeken waar Open Library er geen had.
+    verwijderTriggers('vulAanUitGoogleBooks');
+    ScriptApp.newTrigger('vulAanUitGoogleBooks').timeBased().after(60 * 1000).create();
   }
   logboek('menu', 'vulAanUitOpenLibrary', verwerkt + ' opgevraagd, ' + aangevuld + ' aangevuld, ' + rest + ' te gaan');
   var tekst = verwerkt + ' boeken opgevraagd bij Open Library, ' + aangevuld + ' aangevuld.';
-  tekst += rest > 0 ? ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.' : ' Alles is verwerkt.';
+  tekst += rest > 0 ? ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.' : ' Alles is verwerkt. Google Books zoekt nu nog ontbrekende covers.';
   try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
 }
 
