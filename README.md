@@ -132,7 +132,8 @@ Voer de functies uit via het menu **Madrigal**, in deze volgorde. Elke functie m
 
 - Koppelt eerst op ISBN, anders op titel en achternaam van de auteur.
 - Vult enkel **lege** velden aan: uitgeverij, jaartal en pagina's. Bestaande waarden worden nooit overschreven.
-- Twijfelgevallen gaan naar **Na te kijken**: een koppeling enkel op titel, of een andere waarde dan in de Catalogus. Je ziet beide waarden naast elkaar.
+- Staat er al een waarde in de Catalogus, dan wint de Catalogus altijd: de stocklijst beschrijft het boek in de kast.
+- Naar **Na te kijken** gaan enkel een koppeling op alleen de titel (de auteur verschilt), en een ISBN uit Goodreads voor boeken zonder ISBN. Zet zo'n ISBN enkel in de Catalogus als het klopt met jouw uitgave.
 
 **Stap 3. Madrigal > 4. Vul aan uit Open Library**
 
