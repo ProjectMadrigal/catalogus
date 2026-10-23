@@ -1970,6 +1970,7 @@ function onOpen() {
     .addSeparator()
     .addItem('Nieuwe boeken verwerken', 'verwerkNieuweBoeken')
     .addItem('Werk de vertaaltabel Onderwerpen bij', 'werkOnderwerpenBijMenu')
+    .addItem('Wis de aanraders die uit de stocklijst kwamen', 'wisAanradersUitStock')
     .addItem('Ververs de publieke catalogus', 'verversMenu')
     .addSeparator()
     .addItem('Neem lopende uitleningen over uit het oude blad', 'neemUitleningenOver')
@@ -3010,7 +3011,8 @@ function voegBronSamen(bestaand, bron, nieuwId, inst, vandaag) {
     if (rij) {
       // Enkel lege velden aanvullen. Wat iemand met de hand invulde, blijft.
       var velden = {};
-      ['titel', 'auteur', 'isbn', 'uitgeverij', 'jaartal', 'taal', 'paginas', 'uitvoering', 'nieuwstaat', 'aanrader', 'genre', 'herkomst', 'isbn_origineel'].forEach(function (k) {
+      // De aanrader nemen we nooit over uit de stocklijst: die vul je zelf in, per boek.
+      ['titel', 'auteur', 'isbn', 'uitgeverij', 'jaartal', 'taal', 'paginas', 'uitvoering', 'nieuwstaat', 'genre', 'herkomst', 'isbn_origineel'].forEach(function (k) {
         if (isLeeg(rij[k]) && !isLeeg(b[k])) velden[k] = b[k];
       });
       if (isLeeg(rij.aantal)) velden.aantal = b.aantal;
@@ -3023,7 +3025,7 @@ function voegBronSamen(bestaand, bron, nieuwId, inst, vandaag) {
       soort: b.soort,
       titel: b.titel, auteur: b.auteur, isbn: b.isbn, uitgeverij: b.uitgeverij, jaartal: b.jaartal,
       taal: b.taal, paginas: b.paginas, uitvoering: b.uitvoering, nieuwstaat: b.nieuwstaat,
-      aanrader: b.aanrader, genre: b.genre, extra_onderwerpen: '', klassieker: '',
+      aanrader: '', genre: b.genre, extra_onderwerpen: '', klassieker: '',
       aantal: b.aantal,
       uitleenbaar: teKoop && !inst.zines_te_koop_uitleenbaar ? 'nee' : 'ja',
       publiek: nietPubliekVolgensHerkomst(b.herkomst) ? 'nee' : 'ja',
@@ -3436,6 +3438,56 @@ function willekeurigeCode() {
   var code = '';
   for (var i = 0; i < 8; i++) code += tekens.charAt(Math.floor(Math.random() * tekens.length));
   return code;
+}
+
+/** Menu: wist de aanraders die automatisch uit de stocklijst overgenomen werden. */
+function wisAanradersUitStock() {
+  var ss = spreadsheet();
+  var bron = [];
+  [['Stock', 'boek'], ['Zines', 'zine']].forEach(function (paar) {
+    var blad = ss.getSheetByName(paar[0]);
+    if (blad) bron = bron.concat(leesBronRijen(blad.getDataRange().getValues(), paar[1]));
+  });
+  if (!bron.length) {
+    meld('De tabbladen Stock en Zines ontbreken. Wis de namen in de kolom aanrader van de Catalogus dan met de hand.');
+    return;
+  }
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  var n;
+  try {
+    var tabel = leesTabel('Catalogus');
+    n = wisAanradersUitStockRijen(tabel.rijen, bron);
+    bewaarTabel(tabel);
+  } finally {
+    lock.releaseLock();
+  }
+  leegCache();
+  logboek('menu', 'wisAanradersUitStock', n + ' aanraders gewist');
+  meld(n + ' aanraders uit de stocklijst gewist. Aanraders die je zelf invulde, bleven staan. Een aanrader voeg je voortaan toe in de kolom aanrader van de Catalogus.');
+}
+
+/**
+ * Wist de aanraders die uit de stocklijst kwamen. Een aanrader die je zelf
+ * invulde of aanpaste (een andere waarde dan in de stocklijst), blijft staan.
+ * catalogusRijen: rijen van de Catalogus. bron: boek-objecten uit leesBronRijen.
+ * Geeft het aantal gewiste aanraders terug.
+ */
+function wisAanradersUitStockRijen(catalogusRijen, bron) {
+  var uitStock = {};
+  bron.forEach(function (b) {
+    var s = bronSleutel(b);
+    if (b.aanrader && !uitStock[s]) uitStock[s] = normaliseerTekst(b.aanrader);
+  });
+  var n = 0;
+  catalogusRijen.forEach(function (rij) {
+    if (isLeeg(rij.aanrader) || !rij.bron_sleutel) return;
+    if (uitStock[rij.bron_sleutel] === normaliseerTekst(rij.aanrader)) {
+      wijzig(rij, { aanrader: '' });
+      n++;
+    }
+  });
+  return n;
 }
 
 /** Woorden van een tekst, zonder lidwoorden (tenzij er dan niets overblijft). */
