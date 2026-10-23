@@ -1013,8 +1013,7 @@ function koppelGoodreads(catalogus, goodreads) {
     if (isLeeg(boek.boek_id)) return;
     var t = titelSleutel(boek.titel);
     var g = boek.isbn ? opIsbn[boek.isbn] : null;
-    var manier = 'isbn';
-    if (!g) { g = opTitelAuteur[t + '|' + achternaam(boek.auteur)]; manier = 'titel en auteur'; }
+    if (!g) g = opTitelAuteur[t + '|' + achternaam(boek.auteur)];
     if (!g && opTitel[t] && opTitel[t].length === 1) {
       // Twijfel: enkel de titel komt overeen. Niets invullen, wel voorleggen.
       var kandidaat = opTitel[t][0];
@@ -1034,13 +1033,6 @@ function koppelGoodreads(catalogus, goodreads) {
       if (isLeeg(waarde)) return;
       if (isLeeg(boek[veld])) {
         aanvullingen.push({ boek: boek, veld: veld, waarde: veld === 'uitgeverij' ? schoon(waarde) : waarde });
-      } else if (manier === 'isbn' && !zelfdeWaarde(boek[veld], waarde)) {
-        // Enkel bij een koppeling op ISBN gaat het om dezelfde uitgave. Bij een koppeling
-        // op titel en auteur is een ander jaartal of aantal pagina's gewoon een andere uitgave.
-        naTeKijken.push({
-          boek: boek, veld: veld, waarde_catalogus: boek[veld], waarde_bron: waarde,
-          opmerking: 'Gekoppeld op ' + manier + '. De Catalogus heeft een andere waarde. Die blijft staan, tenzij je ze zelf aanpast.'
-        });
       }
     });
     // Een ISBN vullen we nooit zelf in: het kan van een andere uitgave zijn.
@@ -2642,13 +2634,6 @@ function woorden(waarde) {
   var alle = normaliseerTekst(waarde).split(' ').filter(function (w) { return w; });
   var zonder = alle.filter(function (w) { return LIDWOORDEN.indexOf(w) === -1; });
   return zonder.length ? zonder : alle;
-}
-
-/** Zijn twee waarden in feite dezelfde? (hoofdletters, leestekens en getalnotatie tellen niet) */
-function zelfdeWaarde(a, b) {
-  var na = parseerGetal(a), nb = parseerGetal(b);
-  if (typeof a === 'number' || typeof b === 'number') return na === nb;
-  return normaliseerTekst(a) === normaliseerTekst(b);
 }
 
 /** Past één instelling aan in het tabblad. */
