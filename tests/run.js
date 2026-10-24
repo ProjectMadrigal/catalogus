@@ -1057,20 +1057,12 @@ test('Doe mee: teksten in beide talen, leeg Engels wordt Nederlands', () => {
   gelijk(d.doeMee.steunen, { nl: '', en: '' });
 });
 
-console.log('\nGoogle Books zonder sleutel');
+console.log('\nBeschrijvingen: wachten op Google');
 test('beschrijving: boek met OL-merkteken wacht nog op Google', () => {
   assert.strictEqual(M.wachtOpGoogle({ beschrijving_gezocht: 'OL 20261024' }), true);
   assert.strictEqual(M.heeftBeschrijvingNodig({ isbn: '9780306406157', beschrijving_gezocht: 'OL 20261024' }), true);
   assert.strictEqual(M.heeftBeschrijvingNodig({ isbn: '9780306406157', beschrijving_gezocht: '2026-10-24' }), false);
   assert.strictEqual(M.parseerDatum('OL 20261024'), ''); // het merkteken blijft tekst, wordt geen datum
-});
-test('Google Books via de geavanceerde service Books, met herkenning van de daglimiet', () => {
-  M.Books = { Volumes: { list: (q) => ({ items: [{ volumeInfo: { title: 'Gevonden voor ' + q } }] }) } };
-  const ok = M.googleBooksZoek('9780306406157', '');
-  gelijk([ok.code, ok.items[0].volumeInfo.title], [200, 'Gevonden voor isbn:9780306406157']);
-  M.Books = { Volumes: { list: () => { throw new Error('Quota exceeded for quota metric'); } } };
-  assert.strictEqual(M.googleBooksZoek('9780306406157', '').code, 429);
-  delete M.Books;
 });
 
 console.log('\nBack-up');

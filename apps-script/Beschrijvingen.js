@@ -12,9 +12,8 @@
  *   - Een beschrijving die je zelf invult, overschrijft het script nooit.
  *   - Elk opgezocht boek krijgt een datum in de kolom beschrijving_gezocht.
  *     Opnieuw laten zoeken? Maak die cel leeg.
- *   - Google Books: met de geavanceerde service Books (Apps Script > Services > Books API)
- *     of met een API-sleutel (instelling google_books_api_key) krijg je een eigen
- *     daglimiet. Zonder beide deelt Google een kleine limiet met veel andere gebruikers.
+ *   - Google Books: met een API-sleutel (instelling google_books_api_key) krijg je een
+ *     eigen daglimiet. Zonder sleutel deelt Google een kleine limiet met veel andere gebruikers.
  *   - Weigert Google, dan zoekt het script gewoon verder bij Open Library. Een boek dat
  *     Open Library niet kent, krijgt "OL" + de datum (bv. OL 20261024) in beschrijving_gezocht: Google
  *     zoekt het later nog op, zodra de limiet weer vrij is.
@@ -46,21 +45,8 @@ function wachtOpGoogle(boek) {
   return String(boek.beschrijving_gezocht || '').indexOf(BS_ENKEL_OL) === 0;
 }
 
-/**
- * Zoekt een ISBN op bij Google Books. Geeft { code, items } terug.
- * Staat de geavanceerde service Books aan (en is er geen API-sleutel), dan gebruiken
- * we die: ze werkt met het Google-account van het script en heeft een eigen daglimiet.
- */
+/** Zoekt een ISBN op bij Google Books. Geeft { code, items } terug. */
 function googleBooksZoek(isbn, sleutel) {
-  if (!sleutel && typeof Books !== 'undefined' && Books.Volumes) {
-    try {
-      var r = Books.Volumes.list('isbn:' + isbn, { maxResults: 5 });
-      return { code: 200, items: (r && r.items) || [] };
-    } catch (e) {
-      var fout = String(e && e.message || e);
-      return { code: /quota|rate|limit|exceeded|429|403/i.test(fout) ? 429 : 500, items: [] };
-    }
-  }
   var a = haalJson('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : ''));
   return { code: a.code, items: (a.data && a.data.items) || [] };
 }
