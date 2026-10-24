@@ -355,3 +355,60 @@ function beheerInstellingBewaren(invoer, wie) {
   }
   return antwoord;
 }
+
+/* ---------- Covers zoeken via de browser van het bestuur ---------- */
+
+/*
+ * Google Books weigert vaak vragen vanuit Apps Script (servers van Google, zonder land).
+ * Daarom vraagt de browser van het bestuur de covers op, en bewaart het script wat gevonden
+ * is. De browser krijgt daarvoor de google_books_api_key: enkel wie de code van het bestuur
+ * heeft, ziet die. Beperk de sleutel in de Google Cloud Console tot de Books API.
+ */
+
+/** De boeken met een ISBN die nog geen cover hebben en nog niet bij Google opgezocht zijn. */
+function coversTeZoeken(staat) {
+  var boeken = staat.catalogus.filter(function (b) {
+    return !isLeeg(b.boek_id) && isLeeg(b.cover_url) && isLeeg(b.gb_gecontroleerd) && /^\d{13}$/.test(String(b.isbn || ''));
+  }).map(function (b) { return { id: String(b.boek_id), isbn: String(b.isbn) }; });
+  return { ok: true, boeken: boeken, sleutel: String(staat.inst.google_books_api_key || '') };
+}
+
+/** Enkel covers van Google zelf, via https. */
+function isGoogleCover(url) {
+  return /^https:\/\/(books\.google\.[a-z.]+|books\.googleusercontent\.com|[a-z0-9-]+\.googleusercontent\.com)\//.test(String(url || ''));
+}
+
+/**
+ * Bewaart wat de browser bij Google Books vond.
+ * invoer: { gezocht: [boek-ID's], resultaten: [{ boek_id, cover, beschrijving, uitgeverij, jaartal, paginas, taal }] }
+ * Enkel lege velden worden aangevuld. Elk gezocht boek krijgt een datum in gb_gecontroleerd.
+ */
+function coversBewaren(staat, invoer) {
+  var gezocht = (invoer.gezocht || []).slice(0, 200).map(String);
+  var perId = {};
+  (invoer.resultaten || []).slice(0, 200).forEach(function (r) { perId[String(r.boek_id)] = r; });
+  var covers = 0;
+  gezocht.forEach(function (id) {
+    var boek = boekVan(staat, id);
+    if (!boek) return;
+    var r = perId[id];
+    var info = null;
+    if (r) {
+      var cover = String(r.cover || '').replace(/^http:/, 'https:');
+      info = {
+        imageLinks: isGoogleCover(cover) ? { thumbnail: cover } : null,
+        description: tekstInvoer(r.beschrijving, 5000), publisher: tekstInvoer(r.uitgeverij, 120),
+        publishedDate: tekstInvoer(r.jaartal, 20), pageCount: parseerGetal(r.paginas) || 0, language: tekstInvoer(r.taal, 5)
+      };
+    }
+    var velden = verwerkGoogleBooks(boek, info);
+    if (velden.cover_url) { velden.cover_bron = 'Google Books'; covers++; }
+    velden.gb_gecontroleerd = staat.vandaag;
+    wijzig(boek, velden);
+  });
+  if (gezocht.length) {
+    staat.catalogusGewijzigd = true;
+    staat.log.push(['covers via de browser', gezocht.length + ' opgezocht, ' + covers + ' covers']);
+  }
+  return { ok: true, covers: covers };
+}

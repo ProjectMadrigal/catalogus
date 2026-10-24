@@ -116,7 +116,8 @@
     }
     zoekveld.addEventListener('input', teken);
     D.vervang(vak, ctx.kop('Boeken', 'Zoek een boek om het aan te passen, of voeg een nieuw boek toe. Alles komt in het tabblad Catalogus van de spreadsheet.'),
-      knoppen(el('button', { type: 'button', class: 'knop', onclick: function () { nieuwBoek(vak, ctx); } }, '+ Nieuw boek toevoegen')),
+      knoppen(el('button', { type: 'button', class: 'knop', onclick: function () { nieuwBoek(vak, ctx); } }, '+ Nieuw boek toevoegen'),
+        el('button', { type: 'button', class: 'knop tweede', onclick: function () { toonCoversZoeken(vak, ctx); } }, 'Zoek ontbrekende covers bij Google')),
       el('div', { class: 'veld' }, el('label', { for: 'beheer-boek-zoek' }, 'Zoek een boek'), zoekveld), lijst);
     teken();
   }
@@ -194,6 +195,92 @@
   }
 
   function nieuwBoek(vak, ctx) { boekFormulier(vak, ctx, {}, true); }
+
+  /* ---------- Ontbrekende covers zoeken via deze browser ---------- */
+
+  /*
+   * Google Books weigert vragen vanuit Apps Script vaak. Vanuit een gewone browser lukt het wel.
+   * Deze browser vraagt dus de covers op bij Google, en stuurt per 20 boeken door naar de
+   * web-app, die ze in de Catalogus zet.
+   */
+  var COVERS_PER_PORTIE = 20;
+  var COVERS_PAUZE_MS = 350;
+
+  function wacht(ms) { return new Promise(function (klaar) { setTimeout(klaar, ms); }); }
+
+  /** Vraagt één ISBN op bij Google Books. Geeft { info } of { fout, limiet, storing }. */
+  function vraagGoogle(isbn, sleutel) {
+    var url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + encodeURIComponent(isbn) + (sleutel ? '&key=' + encodeURIComponent(sleutel) : '');
+    return fetch(url).then(function (r) { return r.json().then(function (d) { return { code: r.status, d: d }; }); }).then(function (a) {
+      if (a.code >= 400 || a.d.error) {
+        var fout = (a.d.error && a.d.error.message) || ('code ' + a.code);
+        return { fout: fout, limiet: a.code === 429 || /quota|limit/i.test(fout), storing: a.code >= 500 };
+      }
+      var item = (a.d.items || [])[0];
+      return { info: item ? item.volumeInfo : null };
+    }, function () { return { fout: 'Geen verbinding met Google.', storing: true }; });
+  }
+
+  function toonCoversZoeken(vak, ctx) {
+    var stop = false;
+    var voortgang = el('progress', { max: '1', value: '0', style: 'width:100%' });
+    var status = el('p', { 'aria-live': 'polite' }, 'Lijst ophalen...');
+    var stopKnop = el('button', { type: 'button', class: 'knop tweede', onclick: function () { stop = true; stopKnop.disabled = true; status.textContent = 'Stoppen na deze portie...'; } }, 'Stop');
+    D.vervang(vak, ctx.kop('Ontbrekende covers zoeken', 'Deze browser vraagt bij Google Books een cover voor elk boek met een ISBN zonder cover. Wat gevonden wordt, komt meteen in de Catalogus. Laat dit venster open tot het klaar is. Je kan altijd stoppen en later verdergaan.'),
+      voortgang, status, knoppen(stopKnop, el('button', { type: 'button', class: 'knop tweede', onclick: function () { stop = true; toonBoeken(vak, ctx); } }, 'Terug naar de boeken')));
+
+    B.voerUit('beheerCoversLijst').then(function (r) {
+      if (!r.ok) { status.textContent = r.fout || 'De lijst laden lukte niet.'; return; }
+      var boeken = r.boeken, sleutel = r.sleutel;
+      if (!boeken.length) { status.textContent = 'Alle boeken met een ISBN hebben een cover, of werden al bij Google opgezocht.'; stopKnop.hidden = true; return; }
+      if (!sleutel) { status.textContent = 'Let op: er staat geen google_books_api_key in Instellingen. Zonder sleutel stopt Google snel.'; }
+      voortgang.max = boeken.length;
+      var gedaan = 0, covers = 0, gezocht = [], resultaten = [];
+
+      function stuur() {
+        if (!gezocht.length) return Promise.resolve({ ok: true });
+        var pakket = { gezocht: gezocht, resultaten: resultaten };
+        gezocht = []; resultaten = [];
+        return B.voerUit('beheerCoversBewaren', pakket).then(function (a) { if (a.ok) covers += a.covers; return a; });
+      }
+
+      function toon(tekst) {
+        voortgang.value = gedaan;
+        status.textContent = gedaan + ' van ' + boeken.length + ' opgezocht, ' + covers + ' covers gevonden.' + (tekst ? ' ' + tekst : '');
+      }
+
+      function volgende(i) {
+        if (stop || i >= boeken.length) {
+          return stuur().then(function () { toon(stop ? 'Gestopt. Klik later opnieuw om verder te gaan.' : 'Klaar.'); stopKnop.hidden = true; });
+        }
+        var b = boeken[i];
+        return vraagGoogle(b.isbn, sleutel).then(function (a) {
+          if (a.storing && !a.info) return wacht(3000).then(function () { return vraagGoogle(b.isbn, sleutel); });
+          return a;
+        }).then(function (a) {
+          if (a.fout) {
+            // Daglimiet of iets anders: stoppen, en niets aanvinken voor dit boek.
+            return stuur().then(function () { toon('Google meldt: ' + a.fout + (a.limiet ? ' Probeer het morgen opnieuw.' : '')); stopKnop.hidden = true; });
+          }
+          gezocht.push(b.id);
+          if (a.info) {
+            var v = a.info, links = v.imageLinks || {};
+            resultaten.push({ boek_id: b.id, cover: links.thumbnail || links.smallThumbnail || '', beschrijving: v.description || '',
+              uitgeverij: v.publisher || '', jaartal: v.publishedDate || '', paginas: v.pageCount || '', taal: v.language || '' });
+          }
+          gedaan++;
+          var bewaar = gezocht.length >= COVERS_PER_PORTIE ? stuur() : Promise.resolve({ ok: true });
+          return bewaar.then(function (s) {
+            if (!s.ok) { toon('Bewaren lukte niet: ' + (s.fout || '') + ' Gestopt.'); stopKnop.hidden = true; return; }
+            toon('');
+            return wacht(COVERS_PAUZE_MS).then(function () { return volgende(i + 1); });
+          });
+        });
+      }
+      toon('');
+      volgende(0);
+    });
+  }
 
   /** Zet een knop op "bezig". Geeft een functie terug om ze terug te zetten. */
   function bezig(knop, tekst) {

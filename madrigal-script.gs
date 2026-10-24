@@ -50,7 +50,9 @@ var ACTIES = {
   beheerIsbnOpzoeken: 'bestuur',
   beheerInhoud: 'bestuur',
   beheerInhoudBewaren: 'bestuur',
-  beheerInstellingBewaren: 'bestuur'
+  beheerInstellingBewaren: 'bestuur',
+  beheerCoversLijst: 'bestuur',
+  beheerCoversBewaren: 'bestuur'
 };
 
 /* ---------- Staat lezen en bewaren ---------- */
@@ -133,6 +135,14 @@ var ONDERWERP_VOORSTELLEN = [
  *   gevoelig zichtbaar  op de website met het label "Gevoelige inhoud"
  */
 var BOEKSTATUSSEN = ['verloren', 'gevoelig verborgen', 'gevoelig zichtbaar'];
+
+var CV_MAX_LOOPTIJD_MS = 4.5 * 60 * 1000;
+
+var CV_PAUZE_MS = 1000; // Open Library vraagt om rustig te zoeken
+
+var CV_ANDERE_UITGAVE = 'andere uitgave (Open Library)';
+
+var CV_TITEL_AUTEUR = 'titel en auteur (Open Library)';
 
 var WEEKDAGEN = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
 
@@ -298,7 +308,8 @@ var KOLOMMEN = {
     'uitvoering', 'nieuwstaat', 'aanrader', 'genre', 'extra_onderwerpen', 'klassieker', 'aantal',
     'uitleenbaar', 'publiek', 'status', 'beschrijving', 'beschrijving_en', 'cover_url', 'startpagina', 'toegevoegd_op',
     // Vanaf hier: nooit publiek.
-    'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht', 'beschrijving_vertaald'
+    'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht', 'beschrijving_vertaald',
+    'cover_bron', 'cover_gezocht'
   ],
   'Onderwerpen': ['genre', 'filtergroepen', 'aantal_boeken'],
   'Leners': ['lenersnummer', 'voornaam', 'achternaam', 'telefoon', 'email', 'datum_inschrijving', 'toestemming_privacy', 'actief'],
@@ -326,7 +337,7 @@ var KOLOMMEN = {
 var DATUMKOLOMMEN = [
   'datum_inschrijving', 'datum_uit', 'oorspronkelijke_vervaldatum', 'vervaldatum', 'datum_terug',
   'datum_verlenging', 'borg_terugbetaald', 'laatste_herinnering', 'datum_reservatie', 'datum_klaar',
-  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd', 'toegevoegd_op', 'beschrijving_gezocht', 'beschrijving_vertaald', 'datum_afgehandeld'
+  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd', 'toegevoegd_op', 'beschrijving_gezocht', 'beschrijving_vertaald', 'datum_afgehandeld', 'cover_gezocht'
 ];
 
 var INSTELLING_GROEPEN = [
@@ -606,6 +617,15 @@ function beheerInstellingBewaren(invoer, wie) {
   }
   return antwoord;
 }
+
+/* ---------- Covers zoeken via de browser van het bestuur ---------- */
+
+/*
+ * Google Books weigert vaak vragen vanuit Apps Script (servers van Google, zonder land).
+ * Daarom vraagt de browser van het bestuur de covers op, en bewaart het script wat gevonden
+ * is. De browser krijgt daarvoor de google_books_api_key: enkel wie de code van het bestuur
+ * heeft, ziet die. Beperk de sleutel in de Google Cloud Console tot de Books API.
+ */
 
 /** Maakt één ingevuld veld netjes. Geeft { waarde } of { fout }. */
 function beheerVeld(veld, ruw) {
@@ -1213,6 +1233,49 @@ function controleerGrenzen(actie, ctx) {
   return overschreden;
 }
 
+/**
+ * Bewaart wat de browser bij Google Books vond.
+ * invoer: { gezocht: [boek-ID's], resultaten: [{ boek_id, cover, beschrijving, uitgeverij, jaartal, paginas, taal }] }
+ * Enkel lege velden worden aangevuld. Elk gezocht boek krijgt een datum in gb_gecontroleerd.
+ */
+function coversBewaren(staat, invoer) {
+  var gezocht = (invoer.gezocht || []).slice(0, 200).map(String);
+  var perId = {};
+  (invoer.resultaten || []).slice(0, 200).forEach(function (r) { perId[String(r.boek_id)] = r; });
+  var covers = 0;
+  gezocht.forEach(function (id) {
+    var boek = boekVan(staat, id);
+    if (!boek) return;
+    var r = perId[id];
+    var info = null;
+    if (r) {
+      var cover = String(r.cover || '').replace(/^http:/, 'https:');
+      info = {
+        imageLinks: isGoogleCover(cover) ? { thumbnail: cover } : null,
+        description: tekstInvoer(r.beschrijving, 5000), publisher: tekstInvoer(r.uitgeverij, 120),
+        publishedDate: tekstInvoer(r.jaartal, 20), pageCount: parseerGetal(r.paginas) || 0, language: tekstInvoer(r.taal, 5)
+      };
+    }
+    var velden = verwerkGoogleBooks(boek, info);
+    if (velden.cover_url) { velden.cover_bron = 'Google Books'; covers++; }
+    velden.gb_gecontroleerd = staat.vandaag;
+    wijzig(boek, velden);
+  });
+  if (gezocht.length) {
+    staat.catalogusGewijzigd = true;
+    staat.log.push(['covers via de browser', gezocht.length + ' opgezocht, ' + covers + ' covers']);
+  }
+  return { ok: true, covers: covers };
+}
+
+/** De boeken met een ISBN die nog geen cover hebben en nog niet bij Google opgezocht zijn. */
+function coversTeZoeken(staat) {
+  var boeken = staat.catalogus.filter(function (b) {
+    return !isLeeg(b.boek_id) && isLeeg(b.cover_url) && isLeeg(b.gb_gecontroleerd) && /^\d{13}$/.test(String(b.isbn || ''));
+  }).map(function (b) { return { id: String(b.boek_id), isbn: String(b.isbn) }; });
+  return { ok: true, boeken: boeken, sleutel: String(staat.inst.google_books_api_key || '') };
+}
+
 /** "1 dag" of "5 dagen". */
 function dagenTekst(n) {
   return n + (n === 1 ? ' dag' : ' dagen');
@@ -1503,6 +1566,12 @@ function haalRoosterMaand(url, code, maand) {
   try { return JSON.parse(antwoord.getContentText()); } catch (e) { return { ok: false, fout: 'Het rooster gaf een onverwacht antwoord.' }; }
 }
 
+/** Heeft dit boek nog een cover nodig van een andere uitgave? */
+function heeftAndereUitgaveNodig(boek) {
+  if (!isLeeg(boek.cover_url) || !isLeeg(boek.cover_gezocht)) return false;
+  return /^\d{13}$/.test(String(boek.isbn || '')) || !isLeeg(boek.titel);
+}
+
 /** Moet het script voor dit boek nog een beschrijving zoeken? (Ook als enkel Google nog moet.) */
 function heeftBeschrijvingNodig(boek) {
   if (!/^\d{13}$/.test(String(boek.isbn || ''))) return false;
@@ -1757,7 +1826,7 @@ function installeer() {
   // Niet-publieke kolommen van de Catalogus grijs markeren.
   var cat = ss.getSheetByName('Catalogus');
   var catKop = cat.getRange(1, 1, 1, cat.getLastColumn()).getValues()[0].map(schoon);
-  ['herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht', 'beschrijving_vertaald'].forEach(function (k) {
+  ['herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht', 'beschrijving_vertaald', 'cover_bron', 'cover_gezocht'].forEach(function (k) {
     var i = catKop.indexOf(k);
     if (i > -1) {
       cat.getRange(1, i + 1).setBackground('#d9d9d9').setNote('Niet publiek. Deze kolom verschijnt nooit op de website.');
@@ -1905,6 +1974,11 @@ function isDatumObject(waarde) {
   return Object.prototype.toString.call(waarde) === '[object Date]' && !isNaN(waarde.getTime());
 }
 
+/** Enkel covers van Google zelf, via https. */
+function isGoogleCover(url) {
+  return /^https:\/\/(books\.google\.[a-z.]+|books\.googleusercontent\.com|[a-z0-9-]+\.googleusercontent\.com)\//.test(String(url || ''));
+}
+
 /** Gaat een fout van Google over de daglimiet, of over iets anders (sleutel, API uit, ...)? */
 function isGoogleLimiet(code, fout) {
   if (code === 429) return true;
@@ -1951,6 +2025,27 @@ function json(tekst) {
 }
 
 /* ---------- Afgeschermde eindpunten ---------- */
+
+/**
+ * Kiest uit de zoekresultaten van Open Library (search.json) het werk dat bij het boek past.
+ * Enkel bij een goede overeenkomst van titel (tot de dubbele punt) en achternaam van de auteur.
+ * Geeft het nummer van de cover terug, of 0.
+ */
+function kiesOlWerk(boek, docs) {
+  var titel = titelSleutel(boek.titel);
+  var naam = achternaam(boek.auteur);
+  for (var i = 0; i < (docs || []).length; i++) {
+    var d = docs[i];
+    if (!d || !d.cover_i) continue;
+    if (gelijkenis(titel, titelSleutel(d.title)) < 0.85) continue;
+    if (naam) {
+      var namen = (d.author_name || []).map(achternaam);
+      if (namen.indexOf(naam) === -1) continue;
+    }
+    return d.cover_i;
+  }
+  return 0;
+}
 
 /**
  * Koppelt de Catalogus aan de Goodreads-export (zonder de spreadsheet aan te raken).
@@ -2678,10 +2773,22 @@ function normaliseerUitvoering(waarde) {
 
 /* ---------- ISBN ---------- */
 
+/** Het adres van een cover bij Open Library, uit het nummer van die cover. */
+function olCoverUrl(coverId) {
+  return 'https://covers.openlibrary.org/b/id/' + coverId + '-M.jpg';
+}
+
 /** Een beschrijving uit Open Library: tekst, of een object met value. */
 function olTekst(description) {
   if (!description) return '';
   return typeof description === 'string' ? description : String(description.value || '');
+}
+
+/** Zoekt bij Open Library. Geeft { docs } of { limiet: true }. */
+function olZoek(parameters) {
+  var r = haalJson('https://openlibrary.org/search.json?' + parameters + '&fields=key,title,author_name,cover_i&limit=5');
+  if (r.code === 429 || r.code >= 500) return { limiet: true };
+  return { docs: (r.data && r.data.docs) || [] };
 }
 
 /** Zet het menu klaar telkens de spreadsheet opent. */
@@ -2696,6 +2803,7 @@ function onOpen() {
     .addItem('Zoek covers opnieuw bij Google (boeken zonder cover)', 'zoekCoversOpnieuw')
     .addItem('6. Zoek ontbrekende beschrijvingen', 'vulBeschrijvingenAan')
     .addItem('7. Vertaal de beschrijvingen (Nederlands en Engels)', 'vertaalBeschrijvingen')
+    .addItem('8. Zoek covers van andere uitgaven (Open Library)', 'zoekCoversAndereUitgaven')
     .addItem('Zoek afgebroken beschrijvingen opnieuw (volledig)', 'herstelAfgebrokenBeschrijvingen')
     .addSeparator()
     .addItem('Nieuwe boeken verwerken', 'verwerkNieuweBoeken')
@@ -3960,6 +4068,8 @@ function voerActieUit(actie, invoer, rol) {
       case 'borgTerugbetaald': antwoord = borgTerugbetaald(staat, invoer); break;
       case 'herinneringVerstuurd': antwoord = herinneringVerstuurd(staat, invoer); break;
       case 'beheerBoekOphalen': antwoord = boekOphalen(staat, invoer); break;
+      case 'beheerCoversLijst': antwoord = coversTeZoeken(staat); break;
+      case 'beheerCoversBewaren': antwoord = coversBewaren(staat, invoer); break;
       case 'beheerBoekBewaren': antwoord = boekAanpassen(staat, invoer); break;
       case 'beheerBoekToevoegen':
         var ids = maakIdGenerator(staat.catalogus);
@@ -4497,6 +4607,61 @@ function zoekBoekOpTitel(catalogus, titel, auteur) {
   if (!kandidaten.length) return {};
   kandidaten.sort(function (a, b) { return b.score - a.score; });
   return { twijfel: kandidaten.slice(0, 3).map(function (k) { return k.boek; }) };
+}
+
+/** Menu: zoekt covers van andere uitgaven bij Open Library, in porties. */
+function zoekCoversAndereUitgaven() {
+  var start = Date.now();
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(10000)) {
+    meld('Er loopt al een andere bewerking. Probeer het zo meteen opnieuw.');
+    return;
+  }
+  var verwerkt = 0, gevonden = 0, rest = 0, limiet = false;
+  try {
+    var tabel = leesTabel('Catalogus');
+    if (tabel.kop.indexOf('cover_gezocht') === -1 || tabel.kop.indexOf('cover_bron') === -1) {
+      meld('De kolommen cover_gezocht en cover_bron ontbreken nog. Voer eerst Madrigal > 1. Installeer tabbladen uit.');
+      return;
+    }
+    var vandaag = vandaagTekst();
+    var teDoen = tabel.rijen.filter(heeftAndereUitgaveNodig);
+    for (var i = 0; i < teDoen.length; i++) {
+      if (Date.now() - start > CV_MAX_LOOPTIJD_MS) break;
+      var boek = teDoen[i];
+      var cover = 0, bron = '';
+      if (/^\d{13}$/.test(String(boek.isbn || ''))) {
+        var opIsbn = olZoek('isbn=' + boek.isbn);
+        if (opIsbn.limiet) { limiet = true; break; }
+        if (opIsbn.docs.length && opIsbn.docs[0].cover_i) { cover = opIsbn.docs[0].cover_i; bron = CV_ANDERE_UITGAVE; }
+        Utilities.sleep(CV_PAUZE_MS);
+      }
+      if (!cover && !isLeeg(boek.titel)) {
+        var vraag = 'title=' + encodeURIComponent(titelSleutel(boek.titel)) + (achternaam(boek.auteur) ? '&author=' + encodeURIComponent(achternaam(boek.auteur)) : '');
+        var opTitel = olZoek(vraag);
+        if (opTitel.limiet) { limiet = true; break; }
+        cover = kiesOlWerk(boek, opTitel.docs);
+        if (cover) bron = CV_TITEL_AUTEUR;
+        Utilities.sleep(CV_PAUZE_MS);
+      }
+      var velden = { cover_gezocht: vandaag };
+      if (cover) { velden.cover_url = olCoverUrl(cover); velden.cover_bron = bron; gevonden++; }
+      wijzig(boek, velden);
+      verwerkt++;
+      if (verwerkt % 20 === 0) bewaarTabel(tabel);
+    }
+    bewaarTabel(tabel);
+    rest = tabel.rijen.filter(heeftAndereUitgaveNodig).length;
+  } finally {
+    lock.releaseLock();
+  }
+  verwijderTriggers('zoekCoversAndereUitgaven');
+  if (rest > 0) ScriptApp.newTrigger('zoekCoversAndereUitgaven').timeBased().after((limiet ? 30 : 1) * 60 * 1000).create();
+  if (gevonden) leegCache();
+  logboek('menu', 'zoekCoversAndereUitgaven', verwerkt + ' opgezocht, ' + gevonden + ' covers van andere uitgaven gevonden, ' + rest + ' te gaan' + (limiet ? ' (Open Library vraagt om te wachten)' : ''));
+  var tekst = verwerkt + ' boeken opgezocht, ' + gevonden + ' covers gevonden.';
+  tekst += rest > 0 ? ' Nog ' + rest + ' te gaan: het script gaat vanzelf verder.' : ' Alles is verwerkt. Kijk de covers met cover_bron "' + CV_TITEL_AUTEUR + '" even na.';
+  try { spreadsheet().toast(tekst, 'Madrigal', 15); } catch (e) { Logger.log(tekst); }
 }
 
 /** Menu: boeken zonder cover nog eens laten opzoeken bij Google (maakt gb_gecontroleerd leeg). */
