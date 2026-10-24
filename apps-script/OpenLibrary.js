@@ -49,7 +49,7 @@ function verwerkOpenLibrary(boek, details) {
   if (isLeeg(boek.beschrijving) && details.description) {
     var b = typeof details.description === 'string' ? details.description : details.description.value;
     b = schoon(b);
-    if (b) v.beschrijving = b.length > 600 ? b.slice(0, 597).replace(/\s+\S*$/, '') + '...' : b;
+    if (b) v.beschrijving = maakBeschrijvingNetjes(b);
   }
   if (isLeeg(boek.cover_url) && details.covers && details.covers.length && details.covers[0] > 0) {
     v.cover_url = 'https://covers.openlibrary.org/b/id/' + details.covers[0] + '-M.jpg';

@@ -94,6 +94,8 @@ Bovenaan de spreadsheet staat het menu **Madrigal**. Zie je het niet? Vernieuw d
 
 **Zelf een cover toevoegen.** Vond het script geen cover? Zoek het boek online op, bijvoorbeeld op Goodreads of de website van de uitgeverij. Klik met de rechtermuisknop op de cover en kies **Afbeeldingsadres kopiëren**. Plak dat adres in de kolom `cover_url`. Het moet beginnen met `https://`. Zonder cover toont de website een gekleurde omslag met de titel.
 
+**Lengte van een beschrijving.** Het script bewaart een beschrijving volledig, tot 2.500 tekens. Is ze langer, dan stopt ze na de laatste volledige zin. Zie je nog beschrijvingen die midden in een zin stoppen met "..."? Die komen uit een oudere versie van het script. Kies **Madrigal > Zoek afgebroken beschrijvingen opnieuw (volledig)**.
+
 **Zelf een beschrijving schrijven.** Typ ze in de kolom `beschrijving`. Het script overschrijft nooit wat je zelf invult. Wil je ook een Engelse versie, typ die in `beschrijving_en`, of laat ze leeg en kies **Madrigal > 7. Vertaal de beschrijvingen**.
 
 **Nog meer:**
