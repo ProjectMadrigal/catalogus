@@ -203,6 +203,7 @@
    * Deze browser vraagt dus de covers op bij Google, en stuurt per 20 boeken door naar de
    * web-app, die ze in de Catalogus zet.
    */
+  var COVERS_VERSIE = '3'; // staat in de voortgang: zo zie je of je browser de nieuwste versie gebruikt
   var COVERS_PER_PORTIE = 20;
   var COVERS_PAUZE_MS = 350;
 
@@ -213,8 +214,12 @@
     var url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + encodeURIComponent(isbn) + (sleutel ? '&key=' + encodeURIComponent(sleutel) : '');
     return fetch(url).then(function (r) { return r.json().then(function (d) { return { code: r.status, d: d }; }); }).then(function (a) {
       if (a.code >= 400 || a.d.error) {
-        var fout = (a.d.error && a.d.error.message) || ('code ' + a.code);
-        return { fout: fout, limiet: a.code === 429 || /quota|limit/i.test(fout), storing: a.code >= 500 };
+        var e = a.d.error || {};
+        var reden = e.errors && e.errors[0] ? e.errors[0].reason : '';
+        var fout = (e.message || ('code ' + a.code)) + (reden ? ' (' + reden + ')' : '');
+        // Een storing herkennen we aan de code (5xx) en ook aan de tekst: Google is daar niet altijd consequent in.
+        var storing = a.code >= 500 || Number(e.code) >= 500 || /temporarily unavailable|backendFailed|backend error|internal error/i.test(fout);
+        return { fout: fout, limiet: !storing && (a.code === 429 || /quota|limit/i.test(fout)), storing: storing };
       }
       var item = (a.d.items || [])[0];
       return { info: item ? item.volumeInfo : null };
@@ -246,7 +251,7 @@
 
       function toon(tekst) {
         voortgang.value = gedaan;
-        status.textContent = gedaan + ' van ' + boeken.length + ' opgezocht, ' + covers + ' covers gevonden' +
+        status.textContent = '[versie ' + COVERS_VERSIE + '] ' + gedaan + ' van ' + boeken.length + ' opgezocht, ' + covers + ' covers gevonden' +
           (overgeslagen ? ', ' + overgeslagen + ' overgeslagen door storingen bij Google (komen later terug)' : '') + '.' + (tekst ? ' ' + tekst : '');
       }
 
