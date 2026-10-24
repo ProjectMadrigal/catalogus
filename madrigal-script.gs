@@ -263,7 +263,8 @@ var STANDAARD_INSTELLINGEN = [
   ['openingsuren_en', 'Every Friday: 18:00 - 20:00', 'Openingsuren op de website, in het Engels.'],
   ['mail_algemeen', 'info@projectmadrigal.be', 'Algemeen mailadres op de website.'],
   ['mail_events', 'events.madrigal@gmail.com', 'Mailadres voor events op de website.'],
-  ['nieuw_op_startpagina_dagen', 60, 'Hoeveel dagen een nieuw toegevoegd boek bij de Aanraders op de startpagina staat, met het label "Nieuw binnen". 0: nieuwe boeken niet automatisch tonen.'],
+  ['nieuw_op_startpagina_dagen', 60, 'Hoeveel dagen een nieuw toegevoegd boek in "Nieuw binnen" op de startpagina staat. 0: nieuwe boeken niet automatisch tonen.'],
+  ['nieuw_op_startpagina_aantal', 8, 'Hoeveel boeken "Nieuw binnen" op de startpagina hoogstens toont. De nieuwste eerst.'],
   ['aanraders_uit_stocklijst', 'Johanna', 'Namen van wie de aanraders uit de oude stocklijst overgenomen worden, gescheiden door komma\'s. Andere namen uit de stocklijst niet. Een aanrader die je zelf typt in de kolom aanrader van de Catalogus, staat altijd op de website.'],
   ['aanraders_verbergen', '', 'Namen van wie de aanraders nergens op de website staan, gescheiden door komma\'s (bv. Nance): niet op de startpagina, niet als label bij de boeken en niet in de filter Aanrader. De namen blijven in de Catalogus staan. Leeg: iedereen staat erop.'],
   ['tekst_herinnering', 'Hoi {voornaam}, je leende bij Project Madrigal "{titel}". Dat boek moest terug op {vervaldatum}. Breng je het binnenkort binnen? Lukt dat niet, laat het ons dan even weten. Dank je!', 'Herinnering voor een boek dat te laat is. Gebruik {voornaam}, {titel} en {vervaldatum}.'],
@@ -328,7 +329,7 @@ var INSTELLING_GROEPEN = [
   ['Herinneringen', ['tekst_herinnering', 'tekst_herinnering_binnenkort']],
   ['Website: contact', ['adres', 'openingsuren', 'openingsuren_en', 'mail_algemeen', 'mail_events']],
   ['Website: teksten bij Boeken', ['tekst_welkom', 'tekst_welkom_en', 'tekst_uitleg_lenen', 'tekst_uitleg_lenen_en', 'tekst_privacy', 'tekst_privacy_en']],
-  ['Aanraders', ['aanraders_uit_stocklijst', 'aanraders_verbergen', 'nieuw_op_startpagina_dagen']],
+  ['Aanraders', ['aanraders_uit_stocklijst', 'aanraders_verbergen', 'nieuw_op_startpagina_dagen', 'nieuw_op_startpagina_aantal']],
   ['Boekgegevens aanvullen', ['goodreads_shelf', 'google_books_api_key']],
   ['Rooster', ['rooster_url', 'rooster_code', 'rooster_link']],
   ['Privacy', ['bewaartermijn_afgesloten_uitleningen_maanden']],
@@ -350,7 +351,7 @@ var ROOSTER_CACHE_SLEUTEL = 'rooster_v1';
 
 var ROOSTER_CACHE_SECONDEN = 10 * 60;
 
-var SITE_CACHE_SLEUTEL = 'site_v1';
+var SITE_CACHE_SLEUTEL = 'site_v2'; // v2: met de aparte lijst Nieuw binnen
 
 var SITE_MAX_NIEUWS = 3;
 
@@ -1088,11 +1089,11 @@ function bouwSiteInhoud(staat, tabellen) {
 
   // Aanraders op de startpagina. Een boek staat erop als:
   //   - de kolom startpagina "ja" is, of
-  //   - iemand het aanraadt (namen uit aanraders_verbergen tellen niet mee), of
-  //   - het nieuw binnen is: toegevoegd_op ligt minder dan nieuw_op_startpagina_dagen geleden.
+  //   - iemand het aanraadt (namen uit aanraders_verbergen tellen niet mee).
+  // Beschikbare boeken eerst, daarna willekeurig maar vast per dag.
+  // Nieuw binnen is een aparte lijst (zie verder): zo verdringen de aanraders de nieuwe boeken nooit.
   // "nee" in de kolom startpagina haalt een boek er altijd af.
   // Een boek met gevoelige inhoud komt er enkel op met "ja" in de kolom startpagina.
-  // Beschikbare boeken eerst, daarna willekeurig maar vast per dag.
   var verborgen = splitsLijst(inst.aanraders_verbergen).map(normaliseerTekst);
   var dagenNieuw = parseerGetal(inst.nieuw_op_startpagina_dagen);
   if (dagenNieuw === null) dagenNieuw = 60;
@@ -1102,9 +1103,10 @@ function bouwSiteInhoud(staat, tabellen) {
     var dagen = dagenTussen(d, staat.vandaag);
     return dagen >= 0 && dagen < dagenNieuw;
   };
-  var aanraders = staat.catalogus.filter(function (b) {
+  var kandidaten = staat.catalogus.filter(function (b) {
     return !isLeeg(b.boek_id) && opWebsite(b) && jaNee(b.startpagina) !== 'nee';
-  }).map(function (b) {
+  });
+  var startpaginaBoek = function (b) {
     var bs = beschikbaarheid(staat, b);
     return {
       id: String(b.boek_id), t: schoon(b.titel), a: schoon(b.auteur), c: veiligeCoverUrl(b.cover_url),
@@ -1116,11 +1118,25 @@ function bouwSiteInhoud(staat, tabellen) {
       zelf: jaNee(b.startpagina) === 'ja',
       gevoelig: boekStatus(b) === 'gevoelig_zichtbaar',
       vrij: bs.code === 'beschikbaar',
-      volgorde: dagVolgorde(String(b.boek_id), staat.vandaag)
+      volgorde: dagVolgorde(String(b.boek_id), staat.vandaag),
+      toegevoegd: parseerDatum(b.toegevoegd_op) || ''
     };
-  }).filter(function (b) { return b.zelf || (!b.gevoelig && (b.r.length || b.n)); }).sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
+  };
+  var opruimen = function (b) { delete b.volgorde; delete b.zelf; delete b.toegevoegd; if (b.gevoelig) b.w = 1; delete b.gevoelig; return b; };
+  var aanraders = kandidaten.map(startpaginaBoek)
+    .filter(function (b) { return b.zelf || (!b.gevoelig && b.r.length); })
+    .sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
     .slice(0, SITE_MAX_AANRADERS)
-    .map(function (b) { delete b.volgorde; delete b.zelf; if (b.gevoelig) b.w = 1; delete b.gevoelig; return b; });
+    .map(opruimen);
+
+  // Nieuw binnen: de laatst toegevoegde boeken, nieuwste eerst.
+  var aantalNieuw = parseerGetal(inst.nieuw_op_startpagina_aantal);
+  if (aantalNieuw === null) aantalNieuw = 8;
+  var nieuwBinnen = kandidaten.filter(isNieuw).map(startpaginaBoek)
+    .filter(function (b) { return b.zelf || !b.gevoelig; })
+    .sort(function (a, b) { return b.toegevoegd.localeCompare(a.toegevoegd) || b.id.localeCompare(a.id); })
+    .slice(0, Math.max(0, aantalNieuw))
+    .map(opruimen);
 
   return {
     bijgewerkt: staat.vandaag,
@@ -1131,7 +1147,8 @@ function bouwSiteInhoud(staat, tabellen) {
     nieuws: nieuws,
     agenda: { komend: komend.slice(0, 3), vorig: voorbij[0] || null },
     faq: faq,
-    aanraders: aanraders
+    aanraders: aanraders,
+    nieuw: nieuwBinnen
   };
 }
 
@@ -1310,6 +1327,48 @@ function geefExemplaarDoor(staat, boekId, exemplaar) {
   });
   staat.log.push(['reservatie klaar', r.reservatie_id + ' ' + exemplaar + ' voor lener ' + r.lenersnummer]);
   return apartLeggenMelding(staat, r);
+}
+
+/**
+ * Geeft elke rij zonder boek-ID (maar met een titel) een boek-ID, de datum van
+ * vandaag in toegevoegd_op en nette waarden (ISBN, taal, ...). Geeft het aantal terug.
+ */
+function geefNieuweBoekenEenId() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  var aantal = 0;
+  try {
+    var tabel = leesTabel('Catalogus');
+    var ids = maakIdGenerator(tabel.rijen);
+    tabel.rijen.forEach(function (rij) {
+      if (!isLeeg(rij.boek_id) || isLeeg(rij.titel)) return;
+      var soort = normaliseerTekst(rij.soort) === 'zine' ? 'zine' : 'boek';
+      var isbn = normaliseerIsbn(rij.isbn);
+      var velden = {
+        boek_id: ids.nieuw(soort),
+        soort: soort,
+        titel: schoon(rij.titel), auteur: schoon(rij.auteur),
+        isbn: isbn.isbn || isbn.issn || schoon(rij.isbn),
+        taal: normaliseerTaal(rij.taal),
+        uitvoering: normaliseerUitvoering(rij.uitvoering),
+        nieuwstaat: jaNee(rij.nieuwstaat),
+        aantal: parseerGetal(rij.aantal) || 1,
+        uitleenbaar: jaNee(rij.uitleenbaar) || 'ja',
+        publiek: jaNee(rij.publiek) || 'ja',
+        toegevoegd_op: parseerDatum(rij.toegevoegd_op) || vandaagTekst()
+      };
+      velden.bron_sleutel = bronSleutel({ soort: soort, isbn: velden.isbn, titel: velden.titel, auteur: velden.auteur });
+      wijzig(rij, velden);
+      aantal++;
+    });
+    if (aantal) {
+      bewaarTabel(tabel);
+      ids.bewaar();
+    }
+  } finally {
+    lock.releaseLock();
+  }
+  return aantal;
 }
 
 /** Hulp voor parseerDatum: controleert of dag en maand bestaan. */
@@ -1649,6 +1708,8 @@ function installeer() {
   verwijderTriggers('ruimOp');
   verwijderTriggers('bijWijziging');
   verwijderTriggers('maakBackup');
+  verwijderTriggers('verwerkNieuweBoekenAutomatisch');
+  ScriptApp.newTrigger('verwerkNieuweBoekenAutomatisch').timeBased().everyHours(1).create();
   ScriptApp.newTrigger('ruimOp').timeBased().everyDays(1).atHour(3).create();
   ScriptApp.newTrigger('maakBackup').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(4).create();
   ScriptApp.newTrigger('bijWijziging').forSpreadsheet(ss).onEdit().create();
@@ -3469,43 +3530,24 @@ function verwerkInstellingen(ruw) {
  * Goodreads (als dat tabblad bestaat) en Open Library.
  */
 function verwerkNieuweBoeken() {
-  var lock = LockService.getScriptLock();
-  lock.waitLock(30000);
-  var aantal = 0;
-  try {
-    var tabel = leesTabel('Catalogus');
-    var ids = maakIdGenerator(tabel.rijen);
-    tabel.rijen.forEach(function (rij) {
-      if (!isLeeg(rij.boek_id)) return;
-      var soort = normaliseerTekst(rij.soort) === 'zine' ? 'zine' : 'boek';
-      var isbn = normaliseerIsbn(rij.isbn);
-      var velden = {
-        boek_id: ids.nieuw(soort),
-        soort: soort,
-        titel: schoon(rij.titel), auteur: schoon(rij.auteur),
-        isbn: isbn.isbn || isbn.issn || schoon(rij.isbn),
-        taal: normaliseerTaal(rij.taal),
-        uitvoering: normaliseerUitvoering(rij.uitvoering),
-        nieuwstaat: jaNee(rij.nieuwstaat),
-        aantal: parseerGetal(rij.aantal) || 1,
-        uitleenbaar: jaNee(rij.uitleenbaar) || 'ja',
-        publiek: jaNee(rij.publiek) || 'ja',
-        toegevoegd_op: parseerDatum(rij.toegevoegd_op) || vandaagTekst()
-      };
-      velden.bron_sleutel = bronSleutel({ soort: soort, isbn: velden.isbn, titel: velden.titel, auteur: velden.auteur });
-      wijzig(rij, velden);
-      aantal++;
-    });
-    bewaarTabel(tabel);
-    ids.bewaar();
-  } finally {
-    lock.releaseLock();
-  }
+  var aantal = geefNieuweBoekenEenId();
   werkOnderwerpenBij();
   leegCache();
   if (spreadsheet().getSheetByName('Goodreads-export')) vulAanUitGoodreads(true);
   meld(aantal + ' nieuwe boeken kregen een boek-ID. Open Library vult nu de rest aan.');
   vulAanUitOpenLibrary();
+}
+
+/**
+ * Elk uur vanzelf (zie Installeer tabbladen): een boek dat je met de hand in de
+ * Catalogus typte, krijgt een boek-ID en verschijnt zo op de website en in Nieuw binnen.
+ */
+function verwerkNieuweBoekenAutomatisch() {
+  var aantal = geefNieuweBoekenEenId();
+  if (!aantal) return;
+  werkOnderwerpenBij();
+  leegCache();
+  logboek('systeem', 'nieuwe boeken', aantal + ' boeken kregen vanzelf een boek-ID');
 }
 
 /**

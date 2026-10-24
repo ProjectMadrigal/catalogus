@@ -136,11 +136,11 @@ Bovenaan de spreadsheet staat het menu **Madrigal**. Zie je het niet? Vernieuw d
 
 ## A3. Aanraders en nieuwe boeken op de startpagina
 
-De startpagina toont tot 12 boeken in het blok **Aanraders**. Beschikbare boeken komen eerst, de keuze wisselt elke dag. Een boek komt erbij als:
+De startpagina heeft een blok **In de kijker** met drie soorten rijen:
 
-- iemand het aanraadt: zet een voornaam in de kolom `aanrader`. Het label wordt "Aanrader van ...". Meerdere namen scheid je met een komma. Elke naam die je daar typt, staat op de website: die van jezelf, van Johanna of van een vrijwilliger.
-- het nieuw binnen is: het kwam minder dan 60 dagen geleden in de Catalogus. Het label wordt "Nieuw binnen".
-- je zelf **ja** zet in de kolom `startpagina`.
+- **Aanraders van ...**: een rij per persoon, wie de meeste boeken aanraadt eerst. Een boek komt erin als iemand het aanraadt: zet een voornaam in de kolom `aanrader`. Het label wordt "Aanrader van ...". Meerdere namen scheid je met een komma. Elke naam die je daar typt, staat op de website: die van jezelf, van Johanna of van een vrijwilliger. Samen tot 12 boeken, beschikbare boeken eerst, de keuze wisselt elke dag.
+- **Nieuw binnen**: de laatst toegevoegde boeken, de nieuwste eerst (standaard 8, van de laatste 60 dagen). Een aparte lijst, dus de aanraders verdringen ze nooit. Een boek dat je via het bestuursscherm toevoegt, staat er meteen in. Een boek dat je met de hand in de Catalogus typt, krijgt binnen het uur vanzelf een boek-ID en komt er dan bij.
+- **Uitgelicht**: boeken waar je zelf **ja** zet in de kolom `startpagina`.
 
 Zet je **nee** in de kolom `startpagina`, dan staat het boek nooit op de startpagina.
 
@@ -150,7 +150,8 @@ In het tabblad Instellingen, onder `── AANRADERS ──`:
 
 | Instelling | Wat |
 | --- | --- |
-| `nieuw_op_startpagina_dagen` | hoeveel dagen een nieuw boek bij de Aanraders staat. 0 = nooit automatisch. |
+| `nieuw_op_startpagina_dagen` | hoeveel dagen een nieuw boek in Nieuw binnen staat. 0 = nooit automatisch. |
+| `nieuw_op_startpagina_aantal` | hoeveel boeken Nieuw binnen hoogstens toont (standaard 8). |
 | `aanraders_uit_stocklijst` | namen van wie de aanraders uit de oude stocklijst overgenomen worden, bv. `Johanna`. Wil je niemand meer overnemen, typ dan `niemand`. |
 | `aanraders_verbergen` | namen van wie de aanraders tijdelijk nergens op de website staan, bv. `Nance`: niet op de startpagina, niet als label bij de boeken en niet in de filter Aanrader. De namen blijven in de Catalogus staan. Wis de naam om ze terug te tonen. |
 

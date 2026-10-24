@@ -366,11 +366,10 @@ function herbouwCatalogus() {
 }
 
 /**
- * Menu: verwerkt boeken die je met de hand onderaan de Catalogus toevoegde.
- * Geeft ze een boek-ID, maakt het ISBN en de taal netjes, en vult aan uit
- * Goodreads (als dat tabblad bestaat) en Open Library.
+ * Geeft elke rij zonder boek-ID (maar met een titel) een boek-ID, de datum van
+ * vandaag in toegevoegd_op en nette waarden (ISBN, taal, ...). Geeft het aantal terug.
  */
-function verwerkNieuweBoeken() {
+function geefNieuweBoekenEenId() {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   var aantal = 0;
@@ -378,7 +377,7 @@ function verwerkNieuweBoeken() {
     var tabel = leesTabel('Catalogus');
     var ids = maakIdGenerator(tabel.rijen);
     tabel.rijen.forEach(function (rij) {
-      if (!isLeeg(rij.boek_id)) return;
+      if (!isLeeg(rij.boek_id) || isLeeg(rij.titel)) return;
       var soort = normaliseerTekst(rij.soort) === 'zine' ? 'zine' : 'boek';
       var isbn = normaliseerIsbn(rij.isbn);
       var velden = {
@@ -398,11 +397,35 @@ function verwerkNieuweBoeken() {
       wijzig(rij, velden);
       aantal++;
     });
-    bewaarTabel(tabel);
-    ids.bewaar();
+    if (aantal) {
+      bewaarTabel(tabel);
+      ids.bewaar();
+    }
   } finally {
     lock.releaseLock();
   }
+  return aantal;
+}
+
+/**
+ * Elk uur vanzelf (zie Installeer tabbladen): een boek dat je met de hand in de
+ * Catalogus typte, krijgt een boek-ID en verschijnt zo op de website en in Nieuw binnen.
+ */
+function verwerkNieuweBoekenAutomatisch() {
+  var aantal = geefNieuweBoekenEenId();
+  if (!aantal) return;
+  werkOnderwerpenBij();
+  leegCache();
+  logboek('systeem', 'nieuwe boeken', aantal + ' boeken kregen vanzelf een boek-ID');
+}
+
+/**
+ * Menu: verwerkt boeken die je met de hand onderaan de Catalogus toevoegde.
+ * Geeft ze een boek-ID, maakt het ISBN en de taal netjes, en vult aan uit
+ * Goodreads (als dat tabblad bestaat) en Open Library.
+ */
+function verwerkNieuweBoeken() {
+  var aantal = geefNieuweBoekenEenId();
   werkOnderwerpenBij();
   leegCache();
   if (spreadsheet().getSheetByName('Goodreads-export')) vulAanUitGoodreads(true);
