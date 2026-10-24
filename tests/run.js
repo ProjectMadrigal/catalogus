@@ -761,7 +761,7 @@ test('startpagina: aanraders_verbergen haalt namen weg, het boek blijft als iema
   gelijk(d.aanraders.map((a) => a.id), [String(s.catalogus[1].boek_id)]);
   gelijk(d.aanraders[0].r, ['Sam']);
 });
-test('startpagina: nieuwe boeken staan bij de aanraders, de kolom startpagina beslist het laatst', () => {
+test('startpagina: nieuw binnen is een aparte lijst, de kolom startpagina beslist het laatst', () => {
   const s = maakStaat('2026-10-23');
   s.catalogus.forEach((b) => { b.aanrader = ''; b.toegevoegd_op = ''; b.startpagina = ''; });
   s.catalogus[0].toegevoegd_op = '2026-10-01';               // nieuw binnen
@@ -769,18 +769,30 @@ test('startpagina: nieuwe boeken staan bij de aanraders, de kolom startpagina be
   s.catalogus[2].toegevoegd_op = '2026-10-10';
   s.catalogus[2].startpagina = 'nee';                        // nieuw, maar met de hand weggehaald
   s.catalogus[4].startpagina = 'ja';                         // met de hand toegevoegd
-  const ids = (d) => d.aanraders.map((a) => a.id).sort();
+  const ids = (lijst) => lijst.map((a) => a.id);
   let d = M.bouwSiteInhoud(s, {});
-  gelijk(ids(d), [s.catalogus[0].boek_id, s.catalogus[4].boek_id].map(String).sort());
-  assert.strictEqual(d.aanraders.find((a) => a.id === String(s.catalogus[0].boek_id)).n, 1);
-  assert.strictEqual(d.aanraders.find((a) => a.id === String(s.catalogus[4].boek_id)).n, 0);
+  gelijk(ids(d.aanraders), [String(s.catalogus[4].boek_id)]);
+  gelijk(ids(d.nieuw), [String(s.catalogus[0].boek_id)]);
+  assert.strictEqual(d.nieuw[0].n, 1);
   s.inst.nieuw_op_startpagina_dagen = 0;
   d = M.bouwSiteInhoud(s, {});
-  gelijk(ids(d), [String(s.catalogus[4].boek_id)]);
+  gelijk(ids(d.nieuw), []);
   s.catalogus[4].aanrader = 'Robin';
   s.catalogus[4].startpagina = 'nee';
   d = M.bouwSiteInhoud(s, {});
-  gelijk(ids(d), []);
+  gelijk(ids(d.aanraders), []);
+});
+test('nieuw binnen: nieuwste eerst, hoogstens het ingestelde aantal, nooit verdrongen door aanraders', () => {
+  const s = maakStaat('2026-10-23');
+  s.inst.nieuw_op_startpagina_aantal = 2;
+  for (let i = 0; i < 20; i++) s.catalogus.push({ boek_id: 'B' + (100 + i), titel: 'Aanrader ' + i, aantal: 1, uitleenbaar: 'ja', publiek: 'ja', aanrader: 'Johanna' });
+  s.catalogus[0].toegevoegd_op = '2026-10-01';
+  s.catalogus[1].toegevoegd_op = '2026-10-20';
+  s.catalogus[2].toegevoegd_op = '2026-10-10';
+  const d = M.bouwSiteInhoud(s, {});
+  assert.strictEqual(d.aanraders.length, 12);
+  gelijk(d.nieuw.map((b) => b.id), ['B0002', 'B0003']);
+  assert.strictEqual(M.verwerkInstellingen({}).nieuw_op_startpagina_aantal, 8);
 });
 test('oude website: html wordt tekst, ids voorkomen dubbels', () => {
   assert.strictEqual(M.htmlNaarTekst('<p>Hallo <b>daar</b></p><p>Tot&nbsp;vrijdag</p>'), 'Hallo daar\nTot vrijdag');

@@ -78,6 +78,8 @@ function installeer() {
   verwijderTriggers('ruimOp');
   verwijderTriggers('bijWijziging');
   verwijderTriggers('maakBackup');
+  verwijderTriggers('verwerkNieuweBoekenAutomatisch');
+  ScriptApp.newTrigger('verwerkNieuweBoekenAutomatisch').timeBased().everyHours(1).create();
   ScriptApp.newTrigger('ruimOp').timeBased().everyDays(1).atHour(3).create();
   ScriptApp.newTrigger('maakBackup').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(4).create();
   ScriptApp.newTrigger('bijWijziging').forSpreadsheet(ss).onEdit().create();

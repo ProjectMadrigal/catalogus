@@ -9,7 +9,7 @@
  * De kolommen op _en zijn de Engelse versie. Leeg? Dan toont de site het Nederlands.
  */
 
-var SITE_CACHE_SLEUTEL = 'site_v1';
+var SITE_CACHE_SLEUTEL = 'site_v2'; // v2: met de aparte lijst Nieuw binnen
 var SITE_MAX_NIEUWS = 3;
 var SITE_MAX_AANRADERS = 12;
 
@@ -60,11 +60,11 @@ function bouwSiteInhoud(staat, tabellen) {
 
   // Aanraders op de startpagina. Een boek staat erop als:
   //   - de kolom startpagina "ja" is, of
-  //   - iemand het aanraadt (namen uit aanraders_verbergen tellen niet mee), of
-  //   - het nieuw binnen is: toegevoegd_op ligt minder dan nieuw_op_startpagina_dagen geleden.
+  //   - iemand het aanraadt (namen uit aanraders_verbergen tellen niet mee).
+  // Beschikbare boeken eerst, daarna willekeurig maar vast per dag.
+  // Nieuw binnen is een aparte lijst (zie verder): zo verdringen de aanraders de nieuwe boeken nooit.
   // "nee" in de kolom startpagina haalt een boek er altijd af.
   // Een boek met gevoelige inhoud komt er enkel op met "ja" in de kolom startpagina.
-  // Beschikbare boeken eerst, daarna willekeurig maar vast per dag.
   var verborgen = splitsLijst(inst.aanraders_verbergen).map(normaliseerTekst);
   var dagenNieuw = parseerGetal(inst.nieuw_op_startpagina_dagen);
   if (dagenNieuw === null) dagenNieuw = 60;
@@ -74,9 +74,10 @@ function bouwSiteInhoud(staat, tabellen) {
     var dagen = dagenTussen(d, staat.vandaag);
     return dagen >= 0 && dagen < dagenNieuw;
   };
-  var aanraders = staat.catalogus.filter(function (b) {
+  var kandidaten = staat.catalogus.filter(function (b) {
     return !isLeeg(b.boek_id) && opWebsite(b) && jaNee(b.startpagina) !== 'nee';
-  }).map(function (b) {
+  });
+  var startpaginaBoek = function (b) {
     var bs = beschikbaarheid(staat, b);
     return {
       id: String(b.boek_id), t: schoon(b.titel), a: schoon(b.auteur), c: veiligeCoverUrl(b.cover_url),
@@ -88,11 +89,25 @@ function bouwSiteInhoud(staat, tabellen) {
       zelf: jaNee(b.startpagina) === 'ja',
       gevoelig: boekStatus(b) === 'gevoelig_zichtbaar',
       vrij: bs.code === 'beschikbaar',
-      volgorde: dagVolgorde(String(b.boek_id), staat.vandaag)
+      volgorde: dagVolgorde(String(b.boek_id), staat.vandaag),
+      toegevoegd: parseerDatum(b.toegevoegd_op) || ''
     };
-  }).filter(function (b) { return b.zelf || (!b.gevoelig && (b.r.length || b.n)); }).sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
+  };
+  var opruimen = function (b) { delete b.volgorde; delete b.zelf; delete b.toegevoegd; if (b.gevoelig) b.w = 1; delete b.gevoelig; return b; };
+  var aanraders = kandidaten.map(startpaginaBoek)
+    .filter(function (b) { return b.zelf || (!b.gevoelig && b.r.length); })
+    .sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
     .slice(0, SITE_MAX_AANRADERS)
-    .map(function (b) { delete b.volgorde; delete b.zelf; if (b.gevoelig) b.w = 1; delete b.gevoelig; return b; });
+    .map(opruimen);
+
+  // Nieuw binnen: de laatst toegevoegde boeken, nieuwste eerst.
+  var aantalNieuw = parseerGetal(inst.nieuw_op_startpagina_aantal);
+  if (aantalNieuw === null) aantalNieuw = 8;
+  var nieuwBinnen = kandidaten.filter(isNieuw).map(startpaginaBoek)
+    .filter(function (b) { return b.zelf || !b.gevoelig; })
+    .sort(function (a, b) { return b.toegevoegd.localeCompare(a.toegevoegd) || b.id.localeCompare(a.id); })
+    .slice(0, Math.max(0, aantalNieuw))
+    .map(opruimen);
 
   return {
     bijgewerkt: staat.vandaag,
@@ -103,7 +118,8 @@ function bouwSiteInhoud(staat, tabellen) {
     nieuws: nieuws,
     agenda: { komend: komend.slice(0, 3), vorig: voorbij[0] || null },
     faq: faq,
-    aanraders: aanraders
+    aanraders: aanraders,
+    nieuw: nieuwBinnen
   };
 }
 

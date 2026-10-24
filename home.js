@@ -96,11 +96,11 @@
         e.link ? el('p', null, link(e.link, T.t('meerInfo'))) : null));
   }
 
-  function aanrader(b) {
+  function aanrader(b, inNieuw) {
     var beeld = b.c ? el('img', { class: 'cover', src: b.c, alt: '', loading: 'lazy' }) : D.plaatshouder(b);
     if (b.c) beeld.addEventListener('error', function () { beeld.replaceWith(D.plaatshouder(b)); });
     var label = (b.r || []).length ? el('span', { class: 'aanrader-label' }, T.t('aanraderVan', { naam: b.r.join(', ') }))
-      : (b.n ? el('span', { class: 'aanrader-label nieuw' }, T.t('nieuwBinnen')) : null);
+      : (b.n && !inNieuw ? el('span', { class: 'aanrader-label nieuw' }, T.t('nieuwBinnen')) : null);
     return el('li', { class: 'aanrader' },
       el('a', { href: 'boeken.html#/boek/' + encodeURIComponent(b.id) },
         beeld,
@@ -111,34 +111,36 @@
   }
 
   /**
-   * Verdeelt de aanraders in groepen: eerst per persoon (wie de meeste boeken aanraadt eerst),
-   * dan nieuw binnen, dan wat het bestuur zelf op de startpagina zette.
+   * Verdeelt de sectie In de kijker in groepen: eerst per persoon (wie de meeste boeken
+   * aanraadt eerst), dan nieuw binnen, dan wat het bestuur zelf op de startpagina zette.
    * Een boek met meerdere namen staat bij de eerste naam.
+   * nieuw: de aparte lijst Nieuw binnen van de web-app. Oudere versies van het script
+   * stuurden die nog niet mee: dan de boeken met het kenmerk "nieuw" uit de aanraders.
    */
-  function aanraderGroepen(lijst) {
-    var perNaam = {}, namen = [], nieuw = [], kijker = [];
+  function aanraderGroepen(lijst, nieuw) {
+    var perNaam = {}, namen = [], kijker = [];
+    if (!nieuw) nieuw = lijst.filter(function (b) { return b.n && !(b.r || []).length; });
     lijst.forEach(function (b) {
       var naam = (b.r || [])[0];
       if (naam) {
         if (!perNaam[naam]) { perNaam[naam] = []; namen.push(naam); }
         perNaam[naam].push(b);
-      } else if (b.n) nieuw.push(b);
-      else kijker.push(b);
+      } else if (!b.n) kijker.push(b);
     });
     namen.sort(function (a, c) { return perNaam[c].length - perNaam[a].length; });
     var groepen = namen.map(function (naam) { return { titel: T.t('aanradersVan', { naam: naam }), ster: true, boeken: perNaam[naam] }; });
-    if (nieuw.length) groepen.push({ titel: T.t('nieuwBinnen'), boeken: nieuw });
-    if (kijker.length) groepen.push({ titel: T.t('inDeKijker'), boeken: kijker });
+    if (nieuw.length) groepen.push({ titel: T.t('nieuwBinnen'), boeken: nieuw, nieuw: true });
+    if (kijker.length) groepen.push({ titel: T.t('uitgelicht'), boeken: kijker });
     return groepen;
   }
 
-  function tekenAanraders(lijst) {
-    var groepen = aanraderGroepen(lijst);
+  function tekenAanraders(lijst, nieuw) {
+    var groepen = aanraderGroepen(lijst, nieuw);
     return groepen.map(function (g, i) {
       var id = 'aanradergroep-' + i;
       return el('div', { class: 'aanradergroep' },
         el('h3', { id: id, class: g.ster ? 'met-ster' : null }, g.titel),
-        el('ul', { class: 'aanraders', 'aria-labelledby': id }, g.boeken.map(aanrader)));
+        el('ul', { class: 'aanraders', 'aria-labelledby': id }, g.boeken.map(function (b) { return aanrader(b, g.nieuw); })));
     });
   }
 
@@ -155,9 +157,9 @@
     if (ag.vorig) kaarten.push(eventKaart(ag.vorig, T.t('vorigEvent')));
     D.vervang($('agenda'), kaarten);
 
-    var aanraders = data.aanraders || [];
-    $('aanraders-sectie').hidden = !aanraders.length;
-    D.vervang($('aanraders'), tekenAanraders(aanraders));
+    var groepen = tekenAanraders(data.aanraders || [], data.nieuw);
+    $('aanraders-sectie').hidden = !groepen.length;
+    D.vervang($('aanraders'), groepen);
 
     var faq = data.faq || [];
     $('faq-sectie').hidden = !faq.length;
