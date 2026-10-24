@@ -72,7 +72,8 @@ function ruimOp() {
     verwerkVervallenReservaties(staat);
     var teller = ruimOpStaat(staat);
     bewaarStaat(staat);
-    logboek('systeem', 'privacy-opruiming', teller.koppelingen + ' koppelingen gewist, ' + teller.leners + ' leners gewist');
+    var aanvragen = ruimAanvragenOp(staat.inst);
+    logboek('systeem', 'privacy-opruiming', teller.koppelingen + ' koppelingen gewist, ' + teller.leners + ' leners gewist, ' + aanvragen + ' aanvragen gewist');
   } finally {
     lock.releaseLock();
   }

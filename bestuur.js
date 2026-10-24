@@ -25,6 +25,7 @@
     ['binnenkort', 'Vervalt binnenkort', toonBinnenkort, 'uitlenen'],
     ['lopend', 'Alle uitleningen', toonLopend, 'uitlenen'],
     ['reservaties', 'Reservaties', toonReservaties, 'uitlenen'],
+    ['aanvragen', 'Aanvragen van de website', toonAanvragen, 'uitlenen'],
     ['leners', 'Leners', toonLeners, 'uitlenen'],
     ['borgen', 'Borgen en giften', toonBorgen, 'uitlenen'],
     ['uitzonderingen', 'Uitzonderingen', toonUitzonderingen, 'uitlenen'],
@@ -62,7 +63,9 @@
       return el('div', { class: 'navgroep', role: 'group', 'aria-labelledby': kopId },
         el('span', { class: 'navgroep-kop', id: kopId }, g[1]),
         el('div', { class: 'navgroep-knoppen' }, SECTIES.filter(function (s) { return s[3] === g[0]; }).map(function (s) {
-          var aantal = s[0] === 'telaat' ? data.telaat.length : s[0] === 'binnenkort' ? data.binnenkort.length : null;
+          var aantal = s[0] === 'telaat' ? data.telaat.length : s[0] === 'binnenkort' ? data.binnenkort.length
+            : s[0] === 'aanvragen' ? (data.aanvragen || []).length : null;
+          if (s[0] === 'aanvragen' && !data.onlineReserveren && !(data.aanvragen || []).length) return null;
           return el('button', {
             type: 'button', class: 'knop' + (s[0] === actief ? '' : ' tweede'), 'aria-pressed': s[0] === actief ? 'true' : 'false',
             onclick: function () { toonSectie(s[0], true); }
@@ -258,6 +261,33 @@
             el('td', {}, x.lenersnummer ? x.lenersnummer + (x.voornaam ? ' (' + x.voornaam + ')' : '') : '(gewist)'),
             el('td', {}, x.titel || ''), el('td', {}, x.reden));
         })))) : el('p', {}, 'Geen uitzonderingen in de laatste 6 maanden.'));
+  }
+
+  /* ---------- Aanvragen van de website ---------- */
+
+  function toonAanvragen(vak) {
+    var lijst = data.aanvragen || [];
+    D.vervang(vak, kop('Aanvragen van de website', 'Mensen die via de website een boek wilden reserveren. Neem contact op, maak de reservatie in het uitleenscherm en zet de aanvraag daarna op afgehandeld.'),
+      data.onlineReserveren ? null : el('p', { class: 'melding' }, 'Online reserveren staat uit. Zet de instelling online_reserveren op ja (onder Teksten en instellingen) om de knop op de website te tonen.'),
+      lijst.length ? el('ul', { class: 'kaartlijst' }, lijst.map(function (a) {
+        var fout = el('div');
+        var knop = function (status, tekst) {
+          return el('button', { type: 'button', class: 'knop' + (status === 'afgehandeld' ? '' : ' tweede'), onclick: function (e) {
+            e.target.disabled = true;
+            B.voerUit('aanvraagAfhandelen', { aanvraag_id: a.aanvraag_id, status: status }).then(function (r) {
+              if (!r.ok) { e.target.disabled = false; B.melding(fout, 'fout', r.fout); return; }
+              B.melding($('melding'), 'ok', r.tekst);
+              laad();
+            });
+          } }, tekst);
+        };
+        return el('li', { class: 'kaart' },
+          el('h3', {}, a.titel), el('p', {}, a.boek_id + ' · aangevraagd op ' + D.korteDatum(a.datum)),
+          el('p', {}, el('strong', {}, a.voornaam), ' · ', a.contact),
+          a.opmerking ? el('p', {}, 'Opmerking: ' + a.opmerking) : null,
+          fout,
+          el('div', { class: 'knoppen' }, knop('afgehandeld', 'Afgehandeld'), knop('geweigerd', 'Kan niet, geweigerd')));
+      })) : el('p', {}, 'Er zijn geen open aanvragen.'));
   }
 
   /* ---------- Verloren en gevoelig ---------- */

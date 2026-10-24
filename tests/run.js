@@ -1011,5 +1011,58 @@ test('back-up: standaard 8 back-ups bewaren', () => {
   assert.strictEqual(instellingen().backup_map, 'Project Madrigal back-ups');
 });
 
+console.log('\nOnline reserveren');
+function aanvraagOmgeving(aan) {
+  const s = maakStaat(null, { online_reserveren: aan === false ? 'nee' : 'ja' });
+  return { inst: s.inst, vandaag: s.vandaag, catalogus: s.catalogus, aanvragen: [] };
+}
+const goedeAanvraag = { boek_id: 'B0001', voornaam: 'Sam', contact: 'sam@voorbeeld.test', toestemming: true };
+let aanvraagNr = 0;
+const aanvraagId = () => 'A' + String(++aanvraagNr).padStart(4, '0');
+test('online reserveren staat standaard uit', () => {
+  assert.strictEqual(instellingen().online_reserveren, false);
+  assert.strictEqual(M.publiekeTeksten(instellingen()).online_reserveren, false);
+  assert.strictEqual(M.maakAanvraag(aanvraagOmgeving(false), goedeAanvraag, aanvraagId).ok, false);
+  assert.strictEqual(M.ACTIES.reservatieAanvraag, 'publiek');
+});
+test('aanvraag: goede invoer komt in de lijst', () => {
+  const o = aanvraagOmgeving();
+  const r = M.maakAanvraag(o, Object.assign({ opmerking: 'Graag volgende vrijdag' }, goedeAanvraag), aanvraagId);
+  assert.strictEqual(r.ok, true);
+  gelijk([o.aanvragen.length, o.aanvragen[0].titel, o.aanvragen[0].status, o.aanvragen[0].datum], [1, 'De verzonnen zee', 'nieuw', '2026-10-23']);
+});
+test('aanvraag: foute invoer en niet-publieke boeken geweigerd', () => {
+  const o = aanvraagOmgeving();
+  assert.strictEqual(M.maakAanvraag(o, Object.assign({}, goedeAanvraag, { contact: 'geen contact' }), aanvraagId).ok, false);
+  assert.strictEqual(M.maakAanvraag(o, Object.assign({}, goedeAanvraag, { voornaam: '' }), aanvraagId).ok, false);
+  assert.strictEqual(M.maakAanvraag(o, Object.assign({}, goedeAanvraag, { toestemming: false }), aanvraagId).ok, false);
+  assert.strictEqual(M.maakAanvraag(o, Object.assign({}, goedeAanvraag, { boek_id: 'B0004' }), aanvraagId).ok, false); // publiek = nee
+  assert.strictEqual(M.maakAanvraag(o, Object.assign({}, goedeAanvraag, { boek_id: 'Z0001' }), aanvraagId).ok, false); // niet uitleenbaar
+  assert.strictEqual(o.aanvragen.length, 0);
+});
+test('aanvraag: robot stil genegeerd, dubbels en te veel aanvragen geweigerd', () => {
+  const o = aanvraagOmgeving();
+  const robot = M.maakAanvraag(o, Object.assign({ website: 'spam.test' }, goedeAanvraag), aanvraagId);
+  gelijk([robot.ok, robot.stil, o.aanvragen.length], [true, true, 0]);
+  assert.strictEqual(M.maakAanvraag(o, goedeAanvraag, aanvraagId).ok, true);
+  assert.strictEqual(M.maakAanvraag(o, goedeAanvraag, aanvraagId).ok, false);
+  assert.strictEqual(M.maakAanvraag(o, Object.assign({}, goedeAanvraag, { boek_id: 'B0002' }), aanvraagId).ok, true);
+  assert.strictEqual(M.maakAanvraag(o, Object.assign({}, goedeAanvraag, { boek_id: 'B0003' }), aanvraagId).ok, true);
+  o.catalogus.push({ boek_id: 'B0009', titel: 'Nog een', aantal: 1, uitleenbaar: 'ja', publiek: 'ja' });
+  assert.strictEqual(M.maakAanvraag(o, Object.assign({}, goedeAanvraag, { boek_id: 'B0009' }), aanvraagId).ok, false);
+});
+test('aanvraag afhandelen en privacy-opruiming', () => {
+  const rijen = [
+    { aanvraag_id: 'A0001', datum: '2026-10-20', boek_id: 'B0001', titel: 'X', voornaam: 'Sam', contact: '0470 00 00 01', status: 'nieuw' },
+    { aanvraag_id: 'A0002', datum: '2026-07-01', boek_id: 'B0002', titel: 'Y', voornaam: 'Jo', contact: 'jo@voorbeeld.test', status: 'afgehandeld' }
+  ];
+  gelijk(M.openAanvragen(rijen).map((a) => a.aanvraag_id), ['A0001']);
+  assert.strictEqual(M.aanvraagAfhandelen(rijen, { aanvraag_id: 'A0001', status: 'raar' }, 'Test', '2026-10-24').ok, false);
+  assert.strictEqual(M.aanvraagAfhandelen(rijen, { aanvraag_id: 'A0001', status: 'afgehandeld' }, 'Test', '2026-10-24').ok, true);
+  gelijk([rijen[0].status, rijen[0].datum_afgehandeld, rijen[0].afgehandeld_door], ['afgehandeld', '2026-10-24', 'Test']);
+  assert.strictEqual(M.ruimAanvragenOpRijen(rijen, '2026-10-24', 60), 1);
+  gelijk([rijen[0]._verwijderen, rijen[1]._verwijderen], [undefined, true]);
+});
+
 console.log('\n' + geslaagd + ' geslaagd, ' + mislukt.length + ' mislukt');
 if (mislukt.length) process.exit(1);

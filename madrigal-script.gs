@@ -11,6 +11,14 @@
 
 /* ==================== Vaste waarden ==================== */
 
+var AANVRAAG_MAX_PER_UUR = 30;
+
+var AANVRAAG_MAX_PER_CONTACT = 3;
+
+var AANVRAAG_NIEUW = 'nieuw';
+
+var AANVRAAG_STATUSSEN = ['nieuw', 'afgehandeld', 'geweigerd'];
+
 var CACHE_SLEUTEL = 'publiek_v1';
 
 var CACHE_DUUR_SECONDEN = 6 * 60 * 60; // het maximum van Google: 6 uur
@@ -32,6 +40,9 @@ var ACTIES = {
   borgTerugbetaald: 'bestuur',
   herinneringVerstuurd: 'bestuur',
   lenerAanpassen: 'bestuur',
+  aanvraagAfhandelen: 'bestuur',
+  // Zonder code, vanaf de publieke website (Aanvragen.js). Staat uit tot online_reserveren = ja.
+  reservatieAanvraag: 'publiek',
   // Beheer van de website (Beheer.js). Wil je vrijwilligers dit laten doen? Zet de actie op 'balie'.
   beheerBoekOphalen: 'bestuur',
   beheerBoekBewaren: 'bestuur',
@@ -233,6 +244,8 @@ var STANDAARD_INSTELLINGEN = [
   ['rooster_code', '', 'De toegangscode voor vrijwilligers van het rooster. Blijft op de server, de browser ziet ze nooit.'],
   ['rooster_link', 'https://projectmadrigal.github.io/rooster/', 'Adres van de roostertool, voor de knop "Beschikbaarheid invullen".'],
   ['code_bestuur', '', 'Code voor het bestuursscherm. Geef ze enkel aan het bestuur.'],
+  ['online_reserveren', 'nee', 'ja: de website toont bij elk uitleenbaar boek de knop "Reserveer dit boek". De aanvragen verschijnen in het bestuursscherm en in het tabblad Aanvragen.'],
+  ['aanvragen_bewaren_dagen', 60, 'Na hoeveel dagen een aanvraag (met voornaam en contactgegevens) gewist wordt.'],
   ['backup_map', 'Project Madrigal back-ups', 'Naam van de map op Google Drive waar elke week een kopie van deze spreadsheet komt.'],
   ['backup_bewaren', 8, 'Hoeveel back-ups je bewaart. De oudste gaan vanzelf naar de prullenbak. Een back-up bevat ook de gegevens van leners.'],
   ['bewaartermijn_afgesloten_uitleningen_maanden', 12, 'Na hoeveel maanden de koppeling tussen een teruggebrachte uitlening en de lener gewist wordt.'],
@@ -291,6 +304,8 @@ var KOLOMMEN = {
   'Uitzonderingen': ['datum', 'wie', 'grens', 'lenersnummer', 'boek_id', 'exemplaar', 'reden', 'actie'],
   'Na te kijken': ['datum', 'bron', 'boek_id', 'titel', 'veld', 'waarde_catalogus', 'waarde_bron', 'opmerking', 'afgehandeld', 'sleutel'],
   'Logboek': ['tijdstip', 'wie', 'actie', 'details'],
+  // Online reserveren (Aanvragen.js). Bevat contactgegevens: nooit publiek.
+  'Aanvragen': ['aanvraag_id', 'datum', 'boek_id', 'titel', 'voornaam', 'contact', 'opmerking', 'status', 'datum_afgehandeld', 'afgehandeld_door'],
   // Inhoud van de website. Kolommen op _en zijn de Engelse versie (mag leeg: dan toont de site het Nederlands).
   'Nieuws': ['datum', 'titel', 'titel_en', 'tekst', 'tekst_en', 'afbeelding', 'link', 'publiek', 'bron_id'],
   'Agenda': ['datum', 'uur', 'titel', 'titel_en', 'tekst', 'tekst_en', 'locatie', 'afbeelding', 'link', 'publiek', 'bron_id'],
@@ -301,7 +316,7 @@ var KOLOMMEN = {
 var DATUMKOLOMMEN = [
   'datum_inschrijving', 'datum_uit', 'oorspronkelijke_vervaldatum', 'vervaldatum', 'datum_terug',
   'datum_verlenging', 'borg_terugbetaald', 'laatste_herinnering', 'datum_reservatie', 'datum_klaar',
-  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd', 'toegevoegd_op', 'beschrijving_gezocht', 'beschrijving_vertaald'
+  'ophalen_tot', 'datum_afgesloten', 'datum', 'ol_gecontroleerd', 'gb_gecontroleerd', 'toegevoegd_op', 'beschrijving_gezocht', 'beschrijving_vertaald', 'datum_afgehandeld'
 ];
 
 var INSTELLING_GROEPEN = [
@@ -317,11 +332,12 @@ var INSTELLING_GROEPEN = [
   ['Boekgegevens aanvullen', ['goodreads_shelf', 'google_books_api_key']],
   ['Rooster', ['rooster_url', 'rooster_code', 'rooster_link']],
   ['Privacy', ['bewaartermijn_afgesloten_uitleningen_maanden']],
-  ['Back-up', ['backup_map', 'backup_bewaren']]
+  ['Back-up', ['backup_map', 'backup_bewaren']],
+  ['Online reserveren', ['online_reserveren', 'aanvragen_bewaren_dagen']]
 ];
 
 var TABBLAD_GROEPEN = [
-  ['#6b3597', ['Uitleningen', 'Reservaties', 'Leners', 'Uitzonderingen']],      // uitlenen
+  ['#6b3597', ['Uitleningen', 'Reservaties', 'Aanvragen', 'Leners', 'Uitzonderingen']],      // uitlenen
   ['#ffcd30', ['Catalogus', 'Onderwerpen', 'Na te kijken']],                     // collectie
   ['#2a6f73', ['Nieuws', 'Agenda', 'Veelgestelde vragen']],                      // website
   ['#1b1b1c', ['Instellingen', 'Logboek']],                                      // beheer
@@ -358,6 +374,16 @@ var STATUS_GEANNULEERD = 'geannuleerd';
 function aantalExemplaren(boek) {
   var n = parseerGetal(boek.aantal);
   return n && n > 0 ? Math.round(n) : 1;
+}
+
+/** Zet een aanvraag op afgehandeld of geweigerd. invoer: { aanvraag_id, status } */
+function aanvraagAfhandelen(rijen, invoer, wie, vandaag) {
+  var status = String(invoer.status || '');
+  if (status !== 'afgehandeld' && status !== 'geweigerd') return { ok: false, fout: 'Onbekende status.' };
+  var a = (rijen || []).filter(function (r) { return String(r.aanvraag_id) === String(invoer.aanvraag_id); })[0];
+  if (!a) return { ok: false, fout: 'Deze aanvraag bestaat niet meer.' };
+  wijzig(a, { status: status, datum_afgehandeld: vandaag, afgehandeld_door: tekstInvoer(wie, 40) });
+  return { ok: true, tekst: 'Aanvraag ' + a.aanvraag_id + ' staat op ' + status + '.' };
 }
 
 /**
@@ -516,6 +542,17 @@ function behandelGrenzen(staat, actie, ctx, invoer) {
 }
 
 /* ---------- Reservaties doorgeven ---------- */
+
+/** Bestuur: een aanvraag afhandelen in het tabblad. */
+function beheerAanvraagAfhandelen(invoer, wie) {
+  var tabel = leesTabel('Aanvragen');
+  var r = aanvraagAfhandelen(tabel.rijen, invoer, wie, vandaagTekst());
+  if (r.ok) {
+    bewaarTabel(tabel);
+    logboek(wie, 'aanvraag ' + invoer.status, String(invoer.aanvraag_id));
+  }
+  return r;
+}
 
 /** Een boek zoals het beheerscherm het toont. */
 function beheerBoek(rij) {
@@ -1183,6 +1220,15 @@ function doPost(e) {
   if (!invoer || typeof invoer !== 'object') return json({ ok: false, fout: 'Ongeldig verzoek.' });
   var actie = String(invoer.actie || '');
   if (!ACTIES.hasOwnProperty(actie)) return json({ ok: false, fout: 'Onbekende actie.' });
+
+  if (ACTIES[actie] === 'publiek') {
+    try {
+      return json(publiekeAanvraag(invoer));
+    } catch (err) {
+      logboek('systeem', 'fout', actie + ': ' + String(err && err.message || err).slice(0, 200));
+      return json({ ok: false, fout: 'Er ging iets mis. Probeer het later opnieuw of kom langs in de bib.' });
+    }
+  }
 
   var rol = rolVoorCode(invoer.code, leesInstellingen());
   if (!rol) {
@@ -2127,6 +2173,35 @@ function lopendeUitleningenVan(staat, lenersnummer) {
 }
 
 /**
+ * Maakt een aanvraag, zonder de spreadsheet aan te raken.
+ * omgeving: { inst, vandaag, catalogus, aanvragen }
+ * nieuwId: functie die een nieuw aanvraagnummer geeft.
+ * Geeft { ok, tekst } of { ok: false, fout }. stil: true als een robot het verborgen veld invulde.
+ */
+function maakAanvraag(omgeving, invoer, nieuwId) {
+  if (!omgeving.inst.online_reserveren) return { ok: false, fout: 'Online reserveren kan nog niet. Kom langs in de bib.' };
+  // Een robot vult elk veld in, ook het verborgen. We doen alsof het lukte.
+  if (!isLeeg(invoer.website)) return { ok: true, stil: true, tekst: 'Je aanvraag is verstuurd.' };
+  var boek = omgeving.catalogus.filter(function (b) { return String(b.boek_id) === String(invoer.boek_id); })[0];
+  if (!boek || !opWebsite(boek)) return { ok: false, fout: 'Dit boek bestaat niet.' };
+  if (!isUitleenbaar(boek)) return { ok: false, fout: 'Dit boek is niet uitleenbaar.' };
+  var voornaam = tekstInvoer(invoer.voornaam, 40);
+  if (!voornaam) return { ok: false, fout: 'Vul je voornaam in.' };
+  var contact = tekstInvoer(invoer.contact, 80);
+  if (!geldigEmail(contact) && !geldigeTelefoon(contact)) return { ok: false, fout: 'Vul een geldig telefoonnummer of e-mailadres in.' };
+  if (invoer.toestemming !== true) return { ok: false, fout: 'Geef toestemming om je gegevens te bewaren, anders kunnen we je niet contacteren.' };
+  var zelfde = normaliseerTekst(contact);
+  var open = omgeving.aanvragen.filter(function (a) { return a.status === AANVRAAG_NIEUW && normaliseerTekst(a.contact) === zelfde; });
+  if (open.length >= AANVRAAG_MAX_PER_CONTACT) return { ok: false, fout: 'Je hebt al ' + open.length + ' aanvragen lopen. Wacht tot het bestuur je contacteert.' };
+  if (open.some(function (a) { return String(a.boek_id) === String(boek.boek_id); })) return { ok: false, fout: 'Je vroeg dit boek al aan. Het bestuur neemt contact met je op.' };
+  voegToe(omgeving.aanvragen, {
+    aanvraag_id: nieuwId(), datum: omgeving.vandaag, boek_id: String(boek.boek_id), titel: schoon(boek.titel),
+    voornaam: voornaam, contact: contact, opmerking: tekstInvoer(invoer.opmerking, 300), status: AANVRAAG_NIEUW
+  });
+  return { ok: true, tekst: 'Je aanvraag is verstuurd. Het bestuur neemt contact met je op om af te spreken wanneer je het boek kan ophalen.' };
+}
+
+/**
  * Maakt afgebroken beschrijvingen leeg, zodat het script ze opnieuw volledig zoekt
  * en vertaalt. Enkel beschrijvingen die het script zelf vond (met een datum in
  * beschrijving_gezocht, ol_gecontroleerd of gb_gecontroleerd). Geeft het aantal terug.
@@ -2499,6 +2574,16 @@ function onOpen() {
     .addToUi();
 }
 
+/** De open aanvragen voor het bestuursscherm, oudste eerst. */
+function openAanvragen(rijen) {
+  return (rijen || []).filter(function (a) { return a.status === AANVRAAG_NIEUW; }).map(function (a) {
+    return {
+      aanvraag_id: String(a.aanvraag_id), datum: a.datum, boek_id: String(a.boek_id), titel: schoon(a.titel),
+      voornaam: schoon(a.voornaam), contact: schoon(a.contact), opmerking: schoon(a.opmerking)
+    };
+  }).sort(function (a, b) { return String(a.datum).localeCompare(String(b.datum)); });
+}
+
 /** Opmaak van de kopregel: vet, vastgezet. */
 function opmaakKop(blad, kolommen) {
   if (kolommen < 1) return;
@@ -2659,6 +2744,34 @@ function planVertaling(minuten) {
   ScriptApp.newTrigger('vertaalBeschrijvingen').timeBased().after(minuten * 60 * 1000).create();
 }
 
+/** Publiek eindpunt: een aanvraag van de website. */
+function publiekeAanvraag(invoer) {
+  var inst = leesInstellingen();
+  if (!inst.online_reserveren) return { ok: false, fout: 'Online reserveren kan nog niet. Kom langs in de bib.' };
+  var cache = CacheService.getScriptCache();
+  var teller = Number(cache.get('aanvragen_uur') || 0);
+  if (teller >= AANVRAAG_MAX_PER_UUR) return { ok: false, fout: 'Er kwamen net veel aanvragen binnen. Probeer het over een uur opnieuw.' };
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(20000)) return { ok: false, fout: 'Het is even druk. Probeer het over een paar seconden opnieuw.' };
+  try {
+    var tabel = leesTabel('Aanvragen');
+    var omgeving = { inst: inst, vandaag: vandaagTekst(), catalogus: leesTabel('Catalogus').rijen, aanvragen: tabel.rijen };
+    var nieuwId = function () {
+      return 'A' + metNullen(volgendNummer('aanvraag', tabel.rijen.map(function (a) { return a.aanvraag_id; })), 4);
+    };
+    var r = maakAanvraag(omgeving, invoer, nieuwId);
+    if (r.ok && !r.stil) {
+      bewaarTabel(tabel);
+      cache.put('aanvragen_uur', String(teller + 1), 3600);
+      var nieuw = tabel.rijen[tabel.rijen.length - 1];
+      logboek('website', 'reservatieaanvraag', nieuw.aanvraag_id + ', boek ' + nieuw.boek_id);
+    }
+    return { ok: r.ok, tekst: r.tekst, fout: r.fout };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
 /** De publieke catalogus als JSON-tekst, uit de cache als die er is. */
 function publiekeCatalogusJson() {
   var cache = CacheService.getScriptCache();
@@ -2690,7 +2803,8 @@ function publiekeTeksten(inst) {
     privacy: inst.tekst_privacy,
     welkom_en: inst.tekst_welkom_en,
     uitleg_en: inst.tekst_uitleg_lenen_en,
-    privacy_en: inst.tekst_privacy_en
+    privacy_en: inst.tekst_privacy_en,
+    online_reserveren: inst.online_reserveren === true
   };
 }
 
@@ -2788,6 +2902,25 @@ function roosterOverzicht() {
   return { ok: true, data: data };
 }
 
+/** Nachtelijke opruiming van de aanvragen (zie Privacy.js). */
+function ruimAanvragenOp(inst) {
+  if (!spreadsheet().getSheetByName('Aanvragen')) return 0;
+  var tabel = leesTabel('Aanvragen');
+  var n = ruimAanvragenOpRijen(tabel.rijen, vandaagTekst(), inst.aanvragen_bewaren_dagen);
+  if (n) bewaarTabel(tabel);
+  return n;
+}
+
+/** Privacy: aanvragen ouder dan het aantal dagen gaan weg, ook de open. Geeft het aantal terug. */
+function ruimAanvragenOpRijen(rijen, vandaag, dagen) {
+  var n = 0;
+  (rijen || []).forEach(function (a) {
+    var d = parseerDatum(a.datum);
+    if (d && dagenTussen(d, vandaag) > dagen) { markeerVerwijderen(a); n++; }
+  });
+  return n;
+}
+
 /** Menu en nachtelijke planning: voert de opruiming uit op de spreadsheet. */
 function ruimOp() {
   var lock = LockService.getScriptLock();
@@ -2798,7 +2931,8 @@ function ruimOp() {
     verwerkVervallenReservaties(staat);
     var teller = ruimOpStaat(staat);
     bewaarStaat(staat);
-    logboek('systeem', 'privacy-opruiming', teller.koppelingen + ' koppelingen gewist, ' + teller.leners + ' leners gewist');
+    var aanvragen = ruimAanvragenOp(staat.inst);
+    logboek('systeem', 'privacy-opruiming', teller.koppelingen + ' koppelingen gewist, ' + teller.leners + ' leners gewist, ' + aanvragen + ' aanvragen gewist');
   } finally {
     lock.releaseLock();
   }
@@ -3647,6 +3781,7 @@ function voerActieUit(actie, invoer, rol) {
   if (!lock.tryLock(20000)) return { ok: false, fout: 'Het is even druk. Probeer het over een paar seconden opnieuw.' };
   try {
     var wie = tekstInvoer(invoer.wie, 40) || 'onbekend';
+    if (actie === 'aanvraagAfhandelen') return beheerAanvraagAfhandelen(invoer, wie);
     if (actie === 'beheerInhoudBewaren' || actie === 'beheerInstellingBewaren') {
       var gewijzigd = actie === 'beheerInhoudBewaren' ? beheerInhoudBewaren(invoer, wie) : beheerInstellingBewaren(invoer, wie);
       if (gewijzigd.ok) leegCache();
@@ -3657,7 +3792,11 @@ function voerActieUit(actie, invoer, rol) {
     var antwoord;
     switch (actie) {
       case 'balieData': antwoord = { ok: true, data: balieGegevens(staat) }; break;
-      case 'bestuurData': antwoord = { ok: true, data: bestuurGegevens(staat, leesTabel('Onderwerpen').rijen) }; break;
+      case 'bestuurData':
+        antwoord = { ok: true, data: bestuurGegevens(staat, leesTabel('Onderwerpen').rijen) };
+        antwoord.data.aanvragen = openAanvragen(spreadsheet().getSheetByName('Aanvragen') ? leesTabel('Aanvragen').rijen : []);
+        antwoord.data.onlineReserveren = staat.inst.online_reserveren === true;
+        break;
       case 'uitlenen': antwoord = uitlenen(staat, invoer); break;
       case 'terugbrengen': antwoord = terugbrengen(staat, { uitlening_id: invoer.uitlening_id, borg_terugbetaald: invoer.borg_terugbetaald === true }); break;
       case 'verlengen': antwoord = verlengen(staat, invoer); break;

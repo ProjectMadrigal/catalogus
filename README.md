@@ -46,6 +46,7 @@ Daarnaast is er een **handleiding van één pagina** voor de balie, om af te dru
 7. [Nieuws, agenda en vragen overnemen van de oude website](#c7-nieuws-agenda-en-vragen-overnemen-van-de-oude-website)
 8. [Het rooster koppelen](#c8-het-rooster-koppelen)
 9. [Het eigen domein projectmadrigal.be](#c9-het-eigen-domein-projectmadrigalbe)
+10. [Bezoekersaantallen met GoatCounter](#c10-bezoekersaantallen-met-goatcounter)
 
 **Deel D. Voor een beheerder**
 
@@ -236,6 +237,13 @@ Enkel wie de code van het bestuur heeft, kan dit. Wil je later vrijwilligers bv.
 - Iets per ongeluk gewist of overschreven? Open de laatste back-up, zoek de rij en kopieer ze terug naar de echte spreadsheet.
 - Werk nooit verder in een back-up: de website leest enkel de echte spreadsheet.
 - Een back-up bevat ook de gegevens van leners. Die blijven er dus nog tot 8 weken in staan nadat de privacy-opruiming ze wiste. Deel de map met niemand buiten het bestuur.
+
+**Online reserveren (staat uit).** Zet je in Instellingen `online_reserveren` op **ja**, dan krijgt elk uitleenbaar boek op de website de knop **Reserveer dit boek**. Een bezoeker laat een voornaam en een telefoonnummer of e-mailadres achter.
+
+- De aanvragen verschijnen in het bestuursscherm onder **Uitlenen > Aanvragen van de website**, en in het tabblad **Aanvragen**.
+- Neem contact op, maak de reservatie zoals gewoonlijk in het uitleenscherm en klik dan op **Afgehandeld**. Kan het niet, klik dan op **Kan niet, geweigerd**.
+- Tegen misbruik: hoogstens 30 aanvragen per uur, 3 open aanvragen per contact, en een verborgen veld dat enkel robots invullen.
+- Privacy: na `aanvragen_bewaren_dagen` (standaard 60) wist de nachtelijke opruiming de aanvraag. Vermeld online reserveren in je privacytekst voor je het aanzet.
 
 ## A8. Wat te doen als iets niet werkt
 
@@ -478,6 +486,18 @@ Wil je dat projectmadrigal.be naar deze website wijst:
 3. Vink **Enforce HTTPS** aan zodra GitHub dat toelaat. Dat duurt soms een dag.
 
 Doe dit pas als de oude website weg mag: vanaf dat moment toont projectmadrigal.be de nieuwe website. Oude links zoals `/boeken` sturen vanzelf door naar de juiste pagina.
+
+Vervang daarna overal `https://projectmadrigal.github.io/` door het nieuwe adres in `index.html`, `boeken.html`, `over-ons.html` (de regels met `og:` en `canonical`), `robots.txt` en `sitemap.xml`. Anders tonen gedeelde links en Google nog het oude adres.
+
+## C10. Bezoekersaantallen met GoatCounter
+
+De website kan bezoeken tellen met GoatCounter: gratis voor verenigingen, zonder cookies en zonder persoonsgegevens. Je ziet hoeveel keer een pagina of een boek bekeken werd, nooit wie of wat iemand zocht. Wie in de browser "niet volgen" aanzette, telt niet mee.
+
+1. Maak een account op https://www.goatcounter.com met het Madrigal-mailadres. Kies als code bv. `projectmadrigal`. Je statistieken staan dan op https://projectmadrigal.goatcounter.com
+2. Vul die code in `config.js` in bij `statistiek: 'projectmadrigal'` en bewaar (op GitHub: potloodje, dan **Commit changes**).
+3. De privacypagina van de catalogus vermeldt dan vanzelf dat de site bezoeken telt.
+
+Uitzetten? Maak `statistiek` weer leeg. De balie en het bestuursscherm tellen nooit mee.
 
 ---
 
