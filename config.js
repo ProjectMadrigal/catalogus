@@ -10,5 +10,10 @@ window.MADRIGAL_CONFIG = {
   apiUrl: 'https://script.google.com/macros/s/AKfycby2wibpZd1zWOAhaUmkLoKp6V3SiYA2Uzh6emsD-eJHcBoxxN0HIeQgr0lqOtVdnv0f/exec',
 
   // Naam bovenaan de pagina's.
-  naam: 'Project Madrigal'
+  naam: 'Project Madrigal',
+
+  // Bezoekersaantallen via GoatCounter: zonder cookies en zonder persoonsgegevens.
+  // Vul de code van je GoatCounter-account in (bv. 'projectmadrigal' voor
+  // projectmadrigal.goatcounter.com). Leeg: er wordt niets geteld.
+  statistiek: ''
 };

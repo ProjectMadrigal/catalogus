@@ -1,0 +1,8 @@
+# Zoekmachines mogen de publieke pagina's lezen, niet de schermen voor de balie en het bestuur.
+User-agent: *
+Disallow: /balie.html
+Disallow: /bestuur.html
+Disallow: /handleiding-balie.html
+Disallow: /rooster/
+
+Sitemap: https://projectmadrigal.github.io/sitemap.xml

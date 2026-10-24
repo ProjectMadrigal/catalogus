@@ -27,11 +27,12 @@ var INSTELLING_GROEPEN = [
   ['Boekgegevens aanvullen', ['goodreads_shelf', 'google_books_api_key']],
   ['Rooster', ['rooster_url', 'rooster_code', 'rooster_link']],
   ['Privacy', ['bewaartermijn_afgesloten_uitleningen_maanden']],
-  ['Back-up', ['backup_map', 'backup_bewaren']]
+  ['Back-up', ['backup_map', 'backup_bewaren']],
+  ['Online reserveren', ['online_reserveren', 'aanvragen_bewaren_dagen']]
 ];
 
 var TABBLAD_GROEPEN = [
-  ['#6b3597', ['Uitleningen', 'Reservaties', 'Leners', 'Uitzonderingen']],      // uitlenen
+  ['#6b3597', ['Uitleningen', 'Reservaties', 'Aanvragen', 'Leners', 'Uitzonderingen']],      // uitlenen
   ['#ffcd30', ['Catalogus', 'Onderwerpen', 'Na te kijken']],                     // collectie
   ['#2a6f73', ['Nieuws', 'Agenda', 'Veelgestelde vragen']],                      // website
   ['#1b1b1c', ['Instellingen', 'Logboek']],                                      // beheer

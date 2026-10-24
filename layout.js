@@ -100,8 +100,35 @@
       '</div>';
   }
 
+  /**
+   * Bezoekersaantallen via GoatCounter, enkel op de publieke pagina's en enkel als
+   * statistiek in config.js ingevuld is. Geen cookies, geen persoonsgegevens.
+   * Wie in de browser "niet volgen" aanzette, tellen we niet. Zoekwoorden sturen we nooit door.
+   */
+  function statistiek() {
+    var code = (window.MADRIGAL_CONFIG || {}).statistiek;
+    if (!code || !/^[a-z0-9-]+$/.test(code)) return;
+    if (navigator.doNotTrack === '1' || navigator.globalPrivacyControl) return;
+    window.goatcounter = { no_onload: true };
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = 'https://gc.zgo.at/count.js';
+    s.setAttribute('data-goatcounter', 'https://' + code + '.goatcounter.com/count');
+    s.addEventListener('load', tel);
+    document.head.appendChild(s);
+    window.addEventListener('hashchange', tel);
+  }
+
+  /** Telt de huidige pagina. Bij boeken ook welk boek, maar nooit wat iemand zocht. */
+  function tel() {
+    if (!window.goatcounter || !window.goatcounter.count) return;
+    var hash = location.hash.split('?')[0];
+    window.goatcounter.count({ path: location.pathname + (/^#\/(boek|privacy)/.test(hash) ? hash : '') });
+  }
+
   var pagina = document.body.getAttribute('data-pagina');
   kop(pagina);
+  statistiek();
   voet();
   T.toepassen();
   tekenKnoppen();

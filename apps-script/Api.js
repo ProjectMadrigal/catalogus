@@ -31,6 +31,9 @@ var ACTIES = {
   borgTerugbetaald: 'bestuur',
   herinneringVerstuurd: 'bestuur',
   lenerAanpassen: 'bestuur',
+  aanvraagAfhandelen: 'bestuur',
+  // Zonder code, vanaf de publieke website (Aanvragen.js). Staat uit tot online_reserveren = ja.
+  reservatieAanvraag: 'publiek',
   // Beheer van de website (Beheer.js). Wil je vrijwilligers dit laten doen? Zet de actie op 'balie'.
   beheerBoekOphalen: 'bestuur',
   beheerBoekBewaren: 'bestuur',
@@ -167,6 +170,15 @@ function doPost(e) {
   var actie = String(invoer.actie || '');
   if (!ACTIES.hasOwnProperty(actie)) return json({ ok: false, fout: 'Onbekende actie.' });
 
+  if (ACTIES[actie] === 'publiek') {
+    try {
+      return json(publiekeAanvraag(invoer));
+    } catch (err) {
+      logboek('systeem', 'fout', actie + ': ' + String(err && err.message || err).slice(0, 200));
+      return json({ ok: false, fout: 'Er ging iets mis. Probeer het later opnieuw of kom langs in de bib.' });
+    }
+  }
+
   var rol = rolVoorCode(invoer.code, leesInstellingen());
   if (!rol) {
     // Even wachten maakt het raden van codes trager.
@@ -196,6 +208,7 @@ function voerActieUit(actie, invoer, rol) {
   if (!lock.tryLock(20000)) return { ok: false, fout: 'Het is even druk. Probeer het over een paar seconden opnieuw.' };
   try {
     var wie = tekstInvoer(invoer.wie, 40) || 'onbekend';
+    if (actie === 'aanvraagAfhandelen') return beheerAanvraagAfhandelen(invoer, wie);
     if (actie === 'beheerInhoudBewaren' || actie === 'beheerInstellingBewaren') {
       var gewijzigd = actie === 'beheerInhoudBewaren' ? beheerInhoudBewaren(invoer, wie) : beheerInstellingBewaren(invoer, wie);
       if (gewijzigd.ok) leegCache();
@@ -206,7 +219,11 @@ function voerActieUit(actie, invoer, rol) {
     var antwoord;
     switch (actie) {
       case 'balieData': antwoord = { ok: true, data: balieGegevens(staat) }; break;
-      case 'bestuurData': antwoord = { ok: true, data: bestuurGegevens(staat, leesTabel('Onderwerpen').rijen) }; break;
+      case 'bestuurData':
+        antwoord = { ok: true, data: bestuurGegevens(staat, leesTabel('Onderwerpen').rijen) };
+        antwoord.data.aanvragen = openAanvragen(spreadsheet().getSheetByName('Aanvragen') ? leesTabel('Aanvragen').rijen : []);
+        antwoord.data.onlineReserveren = staat.inst.online_reserveren === true;
+        break;
       case 'uitlenen': antwoord = uitlenen(staat, invoer); break;
       case 'terugbrengen': antwoord = terugbrengen(staat, { uitlening_id: invoer.uitlening_id, borg_terugbetaald: invoer.borg_terugbetaald === true }); break;
       case 'verlengen': antwoord = verlengen(staat, invoer); break;

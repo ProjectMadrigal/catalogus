@@ -90,6 +90,8 @@
     $('welkom').textContent = tekst('welkom');
     $('uitleg-lenen').textContent = tekst('uitleg');
     $('privacy-tekst').textContent = tekst('privacy');
+    var stat = $('privacy-statistiek');
+    if (stat) stat.hidden = !(window.MADRIGAL_CONFIG || {}).statistiek;
   }
 
   function ontvang(data) {
@@ -249,6 +251,57 @@
 
   /* ---------- Detailpagina ---------- */
 
+  /**
+   * Online reserveren: enkel als het bestuur de instelling online_reserveren aanzette
+   * en het boek uitleenbaar is. Geeft { knop, vak } of null.
+   */
+  function reservatieBlok(b) {
+    var teksten = (staat.data && staat.data.teksten) || {};
+    if (!teksten.online_reserveren || b.b.c === 'niet_uitleenbaar' || !window.MadrigalApi.isGekoppeld()) return null;
+    var vak = el('div', { class: 'blok reservatie', hidden: true });
+    var knop = el('button', { type: 'button', class: 'knop', 'aria-expanded': 'false', 'aria-controls': 'reservatie-vak',
+      onclick: function () {
+        vak.hidden = !vak.hidden;
+        knop.setAttribute('aria-expanded', vak.hidden ? 'false' : 'true');
+        if (!vak.hidden) $('res-voornaam').focus();
+      } }, t('reserveer'));
+    vak.id = 'reservatie-vak';
+    var melding = el('div', { 'aria-live': 'polite' });
+    var verstuur = el('button', { type: 'submit', class: 'knop' }, t('reserveerVerstuur'));
+    var formulier = el('form', { novalidate: true },
+      el('h3', {}, t('reserveerTitel')),
+      el('p', {}, t('reserveerUitleg')),
+      el('div', { class: 'veld' }, el('label', { for: 'res-voornaam' }, t('reserveerVoornaam')),
+        el('input', { type: 'text', id: 'res-voornaam', autocomplete: 'given-name', maxlength: '40', required: true })),
+      el('div', { class: 'veld' }, el('label', { for: 'res-contact' }, t('reserveerContact')),
+        el('input', { type: 'text', id: 'res-contact', autocomplete: 'email', maxlength: '80', required: true })),
+      el('div', { class: 'veld' }, el('label', { for: 'res-opmerking' }, t('reserveerOpmerking')),
+        el('textarea', { id: 'res-opmerking', maxlength: '300', rows: '3' })),
+      // Enkel robots vullen dit veld in. Mensen zien het niet.
+      el('div', { class: 'verborgen', 'aria-hidden': 'true' },
+        el('label', { for: 'res-website' }, 'Website'), el('input', { type: 'text', id: 'res-website', tabindex: '-1', autocomplete: 'off' })),
+      el('label', { class: 'vinkje', for: 'res-toestemming' }, el('input', { type: 'checkbox', id: 'res-toestemming' }),
+        el('span', {}, t('reserveerToestemming'), ' ', el('a', { href: '#/privacy' }, t('privacy')))),
+      melding,
+      el('div', { class: 'knoppen' }, verstuur));
+    formulier.addEventListener('submit', function (e) {
+      e.preventDefault();
+      verstuur.disabled = true;
+      window.MadrigalApi.verstuur('reservatieAanvraag', {
+        boek_id: b.id, voornaam: $('res-voornaam').value, contact: $('res-contact').value,
+        opmerking: $('res-opmerking').value, website: $('res-website').value, toestemming: $('res-toestemming').checked
+      }).then(function (r) {
+        verstuur.disabled = false;
+        if (!r.ok) { D.vervang(melding, el('p', { class: 'melding fout', role: 'alert' }, r.fout)); return; }
+        D.vervang(vak, el('p', { class: 'melding ok', role: 'status', tabindex: '-1' }, t('reserveerGelukt')));
+        knop.remove(); // de stijl van .knop zou hidden negeren
+        vak.firstChild.focus();
+      });
+    });
+    vak.appendChild(formulier);
+    return { knop: knop, vak: vak };
+  }
+
   function toonDetail(id) {
     var b = staat.perId[id];
     var scherm = $('detail-scherm');
@@ -277,6 +330,7 @@
     }[b.b.c] || '';
 
     var deelKnop = el('button', { type: 'button', class: 'knop tweede', onclick: function () { deel(b); } }, t('deelBoek'));
+    var reservatie = reservatieBlok(b);
 
     D.vervang($('detail-scherm'), terug, el('article', { class: 'blok detail' },
       el('div', {}, cover(b, true)),
@@ -292,7 +346,8 @@
         b.d ? el('p', { class: 'beschrijving' }, (T.taal() === 'en' && b.de) || b.d) : null,
         el('dl', { class: 'gegevens' }, rijen.map(function (r) { return [el('dt', {}, r[0]), el('dd', {}, String(r[1]))]; })),
         onderwerpen.length ? el('div', {}, el('h3', {}, t('onderwerpen')), el('ul', { class: 'labels' }, onderwerpen)) : null,
-        el('div', { class: 'knoppen' }, deelKnop),
+        el('div', { class: 'knoppen' }, reservatie ? reservatie.knop : null, deelKnop),
+        reservatie ? reservatie.vak : null,
         el('p', { class: 'hulptekst', id: 'deel-melding', 'aria-live': 'polite' }))));
     document.title = b.t + ' · Project Madrigal';
   }
