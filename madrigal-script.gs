@@ -88,6 +88,9 @@ var BS_MAX_LENGTE = 2500;
 
 var BS_USER_AGENT = 'ProjectMadrigal-catalogus (Google Apps Script; queer bibliotheek Antwerpen)';
 
+/** Open Library gaf niets terwijl Google weigerde: Google moet het nog opzoeken. */
+var BS_ENKEL_OL = 'OL ';
+
 /** Kolomnamen in Stock en Zines, en hoe ze in de Catalogus heten. */
 var BRONKOLOMMEN = {
   'titel': 'titel',
@@ -711,9 +714,9 @@ function beschikbaarheid(staat, boek) {
 
 /** Beschrijving via Google Books. Geeft { tekst } of { limiet: true }. */
 function beschrijvingUitGoogleBooks(isbn, sleutel) {
-  var r = haalJson('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : ''));
+  var r = googleBooksZoek(isbn, sleutel);
   if (r.code === 429 || r.code === 403) return { limiet: true };
-  var items = (r.data && r.data.items) || [];
+  var items = r.items;
   for (var i = 0; i < items.length; i++) {
     var tekst = maakBeschrijvingNetjes(items[i].volumeInfo && items[i].volumeInfo.description);
     if (tekst) return { tekst: tekst };
@@ -1437,6 +1440,25 @@ function goodreadsWaarde(rij, kolommen) {
   return '';
 }
 
+/**
+ * Zoekt een ISBN op bij Google Books. Geeft { code, items } terug.
+ * Staat de geavanceerde service Books aan (en is er geen API-sleutel), dan gebruiken
+ * we die: ze werkt met het Google-account van het script en heeft een eigen daglimiet.
+ */
+function googleBooksZoek(isbn, sleutel) {
+  if (!sleutel && typeof Books !== 'undefined' && Books.Volumes) {
+    try {
+      var r = Books.Volumes.list('isbn:' + isbn, { maxResults: 5 });
+      return { code: 200, items: (r && r.items) || [] };
+    } catch (e) {
+      var fout = String(e && e.message || e);
+      return { code: /quota|rate|limit|exceeded|429|403/i.test(fout) ? 429 : 500, items: [] };
+    }
+  }
+  var a = haalJson('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : ''));
+  return { code: a.code, items: (a.data && a.data.items) || [] };
+}
+
 /** Haalt JSON op. Geeft { code, data } terug. */
 function haalJson(url) {
   var antwoord = UrlFetchApp.fetch(url, { muteHttpExceptions: true, followRedirects: true, headers: { 'User-Agent': BS_USER_AGENT } });
@@ -1467,10 +1489,10 @@ function haalRoosterMaand(url, code, maand) {
   try { return JSON.parse(antwoord.getContentText()); } catch (e) { return { ok: false, fout: 'Het rooster gaf een onverwacht antwoord.' }; }
 }
 
-/** Moet het script voor dit boek nog een beschrijving zoeken? */
+/** Moet het script voor dit boek nog een beschrijving zoeken? (Ook als enkel Google nog moet.) */
 function heeftBeschrijvingNodig(boek) {
   if (!/^\d{13}$/.test(String(boek.isbn || ''))) return false;
-  if (!isLeeg(boek.beschrijving_gezocht)) return false;
+  if (!isLeeg(boek.beschrijving_gezocht) && !wachtOpGoogle(boek)) return false;
   return isLeeg(boek.beschrijving);
 }
 
@@ -3995,14 +4017,11 @@ function vulAanUitGoogleBooks() {
     for (var i = 0; i < teDoen.length; i++) {
       if (Date.now() - start > GB_MAX_LOOPTIJD_MS) break;
       var boek = teDoen[i];
-      var url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + boek.isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : '');
-      var antwoord = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-      var code = antwoord.getResponseCode();
+      var antwoord = googleBooksZoek(boek.isbn, sleutel); // zie Beschrijvingen.js
+      var code = antwoord.code;
       if (code === 429 || code === 403) { limiet = true; break; } // daglimiet bereikt
       if (code >= 500) break;                                       // storing bij Google: later verder
-      var data = {};
-      try { data = JSON.parse(antwoord.getContentText()); } catch (e) { data = {}; }
-      var info = data.items && data.items.length ? data.items[0].volumeInfo : null;
+      var info = antwoord.items.length ? antwoord.items[0].volumeInfo : null;
       var velden = verwerkGoogleBooks(boek, info);
       if (velden.cover_url) aangevuld++;
       velden.gb_gecontroleerd = vandaag;
@@ -4110,33 +4129,42 @@ function vulBeschrijvingenAan() {
     }
     var sleutel = leesInstellingen().google_books_api_key;
     var vandaag = vandaagTekst();
-    var teDoen = tabel.rijen.filter(heeftBeschrijvingNodig);
+    // Eerst de boeken die nog nergens opgezocht zijn, dan die enkel Google nog nodig hebben.
+    var teDoen = tabel.rijen.filter(heeftBeschrijvingNodig).sort(function (a, b) { return wachtOpGoogle(a) - wachtOpGoogle(b); });
     for (var i = 0; i < teDoen.length; i++) {
       if (Date.now() - start > BS_MAX_LOOPTIJD_MS) break;
       var boek = teDoen[i];
+      var enkelGoogle = wachtOpGoogle(boek);
+      if (enkelGoogle && gbLimiet) break; // Google weigert nog: de rest wacht
       // Zit Google aan zijn daglimiet, dan zoeken we verder bij Open Library alleen.
       var r = gbLimiet ? { tekst: '' } : beschrijvingUitGoogleBooks(boek.isbn, sleutel);
-      if (r.limiet) { gbLimiet = true; limiet = true; r = { tekst: '' }; }
-      if (!r.tekst) { Utilities.sleep(1000); r = beschrijvingUitOpenLibrary(boek.isbn); }
+      if (r.limiet) { gbLimiet = true; limiet = true; r = { tekst: '' }; if (enkelGoogle) break; }
+      if (!r.tekst && !enkelGoogle) { Utilities.sleep(1000); r = beschrijvingUitOpenLibrary(boek.isbn); }
       if (r.limiet) break; // Open Library vraagt om te wachten
       if (r.tekst) {
         wijzig(boek, { beschrijving: r.tekst, beschrijving_gezocht: vandaag });
         gevonden++;
-      } else if (!gbLimiet) {
-        wijzig(boek, { beschrijving_gezocht: vandaag });
-      } // anders niet afvinken: Google probeert het later opnieuw
+      } else {
+        // Weigerde Google, dan noteren we dat enkel Open Library al zocht: Google volgt later.
+        // Zonder streepjes: anders leest het script de cel later als een gewone datum en valt "OL" weg.
+        wijzig(boek, { beschrijving_gezocht: gbLimiet ? BS_ENKEL_OL + vandaag.replace(/-/g, '') : vandaag });
+      }
       verwerkt++;
       if (verwerkt % 20 === 0) bewaarTabel(tabel);
       Utilities.sleep(400);
     }
     bewaarTabel(tabel);
-    rest = tabel.rijen.filter(heeftBeschrijvingNodig).length;
+    var nog = tabel.rijen.filter(heeftBeschrijvingNodig);
+    rest = nog.length;
+    // Nog boeken die niemand opzocht: over een minuut verder (Open Library werkt nog).
+    // Enkel nog Google nodig en Google weigert: over 6 uur.
+    var nieuwTeDoen = nog.filter(function (b) { return !wachtOpGoogle(b); }).length;
+    limiet = limiet && nieuwTeDoen === 0;
   } finally {
     lock.releaseLock();
   }
   verwijderTriggers('vulBeschrijvingenAan');
   if (rest > 0) {
-    // Bij een limiet wachten we een paar uur, anders een minuut.
     ScriptApp.newTrigger('vulBeschrijvingenAan').timeBased().after((limiet ? 6 * 60 : 1) * 60 * 1000).create();
   }
   if (gevonden) leegCache();
@@ -4178,6 +4206,11 @@ function vulOnderwerpenAan(onderwerpRijen, catalogusRijen) {
     nieuw++;
   });
   return nieuw;
+}
+
+/** Zocht enkel Open Library al, en moet Google dit boek nog opzoeken? */
+function wachtOpGoogle(boek) {
+  return String(boek.beschrijving_gezocht || '').indexOf(BS_ENKEL_OL) === 0;
 }
 
 /** De maandag van de week van een datum ("JJJJ-MM-DD"). Zo wisselen de aanraders elke week. */

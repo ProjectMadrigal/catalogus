@@ -405,7 +405,11 @@ Je mag "Installeer tabbladen" later opnieuw uitvoeren. Bestaande tabbladen, gege
    - **6. Zoek ontbrekende beschrijvingen** (Google Books, dan Open Library);
    - **7. Vertaal de beschrijvingen** naar het Nederlands en het Engels, gratis met Google Translate. Het blijft een automatische vertaling: lees de beschrijvingen van aanraders even na.
 
-   Zonder sleutel geeft Google een beperkt aantal opvragingen per dag. Is die limiet bereikt, dan gaat het script 6 uur later vanzelf verder. Sneller? Maak een gratis sleutel voor de Google Books-API in de Google Cloud Console en zet ze in Instellingen bij `google_books_api_key`.
+   Google Books deelt zonder meer een kleine daglimiet met iedereen. Geef het script een eigen limiet, op een van deze twee manieren:
+   - **Eenvoudigst: de service Books.** Open Apps Script. Klik links naast **Services** op **+**, kies **Books API** en klik op **Toevoegen**. Voer daarna een van de menu-items uit en klik op **Toestaan** als Google om toestemming vraagt.
+   - **Of een API-sleutel.** In de Google Cloud Console: kies bovenaan je project, ga naar **APIs en services > Bibliotheek**, zoek **Books API** en klik op **Inschakelen**. Ga dan naar **APIs en services > Inloggegevens**, klik **bovenaan** op **+ Inloggegevens maken** en kies **API-sleutel**. Zet de sleutel in Instellingen bij `google_books_api_key`.
+
+   Weigert Google toch, dan zoekt het script verder bij Open Library. Boeken die Open Library niet kent, krijgen `OL` en de datum in `beschrijving_gezocht`: die zoekt Google later nog op.
 4. **Het tabblad Na te kijken.** Klopt de waarde uit de bron (`waarde_bron`)? Zet ze zelf in de Catalogus. Zet daarna **ja** in de kolom `afgehandeld`.
 
 De Catalogus is nu de enige bron. Stock en Zines heb je niet meer nodig.
