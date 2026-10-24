@@ -51,7 +51,19 @@ function wachtOpGoogle(boek) {
  *   fout:   wat Google zelf als reden geeft, bv. "API not enabled" of een probleem met de sleutel.
  */
 function googleBooksZoek(isbn, sleutel, land) {
-  var a = haalJson(googleBooksUrl(isbn, sleutel, land));
+  var r = googleBooksVraag(googleBooksUrl(isbn, sleutel, land));
+  // Google geeft soms niets terug voor "isbn:…", terwijl het boek wel gekend is. Dan zoeken we
+  // op het ISBN als gewoon getal, en nemen enkel een uitgave met precies dat ISBN.
+  if (!r.fout && !r.items.length) {
+    var vrij = googleBooksVraag(googleBooksUrl(isbn, sleutel, land, 'vrij'));
+    if (!vrij.fout) r.items = googleItemsMetIsbn(vrij.items, isbn);
+  }
+  return r;
+}
+
+/** Eén vraag aan Google Books. Geeft { code, items, limiet, fout }. */
+function googleBooksVraag(url) {
+  var a = haalJson(url);
   var r = { code: a.code, items: (a.data && a.data.items) || [], limiet: false, fout: '' };
   if (a.code >= 400) {
     r.fout = googleFout(a.data) || ('code ' + a.code);
@@ -60,13 +72,32 @@ function googleBooksZoek(isbn, sleutel, land) {
   return r;
 }
 
+/** ISBN-13 (978…) naar ISBN-10. Geeft '' als dat niet kan. */
+function isbn13Naar10(isbn13) {
+  var s = String(isbn13 || '');
+  if (!/^978\d{10}$/.test(s)) return '';
+  var kern = s.slice(3, 12), som = 0;
+  for (var i = 0; i < 9; i++) som += (10 - i) * Number(kern.charAt(i));
+  var c = (11 - (som % 11)) % 11;
+  return kern + (c === 10 ? 'X' : String(c));
+}
+
+/** Enkel de uitgaven met precies dit ISBN (13 of 10 cijfers). */
+function googleItemsMetIsbn(items, isbn) {
+  var gezocht = [String(isbn), isbn13Naar10(isbn)].filter(Boolean);
+  return (items || []).filter(function (it) {
+    var ids = (it && it.volumeInfo && it.volumeInfo.industryIdentifiers) || [];
+    return ids.some(function (id) { return gezocht.indexOf(String(id.identifier || '').replace(/[^0-9X]/gi, '').toUpperCase()) > -1; });
+  });
+}
+
 /**
  * Het adres om een ISBN op te vragen bij Google Books.
  * country=BE: Apps Script draait op servers van Google, zonder gekend land. Zonder
  * land weigert Google met "Cannot determine user location" (unknownLocation).
  */
-function googleBooksUrl(isbn, sleutel, land) {
-  return 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + encodeURIComponent(isbn) +
+function googleBooksUrl(isbn, sleutel, land, vorm) {
+  return 'https://www.googleapis.com/books/v1/volumes?q=' + (vorm === 'vrij' ? '' : 'isbn:') + encodeURIComponent(isbn) +
     (land === '' ? '' : '&country=' + (land || 'BE')) + (sleutel ? '&key=' + encodeURIComponent(sleutel) : '');
 }
 

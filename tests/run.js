@@ -1121,6 +1121,17 @@ test('covers via de browser: lijst, enkel covers van Google, enkel lege velden',
   assert.strictEqual(M.coversTeZoeken(s).boeken.length, 0);
 });
 
+test('Google: tweede zoekvorm neemt enkel een uitgave met precies dit ISBN', () => {
+  assert.strictEqual(M.isbn13Naar10('9780141439518'), '0141439513');
+  assert.strictEqual(M.isbn13Naar10('9790000000001'), '');
+  const items = [
+    { volumeInfo: { title: 'Andere uitgave', industryIdentifiers: [{ type: 'ISBN_13', identifier: '9780141199078' }] } },
+    { volumeInfo: { title: 'Juiste uitgave', industryIdentifiers: [{ type: 'ISBN_10', identifier: '0141439513' }] } }
+  ];
+  gelijk(M.googleItemsMetIsbn(items, '9780141439518').map((i) => i.volumeInfo.title), ['Juiste uitgave']);
+  assert.ok(M.googleBooksUrl('9780141439518', 'k', 'BE', 'vrij').includes('?q=9780141439518&country=BE&key=k'));
+});
+
 console.log('\nBack-up');
 test('back-up: naam met de datum', () => {
   assert.strictEqual(M.backupNaam('2026-10-24'), 'Madrigal back-up 2026-10-24');
