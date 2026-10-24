@@ -99,14 +99,47 @@
   function aanrader(b) {
     var beeld = b.c ? el('img', { class: 'cover', src: b.c, alt: '', loading: 'lazy' }) : D.plaatshouder(b);
     if (b.c) beeld.addEventListener('error', function () { beeld.replaceWith(D.plaatshouder(b)); });
-    var door = (b.r || []).length ? T.t('aanraderVan', { naam: b.r.join(', ') }) : (b.n ? T.t('nieuwBinnen') : '');
+    var label = (b.r || []).length ? el('span', { class: 'aanrader-label' }, T.t('aanraderVan', { naam: b.r.join(', ') }))
+      : (b.n ? el('span', { class: 'aanrader-label nieuw' }, T.t('nieuwBinnen')) : null);
     return el('li', { class: 'aanrader' },
       el('a', { href: 'boeken.html#/boek/' + encodeURIComponent(b.id) },
         beeld,
+        label,
         el('span', { class: 'aanrader-titel' }, b.t),
         b.a ? el('span', { class: 'aanrader-auteur' }, b.a) : null,
-        door ? el('span', { class: 'aanrader-auteur' }, door) : null,
         b.w ? el('span', { class: 'aanrader-auteur' }, T.t('gevoelig')) : null));
+  }
+
+  /**
+   * Verdeelt de aanraders in groepen: eerst per persoon (wie de meeste boeken aanraadt eerst),
+   * dan nieuw binnen, dan wat het bestuur zelf op de startpagina zette.
+   * Een boek met meerdere namen staat bij de eerste naam.
+   */
+  function aanraderGroepen(lijst) {
+    var perNaam = {}, namen = [], nieuw = [], kijker = [];
+    lijst.forEach(function (b) {
+      var naam = (b.r || [])[0];
+      if (naam) {
+        if (!perNaam[naam]) { perNaam[naam] = []; namen.push(naam); }
+        perNaam[naam].push(b);
+      } else if (b.n) nieuw.push(b);
+      else kijker.push(b);
+    });
+    namen.sort(function (a, c) { return perNaam[c].length - perNaam[a].length; });
+    var groepen = namen.map(function (naam) { return { titel: T.t('aanradersVan', { naam: naam }), ster: true, boeken: perNaam[naam] }; });
+    if (nieuw.length) groepen.push({ titel: T.t('nieuwBinnen'), boeken: nieuw });
+    if (kijker.length) groepen.push({ titel: T.t('inDeKijker'), boeken: kijker });
+    return groepen;
+  }
+
+  function tekenAanraders(lijst) {
+    var groepen = aanraderGroepen(lijst);
+    return groepen.map(function (g, i) {
+      var id = 'aanradergroep-' + i;
+      return el('div', { class: 'aanradergroep' },
+        el('h3', { id: id, class: g.ster ? 'met-ster' : null }, g.titel),
+        el('ul', { class: 'aanraders', 'aria-labelledby': id }, g.boeken.map(aanrader)));
+    });
   }
 
   function teken() {
@@ -124,7 +157,7 @@
 
     var aanraders = data.aanraders || [];
     $('aanraders-sectie').hidden = !aanraders.length;
-    D.vervang($('aanraders'), aanraders.map(aanrader));
+    D.vervang($('aanraders'), tekenAanraders(aanraders));
 
     var faq = data.faq || [];
     $('faq-sectie').hidden = !faq.length;
