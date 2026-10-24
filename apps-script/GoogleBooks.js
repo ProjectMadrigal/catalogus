@@ -47,7 +47,7 @@ function verwerkGoogleBooks(boek, info) {
   if (isLeeg(boek.taal) && GB_TALEN[info.language]) v.taal = GB_TALEN[info.language];
   if (isLeeg(boek.beschrijving) && info.description) {
     var b = schoon(String(info.description).replace(/<[^>]*>/g, ' '));
-    if (b) v.beschrijving = b.length > 600 ? b.slice(0, 597).replace(/\s+\S*$/, '') + '...' : b;
+    if (b) v.beschrijving = maakBeschrijvingNetjes(b);
   }
   return v;
 }
