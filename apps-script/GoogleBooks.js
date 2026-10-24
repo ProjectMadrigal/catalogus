@@ -7,10 +7,8 @@
  *     cover_url zette, blijft altijd staan.
  *   - Elk opgezocht boek krijgt een datum in de kolom gb_gecontroleerd.
  *     Wil je een boek opnieuw laten opzoeken? Maak die cel leeg.
- *   - Zet in Apps Script de geavanceerde service Books aan (Services > Books API),
- *     dan krijgt het script een eigen daglimiet. Zonder die service en zonder
- *     API-sleutel staat Google maar een beperkt aantal opvragingen per dag toe.
- *     Is de limiet bereikt, dan stopt het script en probeert het een paar
+ *   - Zonder API-sleutel staat Google maar een beperkt aantal opvragingen per dag
+ *     toe, gedeeld met veel andere gebruikers. Is de limiet bereikt, dan stopt het script en probeert het een paar
  *     uur later vanzelf opnieuw. Met een sleutel (instelling google_books_api_key)
  *     gaat het sneller.
  *   - Open Library start dit script vanzelf als het klaar is.

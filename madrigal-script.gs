@@ -1440,21 +1440,8 @@ function goodreadsWaarde(rij, kolommen) {
   return '';
 }
 
-/**
- * Zoekt een ISBN op bij Google Books. Geeft { code, items } terug.
- * Staat de geavanceerde service Books aan (en is er geen API-sleutel), dan gebruiken
- * we die: ze werkt met het Google-account van het script en heeft een eigen daglimiet.
- */
+/** Zoekt een ISBN op bij Google Books. Geeft { code, items } terug. */
 function googleBooksZoek(isbn, sleutel) {
-  if (!sleutel && typeof Books !== 'undefined' && Books.Volumes) {
-    try {
-      var r = Books.Volumes.list('isbn:' + isbn, { maxResults: 5 });
-      return { code: 200, items: (r && r.items) || [] };
-    } catch (e) {
-      var fout = String(e && e.message || e);
-      return { code: /quota|rate|limit|exceeded|429|403/i.test(fout) ? 429 : 500, items: [] };
-    }
-  }
   var a = haalJson('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : ''));
   return { code: a.code, items: (a.data && a.data.items) || [] };
 }
