@@ -17,7 +17,8 @@
   var MENU = [
     { pagina: 'home', href: 'index.html', tekst: 'menuHome' },
     { pagina: 'boeken', href: 'boeken.html', tekst: 'menuBoeken' },
-    { pagina: 'over', href: 'over-ons.html', tekst: 'menuOver' }
+    { pagina: 'over', href: 'over-ons.html', tekst: 'menuOver' },
+    { pagina: 'doemee', href: 'doe-mee.html', tekst: 'menuDoeMee' }
   ];
 
   /* Iconen (Feather, MIT-licentie). De kleur volgt de tekstkleur. */

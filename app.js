@@ -243,7 +243,7 @@
     return el('li', { class: 'boek' },
       cover(b, false),
       el('div', {},
-        el('h3', {}, el('a', { href: '#/boek/' + encodeURIComponent(b.id), 'data-id': b.id }, b.t)),
+        el('h2', { class: 'boek-titel' }, el('a', { href: '#/boek/' + encodeURIComponent(b.id), 'data-id': b.id }, b.t)),
         b.a ? el('p', { class: 'auteur' }, b.a) : null,
         meta(b) ? el('p', { class: 'meta' }, meta(b)) : null,
         labels(b)));
@@ -269,7 +269,7 @@
     var melding = el('div', { 'aria-live': 'polite' });
     var verstuur = el('button', { type: 'submit', class: 'knop' }, t('reserveerVerstuur'));
     var formulier = el('form', { novalidate: true },
-      el('h3', {}, t('reserveerTitel')),
+      el('h2', { class: 'klein' }, t('reserveerTitel')),
       el('p', {}, t('reserveerUitleg')),
       el('div', { class: 'veld' }, el('label', { for: 'res-voornaam' }, t('reserveerVoornaam')),
         el('input', { type: 'text', id: 'res-voornaam', autocomplete: 'given-name', maxlength: '40', required: true })),
@@ -308,7 +308,7 @@
     var terug = el('a', { class: 'terug', href: staat.laatsteLijstAdres }, t('terugCatalogus'));
     if (!b) {
       D.vervang(scherm, terug, el('div', { class: 'blok' },
-        el('h2', { tabindex: '-1' }, t('nietGevonden')),
+        el('h1', { tabindex: '-1' }, t('nietGevonden')),
         el('p', {}, t('nietGevondenTekst'))));
       document.title = t('nietGevonden') + ' · Project Madrigal';
       return;
@@ -335,7 +335,7 @@
     D.vervang($('detail-scherm'), terug, el('article', { class: 'blok detail' },
       el('div', {}, cover(b, true)),
       el('div', {},
-        el('h2', { tabindex: '-1' }, b.t),
+        el('h1', { tabindex: '-1' }, b.t),
         b.a ? el('p', { class: 'auteur' }, b.a) : null,
         el('p', { class: 'beschikbaarheid' }, D.statusLabel(b.b.c, status(b))),
         uitlegStatus ? el('p', {}, uitlegStatus) : null,
@@ -345,7 +345,7 @@
         })) : null,
         b.d ? el('p', { class: 'beschrijving' }, (T.taal() === 'en' && b.de) || b.d) : null,
         el('dl', { class: 'gegevens' }, rijen.map(function (r) { return [el('dt', {}, r[0]), el('dd', {}, String(r[1]))]; })),
-        onderwerpen.length ? el('div', {}, el('h3', {}, t('onderwerpen')), el('ul', { class: 'labels' }, onderwerpen)) : null,
+        onderwerpen.length ? el('div', {}, el('h2', { class: 'klein' }, t('onderwerpen')), el('ul', { class: 'labels' }, onderwerpen)) : null,
         el('div', { class: 'knoppen' }, reservatie ? reservatie.knop : null, deelKnop),
         reservatie ? reservatie.vak : null,
         el('p', { class: 'hulptekst', id: 'deel-melding', 'aria-live': 'polite' }))));
@@ -399,12 +399,12 @@
       if (!staat.data) return;
       toonDetail(adres.id);
       window.scrollTo(0, 0);
-      var kop = detail.querySelector('h2');
+      var kop = detail.querySelector('h1');
       if (kop) kop.focus({ preventScroll: true });
     } else {
       document.title = 'Privacy · Project Madrigal';
       window.scrollTo(0, 0);
-      privacy.querySelector('h2').focus({ preventScroll: true });
+      privacy.querySelector('h1').focus({ preventScroll: true });
     }
   }
 
@@ -432,7 +432,7 @@
       staat.keuzes.q = $('zoek').value;
       nieuweLijst();
       // Enter in het zoekveld: naar het eerste resultaat.
-      var eerste = $('resultaten').querySelector('h3 a');
+      var eerste = $('resultaten').querySelector('.boek-titel a');
       if (eerste) eerste.focus();
     });
     $('sorteer').addEventListener('change', function () { staat.keuzes.sorteer = this.value; nieuweLijst(); });

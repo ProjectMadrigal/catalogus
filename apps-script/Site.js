@@ -9,7 +9,7 @@
  * De kolommen op _en zijn de Engelse versie. Leeg? Dan toont de site het Nederlands.
  */
 
-var SITE_CACHE_SLEUTEL = 'site_v2'; // v2: met de aparte lijst Nieuw binnen
+var SITE_CACHE_SLEUTEL = 'site_v3'; // v3: met de teksten van de pagina Doe mee
 var SITE_MAX_NIEUWS = 3;
 var SITE_MAX_AANRADERS = 12;
 
@@ -128,7 +128,13 @@ function bouwSiteInhoud(staat, tabellen) {
     agenda: { komend: komend.slice(0, 3), vorig: voorbij[0] || null },
     faq: faq,
     aanraders: aanraders,
-    nieuw: nieuwBinnen
+    nieuw: nieuwBinnen,
+    // Pagina Doe mee. Een leeg blok toont de website niet.
+    doeMee: {
+      vrijwilliger: { nl: String(inst.tekst_vrijwilliger || ''), en: String(inst.tekst_vrijwilliger_en || '') || String(inst.tekst_vrijwilliger || '') },
+      schenken: { nl: String(inst.tekst_schenken || ''), en: String(inst.tekst_schenken_en || '') || String(inst.tekst_schenken || '') },
+      steunen: { nl: String(inst.tekst_steunen || ''), en: String(inst.tekst_steunen_en || '') || String(inst.tekst_steunen || '') }
+    }
   };
 }
 
