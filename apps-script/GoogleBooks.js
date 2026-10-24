@@ -7,8 +7,10 @@
  *     cover_url zette, blijft altijd staan.
  *   - Elk opgezocht boek krijgt een datum in de kolom gb_gecontroleerd.
  *     Wil je een boek opnieuw laten opzoeken? Maak die cel leeg.
- *   - Zonder API-sleutel staat Google maar een beperkt aantal opvragingen per dag
- *     toe. Is de limiet bereikt, dan stopt het script en probeert het een paar
+ *   - Zet in Apps Script de geavanceerde service Books aan (Services > Books API),
+ *     dan krijgt het script een eigen daglimiet. Zonder die service en zonder
+ *     API-sleutel staat Google maar een beperkt aantal opvragingen per dag toe.
+ *     Is de limiet bereikt, dan stopt het script en probeert het een paar
  *     uur later vanzelf opnieuw. Met een sleutel (instelling google_books_api_key)
  *     gaat het sneller.
  *   - Open Library start dit script vanzelf als het klaar is.
@@ -73,14 +75,11 @@ function vulAanUitGoogleBooks() {
     for (var i = 0; i < teDoen.length; i++) {
       if (Date.now() - start > GB_MAX_LOOPTIJD_MS) break;
       var boek = teDoen[i];
-      var url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + boek.isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : '');
-      var antwoord = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
-      var code = antwoord.getResponseCode();
+      var antwoord = googleBooksZoek(boek.isbn, sleutel); // zie Beschrijvingen.js
+      var code = antwoord.code;
       if (code === 429 || code === 403) { limiet = true; break; } // daglimiet bereikt
       if (code >= 500) break;                                       // storing bij Google: later verder
-      var data = {};
-      try { data = JSON.parse(antwoord.getContentText()); } catch (e) { data = {}; }
-      var info = data.items && data.items.length ? data.items[0].volumeInfo : null;
+      var info = antwoord.items.length ? antwoord.items[0].volumeInfo : null;
       var velden = verwerkGoogleBooks(boek, info);
       if (velden.cover_url) aangevuld++;
       velden.gb_gecontroleerd = vandaag;
