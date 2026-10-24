@@ -235,7 +235,7 @@
       if (!boeken.length) { status.textContent = 'Alle boeken met een ISBN hebben een cover, of werden al bij Google opgezocht.'; stopKnop.hidden = true; return; }
       if (!sleutel) { status.textContent = 'Let op: er staat geen google_books_api_key in Instellingen. Zonder sleutel stopt Google snel.'; }
       voortgang.max = boeken.length;
-      var gedaan = 0, covers = 0, gezocht = [], resultaten = [];
+      var gedaan = 0, covers = 0, gezocht = [], resultaten = [], overgeslagen = 0, naElkaar = 0;
 
       function stuur() {
         if (!gezocht.length) return Promise.resolve({ ok: true });
@@ -246,7 +246,8 @@
 
       function toon(tekst) {
         voortgang.value = gedaan;
-        status.textContent = gedaan + ' van ' + boeken.length + ' opgezocht, ' + covers + ' covers gevonden.' + (tekst ? ' ' + tekst : '');
+        status.textContent = gedaan + ' van ' + boeken.length + ' opgezocht, ' + covers + ' covers gevonden' +
+          (overgeslagen ? ', ' + overgeslagen + ' overgeslagen door storingen bij Google (komen later terug)' : '') + '.' + (tekst ? ' ' + tekst : '');
       }
 
       function volgende(i) {
@@ -254,14 +255,31 @@
           return stuur().then(function () { toon(stop ? 'Gestopt. Klik later opnieuw om verder te gaan.' : 'Klaar.'); stopKnop.hidden = true; });
         }
         var b = boeken[i];
-        return vraagGoogle(b.isbn, sleutel).then(function (a) {
-          if (a.storing && !a.info) return wacht(3000).then(function () { return vraagGoogle(b.isbn, sleutel); });
-          return a;
-        }).then(function (a) {
+        // Bij een storing van Google: tot 5 keer opnieuw, telkens langer wachten (2, 4, 8, 16 seconden).
+        function probeer(poging) {
+          return vraagGoogle(b.isbn, sleutel).then(function (a) {
+            if (a.storing && poging < 5 && !stop) {
+              toon('Google hapert, nieuwe poging ' + (poging + 1) + ' van 5...');
+              return wacht(1000 * Math.pow(2, poging)).then(function () { return probeer(poging + 1); });
+            }
+            return a;
+          });
+        }
+        return probeer(1).then(function (a) {
+          if (a.fout && a.storing) {
+            // Dit boek lukt nu niet: overslaan zonder aan te vinken, het komt een volgende keer terug.
+            overgeslagen++; naElkaar++;
+            if (naElkaar >= 10) {
+              return stuur().then(function () { toon('Google weigerde 10 boeken na elkaar (' + a.fout + '). Gestopt. Probeer het later opnieuw.'); stopKnop.hidden = true; });
+            }
+            gedaan++;
+            return wacht(COVERS_PAUZE_MS).then(function () { return volgende(i + 1); });
+          }
           if (a.fout) {
-            // Daglimiet of iets anders: stoppen, en niets aanvinken voor dit boek.
+            // Daglimiet of een probleem met de sleutel: stoppen, en niets aanvinken voor dit boek.
             return stuur().then(function () { toon('Google meldt: ' + a.fout + (a.limiet ? ' Probeer het morgen opnieuw.' : '')); stopKnop.hidden = true; });
           }
+          naElkaar = 0;
           gezocht.push(b.id);
           if (a.info) {
             var v = a.info, links = v.imageLinks || {};
