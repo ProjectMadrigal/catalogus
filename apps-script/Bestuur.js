@@ -178,6 +178,7 @@ function bestuurGegevens(staat, onderwerpRijen) {
     reservaties: alleReservaties(staat),
     uitzonderingen: uitzonderingen,
     boekstatus: boekenMetStatus(staat),
+    boeken: baliecatalogus(staat),
     leners: staat.leners.map(function (l) {
       return {
         lenersnummer: l.lenersnummer, voornaam: l.voornaam, achternaam: l.achternaam, telefoon: l.telefoon,

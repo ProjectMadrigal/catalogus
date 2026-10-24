@@ -896,5 +896,99 @@ test('bestuur: overzicht per status', () => {
   gelijk(d.boekstatus.gevoelig_zichtbaar.map((b) => b.boek_id), ['B0003']);
 });
 
+console.log('\nBeheer via de website');
+function idTeller() { let n = 100; return (soort) => (soort === 'zine' ? 'Z' : 'B') + String(++n).padStart(4, '0'); }
+test('boek aanpassen: enkel toegelaten velden, netjes gemaakt', () => {
+  const s = maakStaat();
+  const r = M.boekAanpassen(s, { boek_id: 'B0002', velden: { titel: ' Twee kasten vol ', status: 'Gevoelig zichtbaar', startpagina: 'Ja', jaartal: '2011', herkomst: 'mag niet', cover_url: 'https://voorbeeld.test/c.jpg' } });
+  assert.strictEqual(r.ok, true);
+  const b = s.catalogus[1];
+  gelijk([b.titel, b.status, b.startpagina, b.jaartal, b.cover_url], ['Twee kasten vol', 'gevoelig zichtbaar', 'ja', 2011, 'https://voorbeeld.test/c.jpg']);
+  assert.ok(!b.herkomst);
+  assert.strictEqual(s.catalogusGewijzigd, true);
+});
+test('boek aanpassen: foute invoer geweigerd', () => {
+  const s = maakStaat();
+  assert.strictEqual(M.boekAanpassen(s, { boek_id: 'B0002', velden: { titel: '' } }).ok, false);
+  assert.strictEqual(M.boekAanpassen(s, { boek_id: 'B0002', velden: { status: 'zoek' } }).ok, false);
+  assert.strictEqual(M.boekAanpassen(s, { boek_id: 'B0002', velden: { cover_url: 'javascript:alert(1)' } }).ok, false);
+  assert.strictEqual(M.boekAanpassen(s, { boek_id: 'B9999', velden: {} }).ok, false);
+});
+test('boek aanpassen: aantal niet lager dan een uitgeleend exemplaar', () => {
+  const s = maakStaat();
+  assert.strictEqual(uitleen(s, 'B0002-2', '1').ok, true);
+  const r = M.boekAanpassen(s, { boek_id: 'B0002', velden: { aantal: '1' } });
+  assert.strictEqual(r.ok, false);
+  assert.ok(/B0002-2/.test(r.fout));
+  assert.strictEqual(M.boekAanpassen(s, { boek_id: 'B0002', velden: { aantal: '3' } }).ok, true);
+});
+test('nieuwe beschrijving: vertaling wordt opnieuw gemaakt', () => {
+  const s = maakStaat();
+  s.catalogus[0].beschrijving = 'Oud.'; s.catalogus[0].beschrijving_vertaald = '2026-01-01';
+  M.boekAanpassen(s, { boek_id: 'B0001', velden: { beschrijving: 'Een nieuwe tekst.' } });
+  assert.strictEqual(s.catalogus[0].beschrijving_vertaald, '');
+});
+test('boek toevoegen: nieuwe ID, standaardwaarden, dubbel ISBN gemeld', () => {
+  const s = maakStaat();
+  const nieuw = idTeller();
+  const r = M.boekToevoegen(s, { velden: { titel: 'Een verzonnen boek', auteur: 'Voorbeeld, Kim', isbn: '978-0-306-40615-7' } }, nieuw);
+  assert.strictEqual(r.ok, false);
+  assert.strictEqual(r.dubbel, 'B0001');
+  const t = M.boekToevoegen(s, { velden: { titel: 'Een verzonnen boek', auteur: 'Voorbeeld, Kim', genre: 'Roman' } }, nieuw);
+  assert.strictEqual(t.ok, true);
+  const b = s.catalogus[s.catalogus.length - 1];
+  gelijk([b.boek_id, b.soort, b.aantal, b.uitleenbaar, b.publiek, b.toegevoegd_op, b._nieuw], ['B0101', 'boek', 1, 'ja', 'ja', '2026-10-23', true]);
+  assert.strictEqual(M.boekToevoegen(s, { velden: { auteur: 'Zonder titel' } }, nieuw).ok, false);
+  assert.strictEqual(M.boekToevoegen(s, { velden: { titel: 'Toch', isbn: '9780306406157' }, toch: true }, nieuw).ok, true);
+});
+test('ISBN-voorstel uit Open Library en Google Books', () => {
+  const v = M.isbnVoorstel(
+    { title: 'Verzonnen titel', subtitle: 'een test', authors: [{ name: 'Mira Verbeek' }], publishers: ['Huis van Papier'], publish_date: 'May 2010', covers: [42] },
+    { title: 'Andere titel', authors: ['Iemand Anders'], pageCount: 114, language: 'nl', description: 'Een korte <b>beschrijving</b>.' });
+  gelijk([v.titel, v.auteur, v.uitgeverij, v.jaartal, v.paginas, v.taal, v.cover_url],
+    ['Verzonnen titel: een test', 'Verbeek, Mira', 'Huis van Papier', 2010, 114, 'Nederlands', 'https://covers.openlibrary.org/b/id/42-M.jpg']);
+  assert.ok(/beschrijving/.test(v.beschrijving));
+  gelijk(M.isbnVoorstel(null, { title: 'Enkel Google', authors: ['Sam Test'] }).auteur, 'Test, Sam');
+});
+test('nieuws: toevoegen, aanpassen met vingerafdruk, verwijderen', () => {
+  const rijen = [{ _rij: 2, datum: '2026-10-01', titel: 'Oud bericht', tekst: 'Tekst', publiek: 'ja' }];
+  const lijst = M.inhoudRijen('Nieuws', rijen);
+  assert.strictEqual(M.inhoudAanpassen(rijen, { tabblad: 'Nieuws', velden: { titel: 'Nieuw bericht', datum: '20/10/2026' } }).ok, true);
+  gelijk([rijen[1].titel, rijen[1].datum, rijen[1].publiek], ['Nieuw bericht', '2026-10-20', 'ja']);
+  assert.strictEqual(M.inhoudAanpassen(rijen, { tabblad: 'Nieuws', rij: 2, vingerafdruk: lijst[0].vingerafdruk, velden: { titel: 'Aangepast', publiek: 'nee' } }).ok, true);
+  gelijk([rijen[0].titel, rijen[0].publiek], ['Aangepast', 'nee']);
+  // De oude vingerafdruk klopt niet meer: geweigerd.
+  assert.strictEqual(M.inhoudAanpassen(rijen, { tabblad: 'Nieuws', rij: 2, vingerafdruk: lijst[0].vingerafdruk, velden: { titel: 'Nog eens' } }).ok, false);
+  const vers = M.inhoudRijen('Nieuws', rijen)[0];
+  assert.strictEqual(M.inhoudAanpassen(rijen, { tabblad: 'Nieuws', rij: 2, vingerafdruk: vers.vingerafdruk, verwijderen: true }).ok, true);
+  assert.strictEqual(rijen[0]._verwijderen, true);
+});
+test('agenda en vragen: verplichte velden, onbekend tabblad geweigerd', () => {
+  assert.strictEqual(M.inhoudAanpassen([], { tabblad: 'Agenda', velden: { titel: 'Leesavond' } }).ok, false);
+  assert.strictEqual(M.inhoudAanpassen([], { tabblad: 'Agenda', velden: { titel: 'Leesavond', datum: '2026-11-20' } }).ok, true);
+  assert.strictEqual(M.inhoudAanpassen([], { tabblad: 'Veelgestelde vragen', velden: { antwoord: 'Zonder vraag' } }).ok, false);
+  assert.strictEqual(M.inhoudAanpassen([], { tabblad: 'Leners', velden: { titel: 'x' } }).ok, false);
+});
+test('instellingen: per groep, codes nooit zichtbaar of aanpasbaar', () => {
+  const rijen = [
+    { _rij: 2, sleutel: '── TOEGANG ──', waarde: '', uitleg: '' },
+    { _rij: 3, sleutel: 'toegangscode_balie', waarde: 'geheim1', uitleg: '' },
+    { _rij: 4, sleutel: 'code_bestuur', waarde: 'geheim2', uitleg: '' },
+    { _rij: 5, sleutel: 'openingsuren', waarde: 'vrijdag 19-22', uitleg: 'Uren' },
+    { _rij: 6, sleutel: 'eigen_sleutel', waarde: 'x', uitleg: '' }
+  ];
+  const groepen = M.instellingenVoorBeheer(rijen);
+  const tekst = JSON.stringify(groepen);
+  assert.ok(tekst.indexOf('geheim') === -1 && tekst.indexOf('code_bestuur') === -1);
+  gelijk(groepen.map((g) => g.titel), ['Website: contact', 'Overige']);
+  assert.strictEqual(M.instellingAanpassen(rijen, { sleutel: 'code_bestuur', waarde: 'x' }).ok, false);
+  assert.strictEqual(M.instellingAanpassen(rijen, { sleutel: '── TOEGANG ──', waarde: 'x' }).ok, false);
+  assert.strictEqual(M.instellingAanpassen(rijen, { sleutel: 'openingsuren', waarde: 'vrijdag 18-22' }).ok, true);
+  assert.strictEqual(rijen[3].waarde, 'vrijdag 18-22');
+});
+test('elke beheeractie vraagt de code van het bestuur', () => {
+  Object.keys(M.ACTIES).filter((a) => /^beheer/.test(a)).forEach((a) => assert.strictEqual(M.ACTIES[a], 'bestuur', a));
+});
+
 console.log('\n' + geslaagd + ' geslaagd, ' + mislukt.length + ' mislukt');
 if (mislukt.length) process.exit(1);

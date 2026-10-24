@@ -30,7 +30,15 @@ var ACTIES = {
   bestuurData: 'bestuur',
   borgTerugbetaald: 'bestuur',
   herinneringVerstuurd: 'bestuur',
-  lenerAanpassen: 'bestuur'
+  lenerAanpassen: 'bestuur',
+  // Beheer van de website (Beheer.js). Wil je vrijwilligers dit laten doen? Zet de actie op 'balie'.
+  beheerBoekOphalen: 'bestuur',
+  beheerBoekBewaren: 'bestuur',
+  beheerBoekToevoegen: 'bestuur',
+  beheerIsbnOpzoeken: 'bestuur',
+  beheerInhoud: 'bestuur',
+  beheerInhoudBewaren: 'bestuur',
+  beheerInstellingBewaren: 'bestuur'
 };
 
 /* ---------- Staat lezen en bewaren ---------- */
@@ -181,10 +189,18 @@ function doPost(e) {
 function voerActieUit(actie, invoer, rol) {
   if (actie === 'aanmelden') return { ok: true, rol: rol };
   if (actie === 'roosterOverzicht') return roosterOverzicht(); // leest enkel, geen slot nodig
+  if (actie === 'beheerIsbnOpzoeken') return isbnOpzoeken(invoer); // leest enkel bij Open Library en Google Books
+  if (actie === 'beheerInhoud') return beheerInhoudGegevens();
 
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) return { ok: false, fout: 'Het is even druk. Probeer het over een paar seconden opnieuw.' };
   try {
+    var wie = tekstInvoer(invoer.wie, 40) || 'onbekend';
+    if (actie === 'beheerInhoudBewaren' || actie === 'beheerInstellingBewaren') {
+      var gewijzigd = actie === 'beheerInhoudBewaren' ? beheerInhoudBewaren(invoer, wie) : beheerInstellingBewaren(invoer, wie);
+      if (gewijzigd.ok) leegCache();
+      return gewijzigd;
+    }
     var staat = laadStaat(invoer.wie, actie === 'bestuurData');
     var meldingen = verwerkVervallenReservaties(staat);
     var antwoord;
@@ -199,10 +215,21 @@ function voerActieUit(actie, invoer, rol) {
       case 'nieuweLener': antwoord = nieuweLener(staat, { voornaam: invoer.voornaam, achternaam: invoer.achternaam, telefoon: invoer.telefoon, email: invoer.email, toestemming: invoer.toestemming === true }); break;
       case 'borgTerugbetaald': antwoord = borgTerugbetaald(staat, invoer); break;
       case 'herinneringVerstuurd': antwoord = herinneringVerstuurd(staat, invoer); break;
+      case 'beheerBoekOphalen': antwoord = boekOphalen(staat, invoer); break;
+      case 'beheerBoekBewaren': antwoord = boekAanpassen(staat, invoer); break;
+      case 'beheerBoekToevoegen':
+        var ids = maakIdGenerator(staat.catalogus);
+        antwoord = boekToevoegen(staat, invoer, ids.nieuw);
+        if (antwoord.ok) ids.bewaar();
+        break;
       case 'lenerAanpassen': antwoord = lenerAanpassen(staat, { lenersnummer: invoer.lenersnummer, voornaam: invoer.voornaam, achternaam: invoer.achternaam, telefoon: invoer.telefoon, email: invoer.email, actief: invoer.actief !== false }); break;
     }
     // Ook bij een geweigerde actie bewaren we vervallen reservaties.
     bewaarStaat(staat);
+    if (staat.catalogusGewijzigd) {
+      bewaarTabel(staat.tabellen.Catalogus);
+      werkOnderwerpenBij(); // een nieuw genre komt zo in de vertaaltabel Onderwerpen
+    }
     if (meldingen.length || (antwoord.ok && actie !== 'balieData' && actie !== 'bestuurData')) leegCache();
     if (meldingen.length && antwoord.ok) antwoord.apartLeggen = (antwoord.apartLeggen || []).concat(meldingen);
     return antwoord;
