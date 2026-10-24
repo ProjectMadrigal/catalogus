@@ -216,8 +216,8 @@ function isbnOpzoeken(invoer) {
   } catch (e) { ol = null; }
   try {
     var sleutel = leesInstellingen().google_books_api_key;
-    var g = haalJson('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : ''));
-    gb = g.data && g.data.items && g.data.items.length ? g.data.items[0].volumeInfo : null;
+    var g = googleBooksZoek(isbn, sleutel); // zie Beschrijvingen.js (met het land erbij)
+    gb = g.items.length ? g.items[0].volumeInfo : null;
   } catch (e) { gb = null; }
   var voorstel = isbnVoorstel(ol, gb);
   voorstel.isbn = isbn;

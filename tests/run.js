@@ -1074,6 +1074,12 @@ test('Google-fouten: daglimiet apart van een probleem met de sleutel of de API',
   assert.strictEqual(M.isGoogleLimiet(400, 'API key not valid. Please pass a valid API key. (badRequest)'), false);
 });
 
+test('Google Books: altijd met het land erbij, anders weigert Google vanuit Apps Script', () => {
+  assert.strictEqual(M.googleBooksUrl('9780306406157', ''), 'https://www.googleapis.com/books/v1/volumes?q=isbn:9780306406157&country=BE');
+  assert.ok(M.googleBooksUrl('9780306406157', 'abc').endsWith('&country=BE&key=abc'));
+  assert.strictEqual(M.isGoogleLimiet(403, 'Cannot determine user location for geographically restricted operation. (unknownLocation)'), false);
+});
+
 console.log('\nBack-up');
 test('back-up: naam met de datum', () => {
   assert.strictEqual(M.backupNaam('2026-10-24'), 'Madrigal back-up 2026-10-24');
