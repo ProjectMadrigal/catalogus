@@ -221,6 +221,16 @@ Het bestuursscherm toont:
 
 Verstuurde je een herinnering? Klik op **Herinnering verstuurd**, dan zie je wanneer de laatste herinnering vertrok.
 
+**De website aanpassen zonder de spreadsheet.** Het bestuursscherm heeft drie onderdelen om de website te beheren. Alles komt in dezelfde spreadsheet terecht, je kan dus ook daar blijven werken.
+
+- **Boeken:** zoek een boek en pas het aan (status, aanrader, startpagina, beschrijving, cover, aantal, ...). Of klik op **Nieuw boek toevoegen**: vul het ISBN in en klik op **Zoek gegevens op**, dan vult de site titel, auteur, cover en beschrijving voor je in via Open Library en Google Books. Staat het ISBN al in de catalogus, dan zegt de site dat en kan je beter het aantal verhogen.
+- **Nieuws en agenda:** berichten, events en veelgestelde vragen toevoegen, aanpassen, verbergen of verwijderen.
+- **Teksten en instellingen:** openingsuren, teksten en de andere instellingen. De codes (`toegangscode_balie`, `code_bestuur`, `rooster_code`) en de Google Books-sleutel staan hier niet: die pas je enkel in de spreadsheet aan.
+
+Paste iemand dezelfde rij intussen aan in de spreadsheet, dan weigert de site te bewaren en vraagt ze om eerst op **Vernieuw** te klikken. Zo overschrijf je nooit per ongeluk het werk van een ander.
+
+Enkel wie de code van het bestuur heeft, kan dit. Wil je later vrijwilligers bv. boeken laten toevoegen? Dat kan met een kleine aanpassing in `apps-script/Api.js` (de lijst `ACTIES`).
+
 ## A8. Wat te doen als iets niet werkt
 
 | Wat je ziet | Wat je doet |

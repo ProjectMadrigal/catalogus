@@ -30,6 +30,7 @@ const SCRIPTS = [
   'apps-script/Publiek.js',
   'apps-script/Site.js',
   'apps-script/Bestuur.js',
+  'apps-script/Beheer.js',
   'apps-script/Privacy.js',
   'apps-script/Overzetten.js',
   'apps-script/OudeSite.js',

@@ -31,10 +31,41 @@ var ACTIES = {
   bestuurData: 'bestuur',
   borgTerugbetaald: 'bestuur',
   herinneringVerstuurd: 'bestuur',
-  lenerAanpassen: 'bestuur'
+  lenerAanpassen: 'bestuur',
+  // Beheer van de website (Beheer.js). Wil je vrijwilligers dit laten doen? Zet de actie op 'balie'.
+  beheerBoekOphalen: 'bestuur',
+  beheerBoekBewaren: 'bestuur',
+  beheerBoekToevoegen: 'bestuur',
+  beheerIsbnOpzoeken: 'bestuur',
+  beheerInhoud: 'bestuur',
+  beheerInhoudBewaren: 'bestuur',
+  beheerInstellingBewaren: 'bestuur'
 };
 
 /* ---------- Staat lezen en bewaren ---------- */
+
+/** Velden van een boek die je via de website kan aanpassen. De rest (herkomst, ...) blijft enkel in de spreadsheet. */
+var BEHEER_BOEKVELDEN = [
+  'soort', 'titel', 'auteur', 'isbn', 'uitgeverij', 'jaartal', 'taal', 'paginas', 'uitvoering', 'nieuwstaat',
+  'aanrader', 'genre', 'extra_onderwerpen', 'klassieker', 'aantal', 'uitleenbaar', 'publiek', 'status',
+  'startpagina', 'beschrijving', 'beschrijving_en', 'cover_url'
+];
+
+/** Velden met ja/nee. Bij startpagina betekent leeg "automatisch". */
+var BEHEER_JANEE = ['nieuwstaat', 'klassieker', 'uitleenbaar', 'publiek', 'startpagina'];
+
+/** Tabbladen met inhoud van de website, en de kolommen die je via de website kan aanpassen. */
+var BEHEER_INHOUD = {
+  'Nieuws': ['datum', 'titel', 'titel_en', 'tekst', 'tekst_en', 'afbeelding', 'link', 'publiek'],
+  'Agenda': ['datum', 'uur', 'titel', 'titel_en', 'tekst', 'tekst_en', 'locatie', 'afbeelding', 'link', 'publiek'],
+  'Veelgestelde vragen': ['volgorde', 'vraag', 'vraag_en', 'antwoord', 'antwoord_en', 'publiek']
+};
+
+/** Instellingen die nooit via de website zichtbaar of aanpasbaar zijn. Pas die aan in de spreadsheet. */
+var BEHEER_GEHEIM = ['toegangscode_balie', 'code_bestuur', 'rooster_code', 'google_books_api_key'];
+
+/** Lange teksten: meer tekens toegelaten en regeleinden blijven staan. */
+var BEHEER_LANG = ['beschrijving', 'beschrijving_en', 'tekst', 'tekst_en', 'antwoord', 'antwoord_en'];
 
 var BS_MAX_LOOPTIJD_MS = 4.5 * 60 * 1000;
 
@@ -383,6 +414,15 @@ function apartLeggenMelding(staat, r) {
   };
 }
 
+/** "Mira Verbeek" wordt "Verbeek, Mira", zoals de rest van de catalogus. */
+function auteurAchternaamEerst(naam) {
+  var n = schoon(naam);
+  if (!n || n.indexOf(',') > -1) return n;
+  var delen = n.split(' ');
+  if (delen.length < 2) return n;
+  return delen.pop() + ', ' + delen.join(' ');
+}
+
 /** Korte lijst van alle boeken voor het uitleenscherm, ook de niet-publieke. */
 function baliecatalogus(staat) {
   return staat.catalogus.filter(function (b) { return !isLeeg(b.boek_id) && !isLeeg(b.titel); }).map(function (b) {
@@ -460,6 +500,101 @@ function behandelGrenzen(staat, actie, ctx, invoer) {
 }
 
 /* ---------- Reservaties doorgeven ---------- */
+
+/** Een boek zoals het beheerscherm het toont. */
+function beheerBoek(rij) {
+  var boek = { boek_id: String(rij.boek_id) };
+  BEHEER_BOEKVELDEN.forEach(function (v) { boek[v] = isLeeg(rij[v]) ? '' : rij[v]; });
+  boek.status = boekStatus(rij).replace('_', ' ');
+  boek.toegevoegd_op = rij.toegevoegd_op || '';
+  return boek;
+}
+
+/** Bewaart een wijziging in Nieuws, Agenda of Veelgestelde vragen. */
+function beheerInhoudBewaren(invoer, wie) {
+  if (!BEHEER_INHOUD[invoer.tabblad]) return { ok: false, fout: 'Onbekend tabblad.' };
+  var tabel = leesTabel(invoer.tabblad);
+  var antwoord = inhoudAanpassen(tabel.rijen, invoer);
+  if (antwoord.ok) {
+    bewaarTabel(tabel);
+    logboek(wie, 'website aangepast', invoer.tabblad);
+  }
+  return antwoord;
+}
+
+/** Gegevens voor de onderdelen Nieuws en agenda, en Teksten en instellingen. */
+function beheerInhoudGegevens() {
+  var uit = { tabbladen: {} };
+  Object.keys(BEHEER_INHOUD).forEach(function (naam) {
+    uit.tabbladen[naam] = spreadsheet().getSheetByName(naam) ? inhoudRijen(naam, leesTabel(naam).rijen) : [];
+  });
+  uit.instellingen = instellingenVoorBeheer(leesTabel('Instellingen').rijen);
+  return { ok: true, data: uit };
+}
+
+/** Bewaart een instelling. */
+function beheerInstellingBewaren(invoer, wie) {
+  var tabel = leesTabel('Instellingen');
+  var antwoord = instellingAanpassen(tabel.rijen, invoer);
+  if (antwoord.ok) {
+    bewaarTabel(tabel);
+    logboek(wie, 'instelling aangepast', schoon(invoer.sleutel));
+  }
+  return antwoord;
+}
+
+/** Maakt één ingevuld veld netjes. Geeft { waarde } of { fout }. */
+function beheerVeld(veld, ruw) {
+  if (BEHEER_LANG.indexOf(veld) > -1) return { waarde: String(ruw === undefined || ruw === null ? '' : ruw).trim().slice(0, 5000) };
+  var w = tekstInvoer(ruw, 300);
+  if (BEHEER_JANEE.indexOf(veld) > -1) return { waarde: jaNee(w) };
+  if (veld === 'soort') return { waarde: normaliseerTekst(w) === 'zine' ? 'zine' : 'boek' };
+  if (veld === 'status') {
+    var s = boekStatus({ status: w });
+    if (w && !s) return { fout: 'Kies als status: leeg, ' + BOEKSTATUSSEN.join(', ') + '.' };
+    return { waarde: s ? s.replace('_', ' ') : '' };
+  }
+  if (veld === 'isbn') {
+    if (!w) return { waarde: '' };
+    var isbn = normaliseerIsbn(w);
+    return { waarde: isbn.isbn || isbn.issn || w };
+  }
+  if (veld === 'cover_url' || veld === 'afbeelding' || veld === 'link') {
+    if (w && !veiligeCoverUrl(w)) return { fout: 'Een link moet beginnen met https://' };
+    return { waarde: w };
+  }
+  if (veld === 'jaartal' || veld === 'paginas' || veld === 'aantal' || veld === 'volgorde') {
+    if (!w) return { waarde: '' };
+    var n = parseerGetal(w);
+    if (n === null || n < 0 || n !== Math.round(n)) return { fout: 'Vul bij ' + veld + ' een geheel getal in.' };
+    return { waarde: n };
+  }
+  if (veld === 'datum') {
+    if (!w) return { waarde: '' };
+    var d = parseerDatum(w);
+    if (!d) return { fout: 'Deze datum klopt niet. Schrijf ze als 20/11/2026.' };
+    return { waarde: d };
+  }
+  if (veld === 'taal') return { waarde: normaliseerTaal(w) || w };
+  if (veld === 'uitvoering') return { waarde: normaliseerUitvoering(w) || w };
+  return { waarde: w };
+}
+
+/** Zet de ingevulde velden om. Enkel toegelaten velden. Geeft { velden } of { fout }. */
+function beheerVelden(invoer, toegelaten) {
+  var velden = {};
+  var bron = invoer || {};
+  for (var i = 0; i < toegelaten.length; i++) {
+    var veld = toegelaten[i];
+    if (!bron.hasOwnProperty(veld)) continue;
+    var r = beheerVeld(veld, bron[veld]);
+    if (r.fout) return { fout: r.fout };
+    velden[veld] = r.waarde;
+  }
+  return { velden: velden };
+}
+
+/* ---------- Boeken ---------- */
 
 /**
  * Tot wanneer ligt een gereserveerd boek apart?
@@ -620,6 +755,7 @@ function bestuurGegevens(staat, onderwerpRijen) {
     reservaties: alleReservaties(staat),
     uitzonderingen: uitzonderingen,
     boekstatus: boekenMetStatus(staat),
+    boeken: baliecatalogus(staat),
     leners: staat.leners.map(function (l) {
       return {
         lenersnummer: l.lenersnummer, voornaam: l.voornaam, achternaam: l.achternaam, telefoon: l.telefoon,
@@ -676,6 +812,36 @@ function bijWijziging(e) {
   if (['Catalogus', 'Onderwerpen', 'Instellingen', 'Uitleningen', 'Reservaties', 'Nieuws', 'Agenda', 'Veelgestelde vragen'].indexOf(naam) > -1) leegCache();
 }
 
+/** Een boek aanpassen. invoer: { boek_id, velden: { ... } } */
+function boekAanpassen(staat, invoer) {
+  var boek = boekVan(staat, invoer.boek_id);
+  if (!boek) return { ok: false, fout: 'Dit boek bestaat niet.' };
+  var r = beheerVelden(invoer.velden, BEHEER_BOEKVELDEN);
+  if (r.fout) return { ok: false, fout: r.fout };
+  var v = r.velden;
+  if (v.hasOwnProperty('titel') && !v.titel) return { ok: false, fout: 'Een boek heeft een titel nodig.' };
+  if (v.hasOwnProperty('aantal')) {
+    if (!v.aantal) v.aantal = 1;
+    var inGebruik = hoogsteExemplaarInGebruik(staat, boek.boek_id);
+    if (v.aantal < inGebruik) {
+      return { ok: false, fout: 'Exemplaar ' + boek.boek_id + '-' + inGebruik + ' is uitgeleend of ligt apart. Het aantal kan niet lager dan ' + inGebruik + '.' };
+    }
+  }
+  if (v.hasOwnProperty('isbn') || v.hasOwnProperty('titel') || v.hasOwnProperty('auteur') || v.hasOwnProperty('soort')) {
+    var samen = {};
+    ['soort', 'isbn', 'titel', 'auteur'].forEach(function (k) { samen[k] = v.hasOwnProperty(k) ? v[k] : boek[k]; });
+    v.bron_sleutel = bronSleutel(samen);
+  }
+  // Een nieuwe Nederlandse beschrijving: de vertaling opnieuw laten maken.
+  if (v.hasOwnProperty('beschrijving') && v.beschrijving !== schoonMetRegels(boek.beschrijving) && !v.hasOwnProperty('beschrijving_en')) {
+    v.beschrijving_vertaald = '';
+  }
+  wijzig(boek, v);
+  staat.catalogusGewijzigd = true;
+  staat.log.push(['boek aangepast', boek.boek_id]);
+  return { ok: true, tekst: '"' + schoon(boek.titel) + '" is bewaard.', boek: beheerBoek(boek) };
+}
+
 /** Boeken met een status, per status, voor het bestuursscherm. */
 function boekenMetStatus(staat) {
   var lijsten = { verloren: [], gevoelig_verborgen: [], gevoelig_zichtbaar: [] };
@@ -690,6 +856,13 @@ function boekenMetStatus(staat) {
   return lijsten;
 }
 
+/** Een boek ophalen om aan te passen. */
+function boekOphalen(staat, invoer) {
+  var boek = boekVan(staat, invoer.boek_id);
+  if (!boek) return { ok: false, fout: 'Dit boek bestaat niet.' };
+  return { ok: true, boek: beheerBoek(boek) };
+}
+
 /** Geeft '', 'verloren', 'gevoelig_verborgen' of 'gevoelig_zichtbaar'. Hoofdletters en kleine tikfouten mogen. */
 function boekStatus(boek) {
   var s = normaliseerTekst(boek && boek.status);
@@ -697,6 +870,40 @@ function boekStatus(boek) {
   if (/verlor|kwijt/.test(s)) return 'verloren';
   if (/gevoelig/.test(s)) return /(^|\s)zichtbaar|waarschuw/.test(s) ? 'gevoelig_zichtbaar' : 'gevoelig_verborgen';
   return '';
+}
+
+/**
+ * Een nieuw boek toevoegen. invoer: { velden: { ... }, toch: true om een dubbel ISBN toe te laten }
+ * nieuwId: functie (soort) -> nieuwe boek-ID.
+ */
+function boekToevoegen(staat, invoer, nieuwId) {
+  var r = beheerVelden(invoer.velden, BEHEER_BOEKVELDEN);
+  if (r.fout) return { ok: false, fout: r.fout };
+  var v = r.velden;
+  if (!v.titel) return { ok: false, fout: 'Een boek heeft een titel nodig.' };
+  v.soort = v.soort || 'boek';
+  if (v.isbn && !invoer.toch) {
+    var dubbel = staat.catalogus.filter(function (b) { return String(b.isbn) === String(v.isbn) && !isLeeg(b.boek_id); })[0];
+    if (dubbel) {
+      return {
+        ok: false, dubbel: String(dubbel.boek_id),
+        fout: 'Dit ISBN staat al in de catalogus als ' + dubbel.boek_id + ' ("' + schoon(dubbel.titel) + '"). Is het een extra exemplaar? Verhoog daar het aantal.'
+      };
+    }
+  }
+  var boek = {};
+  BEHEER_BOEKVELDEN.forEach(function (k) { boek[k] = v.hasOwnProperty(k) ? v[k] : ''; });
+  boek.boek_id = nieuwId(v.soort);
+  boek.aantal = v.aantal || 1;
+  boek.uitleenbaar = v.uitleenbaar || 'ja';
+  boek.publiek = v.publiek || 'ja';
+  boek.toegevoegd_op = staat.vandaag;
+  boek.herkomst = tekstInvoer(invoer.herkomst, 300);
+  boek.bron_sleutel = bronSleutel(boek);
+  voegToe(staat.catalogus, boek);
+  staat.catalogusGewijzigd = true;
+  staat.log.push(['boek toegevoegd', boek.boek_id]);
+  return { ok: true, tekst: '"' + boek.titel + '" staat in de catalogus als ' + boek.boek_id + '.', boek: beheerBoek(boek) };
 }
 
 function boekVan(staat, boekId) {
@@ -1197,6 +1404,18 @@ function herstelAfgebrokenBeschrijvingen() {
   vulBeschrijvingenAan();
 }
 
+/** Het hoogste exemplaarnummer dat nu uitgeleend of apart gelegd is. */
+function hoogsteExemplaarInGebruik(staat, boekId) {
+  var hoogste = 0;
+  var tel = function (ex) {
+    var m = String(ex || '').match(/-(\d+)$/);
+    if (m && String(ex).indexOf(boekId + '-') === 0) hoogste = Math.max(hoogste, Number(m[1]));
+  };
+  lopendeUitleningen(staat).forEach(function (u) { if (u.boek_id === boekId) tel(u.exemplaar); });
+  actieveReservaties(staat, boekId).forEach(function (r) { tel(r.exemplaar); });
+  return hoogste;
+}
+
 /** HTML uit de oude databank naar gewone tekst met regeleinden. */
 function htmlNaarTekst(html) {
   return String(html || '')
@@ -1237,6 +1456,60 @@ function importeerOudeSite() {
   logboek('menu', 'importeerOudeSite', 'nieuws: ' + velden(posts) + ' | events: ' + velden(events) + ' | faq: ' + velden(faq));
   meld('Overgenomen van de oude website: ' + tellers['Nieuws'] + ' nieuwsberichten, ' + tellers['Agenda'] + ' events en ' +
     tellers['Veelgestelde vragen'] + ' veelgestelde vragen. Kijk ze na in de tabbladen. De Engelse kolommen vul je zelf aan waar nodig.');
+}
+
+/**
+ * Past een rij van Nieuws, Agenda of Veelgestelde vragen aan, voegt er een toe of verwijdert er een.
+ * invoer: { tabblad, rij (leeg = nieuw), vingerafdruk, velden, verwijderen }
+ * rijen: de rijen van dat tabblad (worden aangepast).
+ */
+function inhoudAanpassen(rijen, invoer) {
+  var tabblad = String(invoer.tabblad || '');
+  var kolommen = BEHEER_INHOUD[tabblad];
+  if (!kolommen) return { ok: false, fout: 'Onbekend tabblad.' };
+  var rij = null;
+  if (invoer.rij) {
+    rij = rijen.filter(function (r) { return r._rij === Number(invoer.rij); })[0];
+    if (!rij || vingerafdruk(rij, kolommen) !== String(invoer.vingerafdruk)) {
+      return { ok: false, fout: 'Iemand paste dit intussen aan in de spreadsheet. Klik op Vernieuw en probeer opnieuw.' };
+    }
+  }
+  if (invoer.verwijderen) {
+    if (!rij) return { ok: false, fout: 'Er is niets om te verwijderen.' };
+    markeerVerwijderen(rij);
+    return { ok: true, tekst: 'Verwijderd uit ' + tabblad + '.' };
+  }
+  var r = beheerVelden(invoer.velden, kolommen);
+  if (r.fout) return { ok: false, fout: r.fout };
+  var v = r.velden;
+  var hoofd = tabblad === 'Veelgestelde vragen' ? 'vraag' : 'titel';
+  var nieuweWaarde = v.hasOwnProperty(hoofd) ? v[hoofd] : (rij ? rij[hoofd] : '');
+  if (isLeeg(nieuweWaarde)) return { ok: false, fout: 'Vul een ' + hoofd + ' in.' };
+  if (tabblad === 'Agenda' && isLeeg(v.hasOwnProperty('datum') ? v.datum : (rij ? rij.datum : ''))) {
+    return { ok: false, fout: 'Een event heeft een datum nodig.' };
+  }
+  if (!v.publiek && !rij) v.publiek = 'ja';
+  if (rij) {
+    wijzig(rij, v);
+  } else {
+    var nieuw = {};
+    kolommen.forEach(function (k) { nieuw[k] = v.hasOwnProperty(k) ? v[k] : ''; });
+    if (tabblad === 'Nieuws' && !nieuw.datum) nieuw.datum = vandaagTekst();
+    voegToe(rijen, nieuw);
+  }
+  return { ok: true, tekst: (rij ? 'Aangepast' : 'Toegevoegd') + ' in ' + tabblad + '.' };
+}
+
+/* ---------- Instellingen ---------- */
+
+/** De rijen van een inhoudstabblad, zoals het beheerscherm ze toont. */
+function inhoudRijen(tabblad, rijen) {
+  var kolommen = BEHEER_INHOUD[tabblad];
+  return rijen.map(function (rij) {
+    var uit = { rij: rij._rij, vingerafdruk: vingerafdruk(rij, kolommen) };
+    kolommen.forEach(function (k) { uit[k] = isLeeg(rij[k]) ? '' : rij[k]; });
+    return uit;
+  });
 }
 
 /**
@@ -1320,6 +1593,41 @@ function installeer() {
   meld('De tabbladen staan klaar. Kijk in Instellingen de codes en teksten na.');
 }
 
+/** Past één instelling aan. invoer: { sleutel, waarde } */
+function instellingAanpassen(rijen, invoer) {
+  var sleutel = schoon(invoer.sleutel);
+  if (!sleutel || isInstellingKop(sleutel)) return { ok: false, fout: 'Onbekende instelling.' };
+  if (BEHEER_GEHEIM.indexOf(sleutel) > -1) return { ok: false, fout: 'Deze instelling pas je enkel in de spreadsheet aan.' };
+  var rij = rijen.filter(function (r) { return schoon(r.sleutel) === sleutel; })[0];
+  if (!rij) return { ok: false, fout: 'Onbekende instelling.' };
+  var waarde = String(invoer.waarde === undefined || invoer.waarde === null ? '' : invoer.waarde).trim().slice(0, 5000);
+  wijzig(rij, { waarde: waarde });
+  return { ok: true, tekst: 'De instelling ' + sleutel + ' is bewaard.' };
+}
+
+/* ---------- Acties die enkel een tabblad lezen of schrijven ---------- */
+
+/** De instellingen per groep, zonder de geheime. rijen: de rijen van het tabblad Instellingen. */
+function instellingenVoorBeheer(rijen) {
+  var perSleutel = {};
+  rijen.forEach(function (r) {
+    var s = schoon(r.sleutel);
+    if (s && !isInstellingKop(s)) perSleutel[s] = r;
+  });
+  var groepen = [], gezien = {};
+  var maak = function (titel, sleutels) {
+    var items = sleutels.filter(function (s) { return perSleutel[s] && BEHEER_GEHEIM.indexOf(s) === -1; }).map(function (s) {
+      gezien[s] = true;
+      return { sleutel: s, waarde: isLeeg(perSleutel[s].waarde) ? '' : String(perSleutel[s].waarde), uitleg: schoon(perSleutel[s].uitleg) };
+    });
+    BEHEER_GEHEIM.forEach(function (s) { gezien[s] = true; });
+    if (items.length) groepen.push({ titel: titel, instellingen: items });
+  };
+  INSTELLING_GROEPEN.forEach(function (g) { maak(g[0], g[1]); });
+  maak('Overige', Object.keys(perSleutel).filter(function (s) { return !gezien[s]; }));
+  return groepen;
+}
+
 /** Een tussenkop in het tabblad Instellingen: "── UITLENEN ──". */
 function instellingKop(titel) {
   return '── ' + titel.toUpperCase() + ' ──';
@@ -1355,6 +1663,45 @@ function isbn13Geldig(isbn) {
   var som = 0;
   for (var i = 0; i < 12; i++) som += Number(isbn.charAt(i)) * (i % 2 === 0 ? 1 : 3);
   return (10 - (som % 10)) % 10 === Number(isbn.charAt(12));
+}
+
+/** Zoekt een ISBN op bij Open Library en Google Books. Geeft { ok, voorstel } terug. */
+function isbnOpzoeken(invoer) {
+  var isbn = normaliseerIsbn(invoer.isbn).isbn;
+  if (!isbn) return { ok: false, fout: 'Dit ISBN klopt niet. Kijk het nog eens na.' };
+  var ol = null, gb = null;
+  try {
+    var r = haalJson('https://openlibrary.org/api/books?format=json&jscmd=details&bibkeys=ISBN:' + isbn);
+    ol = r.data && r.data['ISBN:' + isbn] ? r.data['ISBN:' + isbn].details : null;
+  } catch (e) { ol = null; }
+  try {
+    var sleutel = leesInstellingen().google_books_api_key;
+    var g = haalJson('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : ''));
+    gb = g.data && g.data.items && g.data.items.length ? g.data.items[0].volumeInfo : null;
+  } catch (e) { gb = null; }
+  var voorstel = isbnVoorstel(ol, gb);
+  voorstel.isbn = isbn;
+  return { ok: true, voorstel: voorstel, gevonden: !!(ol || gb) };
+}
+
+/* ---------- Nieuws, Agenda, Veelgestelde vragen ---------- */
+
+/**
+ * Voegt wat Open Library en Google Books over een ISBN weten samen tot een voorstel.
+ * olDetails: het "details"-object van Open Library, gbInfo: een "volumeInfo" van Google Books.
+ */
+function isbnVoorstel(olDetails, gbInfo) {
+  var leeg = {};
+  var v = verwerkOpenLibrary(leeg, olDetails);
+  var gb = verwerkGoogleBooks(v, gbInfo);
+  Object.keys(gb).forEach(function (k) { if (isLeeg(v[k])) v[k] = gb[k]; });
+  var titel = olDetails && olDetails.title ? schoon(olDetails.title) + (olDetails.subtitle ? ': ' + schoon(olDetails.subtitle) : '') : '';
+  if (!titel && gbInfo && gbInfo.title) titel = schoon(gbInfo.title) + (gbInfo.subtitle ? ': ' + schoon(gbInfo.subtitle) : '');
+  var auteurs = (olDetails && olDetails.authors || []).map(function (a) { return a.name; });
+  if (!auteurs.length && gbInfo && gbInfo.authors) auteurs = gbInfo.authors;
+  if (titel) v.titel = titel;
+  if (auteurs.length) v.auteur = auteurs.map(auteurAchternaamEerst).join(' & ');
+  return v;
 }
 
 /** Is dit een Date-object (zoals de spreadsheet datums teruggeeft)? */
@@ -3120,6 +3467,14 @@ function vindOudeDatabank() {
   return { url: url, sleutel: sleutel };
 }
 
+/** Een korte vingerafdruk van een rij: zo merken we het als iemand ze intussen in de spreadsheet aanpaste. */
+function vingerafdruk(rij, kolommen) {
+  var tekst = kolommen.map(function (k) { return String(isLeeg(rij[k]) ? '' : rij[k]); }).join('\u0001');
+  var h = 5381;
+  for (var i = 0; i < tekst.length; i++) h = ((h * 33) ^ tekst.charCodeAt(i)) >>> 0;
+  return String(h);
+}
+
 function voegBronSamen(bestaand, bron, nieuwId, inst, vandaag) {
   // Bij de eerste opbouw is niets "nieuw binnen". Daarna krijgt een nieuw boek de datum van vandaag.
   var datumNieuw = bestaand.length && vandaag ? vandaag : '';
@@ -3227,10 +3582,18 @@ function voegToe(lijst, obj) {
 function voerActieUit(actie, invoer, rol) {
   if (actie === 'aanmelden') return { ok: true, rol: rol };
   if (actie === 'roosterOverzicht') return roosterOverzicht(); // leest enkel, geen slot nodig
+  if (actie === 'beheerIsbnOpzoeken') return isbnOpzoeken(invoer); // leest enkel bij Open Library en Google Books
+  if (actie === 'beheerInhoud') return beheerInhoudGegevens();
 
   var lock = LockService.getScriptLock();
   if (!lock.tryLock(20000)) return { ok: false, fout: 'Het is even druk. Probeer het over een paar seconden opnieuw.' };
   try {
+    var wie = tekstInvoer(invoer.wie, 40) || 'onbekend';
+    if (actie === 'beheerInhoudBewaren' || actie === 'beheerInstellingBewaren') {
+      var gewijzigd = actie === 'beheerInhoudBewaren' ? beheerInhoudBewaren(invoer, wie) : beheerInstellingBewaren(invoer, wie);
+      if (gewijzigd.ok) leegCache();
+      return gewijzigd;
+    }
     var staat = laadStaat(invoer.wie, actie === 'bestuurData');
     var meldingen = verwerkVervallenReservaties(staat);
     var antwoord;
@@ -3245,10 +3608,21 @@ function voerActieUit(actie, invoer, rol) {
       case 'nieuweLener': antwoord = nieuweLener(staat, { voornaam: invoer.voornaam, achternaam: invoer.achternaam, telefoon: invoer.telefoon, email: invoer.email, toestemming: invoer.toestemming === true }); break;
       case 'borgTerugbetaald': antwoord = borgTerugbetaald(staat, invoer); break;
       case 'herinneringVerstuurd': antwoord = herinneringVerstuurd(staat, invoer); break;
+      case 'beheerBoekOphalen': antwoord = boekOphalen(staat, invoer); break;
+      case 'beheerBoekBewaren': antwoord = boekAanpassen(staat, invoer); break;
+      case 'beheerBoekToevoegen':
+        var ids = maakIdGenerator(staat.catalogus);
+        antwoord = boekToevoegen(staat, invoer, ids.nieuw);
+        if (antwoord.ok) ids.bewaar();
+        break;
       case 'lenerAanpassen': antwoord = lenerAanpassen(staat, { lenersnummer: invoer.lenersnummer, voornaam: invoer.voornaam, achternaam: invoer.achternaam, telefoon: invoer.telefoon, email: invoer.email, actief: invoer.actief !== false }); break;
     }
     // Ook bij een geweigerde actie bewaren we vervallen reservaties.
     bewaarStaat(staat);
+    if (staat.catalogusGewijzigd) {
+      bewaarTabel(staat.tabellen.Catalogus);
+      werkOnderwerpenBij(); // een nieuw genre komt zo in de vertaaltabel Onderwerpen
+    }
     if (meldingen.length || (antwoord.ok && actie !== 'balieData' && actie !== 'bestuurData')) leegCache();
     if (meldingen.length && antwoord.ok) antwoord.apartLeggen = (antwoord.apartLeggen || []).concat(meldingen);
     return antwoord;

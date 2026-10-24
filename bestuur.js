@@ -2,6 +2,7 @@
  * bestuur.js
  * Het bestuursscherm: te laat, vervalt binnenkort, lopende uitleningen,
  * borgen en giften, reservaties, uitzonderingen, leners en cijfers.
+ * Daarnaast boeken, nieuws, agenda en instellingen aanpassen (bestuur-beheer.js).
  * Herinneringen verstuur je zelf (WhatsApp, sms of mail). Dit scherm kopieert
  * de tekst en noteert daarna dat de herinnering verstuurd is.
  */
@@ -12,6 +13,7 @@
   var el = D.el;
   var B = window.MadrigalBeheer;
   var Z = window.MadrigalZoeken;
+  var W = window.MadrigalBestuurBeheer;
   var $ = function (id) { return document.getElementById(id); };
 
   var data = null;
@@ -27,8 +29,17 @@
     ['boekstatus', 'Verloren en gevoelig', toonBoekstatus],
     ['leners', 'Leners', toonLeners],
     ['cijfers', 'Cijfers', toonCijfers],
-    ['rooster', 'Rooster', toonRoosterSectie]
+    ['rooster', 'Rooster', toonRoosterSectie],
+    // De website aanpassen: zie bestuur-beheer.js.
+    ['boeken', 'Boeken', function (vak) { W.boeken(vak, context()); }],
+    ['inhoud', 'Nieuws en agenda', function (vak) { W.inhoud(vak, context()); }],
+    ['instellingen', 'Teksten en instellingen', function (vak) { W.instellingen(vak, context()); }]
   ];
+
+  /** Wat bestuur-beheer.js nodig heeft van dit scherm. */
+  function context() {
+    return { data: data, kop: kop, laad: laad };
+  }
 
   /* ---------- Gegevens en navigatie ---------- */
 
@@ -340,7 +351,7 @@
 
   /* ---------- Start ---------- */
 
-  $('vernieuw').addEventListener('click', function () { laad(); });
+  $('vernieuw').addEventListener('click', function () { W.vergeet(); laad(); });
   $('afmelden').addEventListener('click', B.afmelden);
 
   B.aanmelden({

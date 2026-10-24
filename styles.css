@@ -161,7 +161,7 @@ details > summary::marker { color: var(--kleur-accent); }
 label { font-weight: 600; display: block; margin-bottom: .3rem; }
 .hulptekst { font-weight: normal; color: var(--kleur-tekst-zacht); font-size: .95rem; }
 
-input[type="search"], input[type="text"], input[type="tel"], input[type="email"], input[type="number"], input[type="password"], select, textarea {
+input[type="search"], input[type="text"], input[type="tel"], input[type="email"], input[type="number"], input[type="password"], input[type="date"], input[type="url"], select, textarea {
   width: 100%;
   min-height: var(--knop-hoogte);
   padding: .55rem .75rem;
@@ -540,3 +540,8 @@ main.website { max-width: none; padding: 0; }
   body { background: #fff; font-size: 11pt; }
   .blok { border: 0; padding: 0; }
 }
+
+/* ---------- Formulieren in het bestuursscherm ---------- */
+
+fieldset.blok { min-width: 0; margin: 0 0 var(--ruimte); }
+fieldset.blok > legend { font-weight: 700; padding: 0 .3rem; }
