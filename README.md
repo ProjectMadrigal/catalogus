@@ -412,6 +412,10 @@ Je mag "Installeer tabbladen" later opnieuw uitvoeren. Bestaande tabbladen, gege
    4. Kopieer de sleutel uit het venster en zet ze in Instellingen bij `google_books_api_key`.
 
    Weigert Google toch, dan zoekt het script verder bij Open Library. Boeken die Open Library niet kent, krijgen `OL` en de datum in `beschrijving_gezocht`: die zoekt Google later nog op.
+
+   **Nog geen cover?** Twee extra manieren:
+   - **8. Zoek covers van andere uitgaven (Open Library).** Neemt de cover van een herdruk of een andere vertaling, of zoekt op titel en auteur. De kolom `cover_bron` vermeldt vanwaar de cover komt, zodat je covers van een andere uitgave kan nakijken.
+   - **Bestuursscherm > Boeken > Zoek ontbrekende covers bij Google.** Google Books weigert vragen vanuit Apps Script vaak. Vanuit je eigen browser lukt het wel: de site vraagt de covers op en bewaart ze in de Catalogus. Laat het venster open tot het klaar is. Daarvoor krijgt je browser de `google_books_api_key`, dus beperk die sleutel in de Google Cloud Console tot de Books API.
 4. **Het tabblad Na te kijken.** Klopt de waarde uit de bron (`waarde_bron`)? Zet ze zelf in de Catalogus. Zet daarna **ja** in de kolom `afgehandeld`.
 
 De Catalogus is nu de enige bron. Stock en Zines heb je niet meer nodig.

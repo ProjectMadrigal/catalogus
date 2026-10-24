@@ -41,7 +41,9 @@ var ACTIES = {
   beheerIsbnOpzoeken: 'bestuur',
   beheerInhoud: 'bestuur',
   beheerInhoudBewaren: 'bestuur',
-  beheerInstellingBewaren: 'bestuur'
+  beheerInstellingBewaren: 'bestuur',
+  beheerCoversLijst: 'bestuur',
+  beheerCoversBewaren: 'bestuur'
 };
 
 /* ---------- Staat lezen en bewaren ---------- */
@@ -233,6 +235,8 @@ function voerActieUit(actie, invoer, rol) {
       case 'borgTerugbetaald': antwoord = borgTerugbetaald(staat, invoer); break;
       case 'herinneringVerstuurd': antwoord = herinneringVerstuurd(staat, invoer); break;
       case 'beheerBoekOphalen': antwoord = boekOphalen(staat, invoer); break;
+      case 'beheerCoversLijst': antwoord = coversTeZoeken(staat); break;
+      case 'beheerCoversBewaren': antwoord = coversBewaren(staat, invoer); break;
       case 'beheerBoekBewaren': antwoord = boekAanpassen(staat, invoer); break;
       case 'beheerBoekToevoegen':
         var ids = maakIdGenerator(staat.catalogus);

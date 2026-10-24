@@ -1082,6 +1082,45 @@ test('Google Books: altijd met het land erbij, anders weigert Google vanuit Apps
   assert.strictEqual(M.isGoogleLimiet(403, 'Cannot determine user location for geographically restricted operation. (unknownLocation)'), false);
 });
 
+console.log('\nCovers: andere uitgaven en via de browser');
+test('andere uitgave: enkel bij goede titel en achternaam', () => {
+  const boek = { titel: 'Stille lichten: gedichten', auteur: 'Aerts, Noor' };
+  gelijk(M.kiesOlWerk(boek, [
+    { title: 'Stille lichten', author_name: ['Iemand Anders'], cover_i: 1 },
+    { title: 'Heel iets anders', author_name: ['Noor Aerts'], cover_i: 2 },
+    { title: 'Stille Lichten', author_name: ['Noor Aerts'] },
+    { title: 'Stille lichten', author_name: ['Noor Aerts'], cover_i: 4 }
+  ]), 4);
+  assert.strictEqual(M.kiesOlWerk(boek, []), 0);
+  assert.strictEqual(M.olCoverUrl(4), 'https://covers.openlibrary.org/b/id/4-M.jpg');
+});
+test('andere uitgave: enkel boeken zonder cover die nog niet gezocht zijn', () => {
+  assert.strictEqual(M.heeftAndereUitgaveNodig({ isbn: '9780306406157', titel: 'X' }), true);
+  assert.strictEqual(M.heeftAndereUitgaveNodig({ isbn: '', titel: 'Zine zonder ISBN' }), true);
+  assert.strictEqual(M.heeftAndereUitgaveNodig({ isbn: '9780306406157', titel: 'X', cover_url: 'https://x.test/c.jpg' }), false);
+  assert.strictEqual(M.heeftAndereUitgaveNodig({ isbn: '9780306406157', titel: 'X', cover_gezocht: '2026-10-24' }), false);
+});
+test('covers via de browser: lijst, enkel covers van Google, enkel lege velden', () => {
+  const s = maakStaat('2026-10-24', { google_books_api_key: 'sleutel-test' });
+  s.catalogus[1].isbn = '9780141439518';
+  s.catalogus[2].isbn = '9789044641035'; s.catalogus[2].uitgeverij = 'Eigen uitgeverij';
+  const lijst = M.coversTeZoeken(s);
+  gelijk([lijst.boeken.map((b) => b.id), lijst.sleutel], [['B0001', 'B0002', 'B0003'], 'sleutel-test']);
+  const r = M.coversBewaren(s, {
+    gezocht: ['B0002', 'B0003', 'B0001'],
+    resultaten: [
+      { boek_id: 'B0002', cover: 'http://books.google.com/books/content?id=abc&printsec=frontcover&img=1&zoom=1&edge=curl', uitgeverij: 'Penguin', beschrijving: 'Een klassieker.' },
+      { boek_id: 'B0003', cover: 'https://evil.test/x.jpg', uitgeverij: 'Andere' }
+    ]
+  });
+  assert.strictEqual(r.covers, 1);
+  assert.ok(s.catalogus[1].cover_url.startsWith('https://books.google.com/') && !s.catalogus[1].cover_url.includes('edge=curl'));
+  gelijk([s.catalogus[1].cover_bron, s.catalogus[1].uitgeverij], ['Google Books', 'Penguin']);
+  gelijk([s.catalogus[2].cover_url || '', s.catalogus[2].uitgeverij], ['', 'Eigen uitgeverij']); // vreemde link geweigerd, eigen waarde blijft
+  gelijk(['B0001', 'B0002', 'B0003'].map((id) => s.catalogus.find((b) => b.boek_id === id).gb_gecontroleerd), ['2026-10-24', '2026-10-24', '2026-10-24']);
+  assert.strictEqual(M.coversTeZoeken(s).boeken.length, 0);
+});
+
 console.log('\nBack-up');
 test('back-up: naam met de datum', () => {
   assert.strictEqual(M.backupNaam('2026-10-24'), 'Madrigal back-up 2026-10-24');
