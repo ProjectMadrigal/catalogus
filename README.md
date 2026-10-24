@@ -138,8 +138,8 @@ Bovenaan de spreadsheet staat het menu **Madrigal**. Zie je het niet? Vernieuw d
 
 De startpagina heeft twee blokken met boeken: **Nieuw binnen** en daaronder **In de kijker**.
 
-- **Aanraders van ...**: een rij per persoon, wie de meeste boeken aanraadt eerst. Een boek komt erin als iemand het aanraadt: zet een voornaam in de kolom `aanrader`. Het label wordt "Aanrader van ...". Meerdere namen scheid je met een komma. Elke naam die je daar typt, staat op de website: die van jezelf, van Johanna of van een vrijwilliger. Samen tot 12 boeken, beschikbare boeken eerst, de keuze wisselt elke dag.
-- **Nieuw binnen** (eigen blok, boven In de kijker): de laatst toegevoegde boeken, de nieuwste eerst (standaard 8, van de laatste 60 dagen). Een aparte lijst, dus de aanraders verdringen ze nooit. Een boek dat je via het bestuursscherm toevoegt, staat er meteen in. Een boek dat je met de hand in de Catalogus typt, krijgt binnen het uur vanzelf een boek-ID en komt er dan bij.
+- **Aanraders van ...**: een rij per persoon, wie de meeste boeken aanraadt eerst. Een boek komt erin als iemand het aanraadt: zet een voornaam in de kolom `aanrader`. Het label wordt "Aanrader van ...". Meerdere namen scheid je met een komma. Elke naam die je daar typt, staat op de website: die van jezelf, van Johanna of van een vrijwilliger. Samen tot 12 boeken, beschikbare boeken eerst. De keuze wisselt elke maandag.
+- **Nieuw binnen** (eigen blok, boven In de kijker): de laatst toegevoegde boeken, de nieuwste eerst (standaard 8, van de laatste 60 dagen). Een aparte lijst, dus de aanraders verdringen ze nooit. Een boek dat je via het bestuursscherm toevoegt, staat er meteen in. Een boek dat je met de hand in de Catalogus typt, krijgt binnen het uur vanzelf een boek-ID en komt er dan bij. Zijn er minder nieuwe boeken dan het aantal, dan vult de site aan met de laatst gecatalogiseerde boeken (het hoogste boek-ID). Zo is de sectie nooit leeg.
 - **Uitgelicht**: boeken waar je zelf **ja** zet in de kolom `startpagina`.
 
 Zet je **nee** in de kolom `startpagina`, dan staat het boek nooit op de startpagina.

@@ -45,7 +45,7 @@ var STANDAARD_INSTELLINGEN = [
   ['openingsuren_en', 'Every Friday: 18:00 - 20:00', 'Openingsuren op de website, in het Engels.'],
   ['mail_algemeen', 'info@projectmadrigal.be', 'Algemeen mailadres op de website.'],
   ['mail_events', 'events.madrigal@gmail.com', 'Mailadres voor events op de website.'],
-  ['nieuw_op_startpagina_dagen', 60, 'Hoeveel dagen een nieuw toegevoegd boek in "Nieuw binnen" op de startpagina staat. 0: nieuwe boeken niet automatisch tonen.'],
+  ['nieuw_op_startpagina_dagen', 60, 'Hoeveel dagen een nieuw toegevoegd boek vooraan in "Nieuw binnen" staat. Zijn er te weinig, dan vult de site aan met de laatst gecatalogiseerde boeken. 0: de sectie Nieuw binnen staat uit.'],
   ['nieuw_op_startpagina_aantal', 8, 'Hoeveel boeken "Nieuw binnen" op de startpagina hoogstens toont. De nieuwste eerst.'],
   ['aanraders_uit_stocklijst', 'Johanna', 'Namen van wie de aanraders uit de oude stocklijst overgenomen worden, gescheiden door komma\'s. Andere namen uit de stocklijst niet. Een aanrader die je zelf typt in de kolom aanrader van de Catalogus, staat altijd op de website.'],
   ['aanraders_verbergen', '', 'Namen van wie de aanraders nergens op de website staan, gescheiden door komma\'s (bv. Nance): niet op de startpagina, niet als label bij de boeken en niet in de filter Aanrader. De namen blijven in de Catalogus staan. Leeg: iedereen staat erop.'],

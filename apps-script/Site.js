@@ -61,7 +61,7 @@ function bouwSiteInhoud(staat, tabellen) {
   // Aanraders op de startpagina. Een boek staat erop als:
   //   - de kolom startpagina "ja" is, of
   //   - iemand het aanraadt (namen uit aanraders_verbergen tellen niet mee).
-  // Beschikbare boeken eerst, daarna willekeurig maar vast per dag.
+  // Beschikbare boeken eerst, daarna willekeurig maar vast per week: elke maandag een nieuwe keuze.
   // Nieuw binnen is een aparte lijst (zie verder): zo verdringen de aanraders de nieuwe boeken nooit.
   // "nee" in de kolom startpagina haalt een boek er altijd af.
   // Een boek met gevoelige inhoud komt er enkel op met "ja" in de kolom startpagina.
@@ -89,7 +89,7 @@ function bouwSiteInhoud(staat, tabellen) {
       zelf: jaNee(b.startpagina) === 'ja',
       gevoelig: boekStatus(b) === 'gevoelig_zichtbaar',
       vrij: bs.code === 'beschikbaar',
-      volgorde: dagVolgorde(String(b.boek_id), staat.vandaag),
+      volgorde: dagVolgorde(String(b.boek_id), weekBegin(staat.vandaag)),
       toegevoegd: parseerDatum(b.toegevoegd_op) || ''
     };
   };
@@ -103,11 +103,20 @@ function bouwSiteInhoud(staat, tabellen) {
   // Nieuw binnen: de laatst toegevoegde boeken, nieuwste eerst.
   var aantalNieuw = parseerGetal(inst.nieuw_op_startpagina_aantal);
   if (aantalNieuw === null) aantalNieuw = 8;
-  var nieuwBinnen = kandidaten.filter(isNieuw).map(startpaginaBoek)
-    .filter(function (b) { return b.zelf || !b.gevoelig; })
-    .sort(function (a, b) { return b.toegevoegd.localeCompare(a.toegevoegd) || b.id.localeCompare(a.id); })
-    .slice(0, Math.max(0, aantalNieuw))
-    .map(opruimen);
+  // Zijn er minder nieuwe boeken dan het aantal, dan vullen we aan met de laatst
+  // gecatalogiseerde boeken: het hoogste boek-ID kwam het laatst in de Catalogus.
+  // Zo is de sectie nooit leeg, ook niet net na de eerste opbouw (toen kreeg geen
+  // enkel boek een datum in toegevoegd_op). 0 dagen: Nieuw binnen staat uit.
+  var nieuwsteEerst = function (a, b) { return b.toegevoegd.localeCompare(a.toegevoegd) || idNummer(b.id) - idNummer(a.id); };
+  var nieuwBinnen = [];
+  if (dagenNieuw > 0) {
+    var toonbaar = kandidaten.map(startpaginaBoek).filter(function (b) { return b.zelf || !b.gevoelig; });
+    nieuwBinnen = toonbaar.filter(function (b) { return b.n; }).sort(nieuwsteEerst);
+    if (nieuwBinnen.length < aantalNieuw) {
+      nieuwBinnen = nieuwBinnen.concat(toonbaar.filter(function (b) { return !b.n; }).sort(nieuwsteEerst));
+    }
+    nieuwBinnen = nieuwBinnen.slice(0, Math.max(0, aantalNieuw)).map(opruimen);
+  }
 
   return {
     bijgewerkt: staat.vandaag,
@@ -123,12 +132,30 @@ function bouwSiteInhoud(staat, tabellen) {
   };
 }
 
-/** Een getal dat per boek en per dag anders is: zo wisselen de aanraders elke dag. */
+/** Het getal in een boek-ID: B0123 wordt 123. */
+function idNummer(id) {
+  return Number(String(id).replace(/\D/g, '')) || 0;
+}
+
+/** De maandag van de week van een datum ("JJJJ-MM-DD"). Zo wisselen de aanraders elke week. */
+function weekBegin(datum) {
+  var terug = (weekdag(datum) + 6) % 7; // maandag 0, zondag 6
+  return telDagenOp(datum, -terug);
+}
+
+/** Een getal dat per boek en per periode anders is: zo wisselt de keuze van de aanraders. */
 function dagVolgorde(id, dag) {
-  var tekst = id + dag;
-  var h = 0;
-  for (var i = 0; i < tekst.length; i++) h = (h * 31 + tekst.charCodeAt(i)) % 1000003;
-  return h;
+  // FNV-1a met een eindmenging: een kleine wijziging in de datum geeft een heel andere volgorde.
+  var tekst = id + '|' + dag;
+  var h = 2166136261;
+  for (var i = 0; i < tekst.length; i++) {
+    h ^= tekst.charCodeAt(i);
+    h = Math.imul(h, 16777619) >>> 0;
+  }
+  h ^= h >>> 16;
+  h = Math.imul(h, 2246822507) >>> 0;
+  h ^= h >>> 13;
+  return h >>> 0;
 }
 
 /** De inhoud van de startpagina als JSON-tekst, uit de cache als die er is. */

@@ -772,8 +772,11 @@ test('startpagina: nieuw binnen is een aparte lijst, de kolom startpagina beslis
   const ids = (lijst) => lijst.map((a) => a.id);
   let d = M.bouwSiteInhoud(s, {});
   gelijk(ids(d.aanraders), [String(s.catalogus[4].boek_id)]);
-  gelijk(ids(d.nieuw), [String(s.catalogus[0].boek_id)]);
+  // Eerst het nieuwe boek, daarna aangevuld: eerst wie een (oudere) datum heeft, dan het hoogste boek-ID.
+  // B0003 staat op nee, B0004 is niet publiek.
+  gelijk(ids(d.nieuw), ['B0001', 'B0002', 'Z0001']);
   assert.strictEqual(d.nieuw[0].n, 1);
+  assert.strictEqual(d.nieuw[1].n, 0);
   s.inst.nieuw_op_startpagina_dagen = 0;
   d = M.bouwSiteInhoud(s, {});
   gelijk(ids(d.nieuw), []);
@@ -1000,6 +1003,24 @@ test('instellingen: per groep, codes nooit zichtbaar of aanpasbaar', () => {
 });
 test('elke beheeractie vraagt de code van het bestuur', () => {
   Object.keys(M.ACTIES).filter((a) => /^beheer/.test(a)).forEach((a) => assert.strictEqual(M.ACTIES[a], 'bestuur', a));
+});
+
+test('nieuw binnen: nooit leeg, ook zonder datums (na de eerste opbouw)', () => {
+  const s = maakStaat('2026-10-23');
+  s.catalogus.forEach((b) => { b.toegevoegd_op = ''; });
+  s.inst.nieuw_op_startpagina_aantal = 2;
+  const d = M.bouwSiteInhoud(s, {});
+  gelijk(d.nieuw.map((b) => b.id), ['B0003', 'B0002']); // hoogste boek-ID eerst, zine Z0001 telt als 1
+});
+test('aanraders wisselen per week, niet per dag', () => {
+  assert.strictEqual(M.weekBegin('2026-10-23'), '2026-10-19'); // vrijdag -> maandag
+  assert.strictEqual(M.weekBegin('2026-10-19'), '2026-10-19');
+  assert.strictEqual(M.weekBegin('2026-10-25'), '2026-10-19'); // zondag hoort bij dezelfde week
+  const s = maakStaat('2026-10-19');
+  for (let i = 0; i < 30; i++) s.catalogus.push({ boek_id: 'B' + (200 + i), titel: 'A' + i, aantal: 1, uitleenbaar: 'ja', publiek: 'ja', aanrader: 'Johanna' });
+  const keuze = (dag) => { s.vandaag = dag; return M.bouwSiteInhoud(s, {}).aanraders.map((b) => b.id).join(); };
+  assert.strictEqual(keuze('2026-10-19'), keuze('2026-10-25'));
+  assert.notStrictEqual(keuze('2026-10-19'), keuze('2026-10-26'));
 });
 
 console.log('\nBack-up');
