@@ -93,7 +93,16 @@
         el('h3', null, tt(e.titel)),
         el('p', { class: 'datum' }, wanneer + (e.locatie ? ' · ' + e.locatie : '')),
         tt(e.tekst) ? el('div', { class: 'tekstblok' }, el('p', null, tt(e.tekst))) : null,
-        e.link ? el('p', null, link(e.link, T.t('meerInfo'))) : null));
+        e.link ? el('p', null, link(e.link, T.t('meerInfo'))) : null,
+        e.datum >= vandaag() ? el('p', null, el('button', { type: 'button', class: 'knop tweede klein', onclick: function () {
+          window.MadrigalAgenda.download({ datum: e.datum, uur: e.uur, titel: tt(e.titel), tekst: tt(e.tekst), locatie: e.locatie, link: e.link });
+        } }, T.t('inMijnAgenda'))) : null));
+  }
+
+  /** De datum van vandaag als "JJJJ-MM-DD", in de tijdzone van de bezoeker. */
+  function vandaag() {
+    var d = new Date();
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   }
 
   function aanrader(b, inNieuw) {
@@ -125,7 +134,7 @@
       } else if (!b.n) kijker.push(b);
     });
     namen.sort(function (a, c) { return perNaam[c].length - perNaam[a].length; });
-    var groepen = namen.map(function (naam) { return { titel: T.t('aanradersVan', { naam: naam }), ster: true, boeken: perNaam[naam] }; });
+    var groepen = namen.map(function (naam) { return { titel: T.t('aanradersVan', { naam: naam }), naam: naam, ster: true, boeken: perNaam[naam] }; });
     if (kijker.length) groepen.push({ titel: T.t('uitgelicht'), boeken: kijker });
     return groepen;
   }
@@ -136,7 +145,8 @@
       var id = 'aanradergroep-' + i;
       return el('div', { class: 'aanradergroep' },
         el('h3', { id: id, class: g.ster ? 'met-ster' : null }, g.titel),
-        el('ul', { class: 'aanraders', 'aria-labelledby': id }, g.boeken.map(function (b) { return aanrader(b, false); })));
+        el('ul', { class: 'aanraders', 'aria-labelledby': id }, g.boeken.map(function (b) { return aanrader(b, false); })),
+        g.naam ? el('p', { class: 'meer' }, el('a', { href: 'boeken.html#/?aanrader=' + encodeURIComponent('Aanrader van ' + g.naam) }, T.t('alleAanradersVan', { naam: g.naam }))) : null);
     });
   }
 

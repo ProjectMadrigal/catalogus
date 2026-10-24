@@ -39,6 +39,7 @@ const SCRIPTS = [
   'apps-script/Api.js',
   'apps-script/Menu.js',
   'zoeken.js',
+  'agenda.js',
   'filters.js'
 ];
 

@@ -266,10 +266,11 @@ textarea { min-height: 6rem; }
 }
 .boek:hover { border-color: var(--kleur-accent); }
 .boek:focus-within { outline: 3px solid var(--kleur-focus); outline-offset: 2px; }
-.boek h3 a { text-decoration: none; color: var(--kleur-tekst); }
-.boek h3 a:focus-visible { outline: none; }
+.boek .boek-titel { font-size: 1.1rem; margin: 0; }
+.boek .boek-titel a { text-decoration: none; color: var(--kleur-tekst); }
+.boek .boek-titel a:focus-visible { outline: none; }
 /* De hele kaart is klikbaar via de titellink. */
-.boek h3 a::after { content: ""; position: absolute; inset: 0; border-radius: var(--hoek); }
+.boek .boek-titel a::after { content: ""; position: absolute; inset: 0; border-radius: var(--hoek); }
 .boek .auteur { margin: .15rem 0 0; color: var(--kleur-tekst-zacht); }
 .boek .meta { margin: .15rem 0 0; font-size: .92rem; color: var(--kleur-tekst-zacht); }
 
@@ -298,7 +299,7 @@ textarea { min-height: 6rem; }
   display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 5; overflow: hidden;
 }
 .ph-auteur { font-size: 8cqw; line-height: 1.2; opacity: .85; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
-.ph-merk { position: absolute; left: 17cqw; right: 10cqw; bottom: 7cqw; font-size: 6.5cqw; letter-spacing: .08em; text-transform: uppercase; opacity: .7; border-top: max(1px, .8cqw) solid currentColor; padding-top: 3cqw; }
+.ph-merk { position: absolute; left: 17cqw; right: 10cqw; bottom: 7cqw; font-size: 6.5cqw; letter-spacing: .08em; text-transform: uppercase; border-top: max(1px, .8cqw) solid currentColor; padding-top: 3cqw; }
 .ph-kleur-0 { background: #6b3597; color: #fff; }
 .ph-kleur-1 { background: #1b1b1c; color: #ffcd30; }
 .ph-kleur-2 { background: #c9a3ea; color: #2f0f52; }
@@ -322,7 +323,8 @@ textarea { min-height: 6rem; }
 .detail { display: grid; gap: var(--ruimte); grid-template-columns: 1fr; }
 .detail .cover, .detail .plaatshouder { max-width: 9rem; }
 @media (min-width: 40rem) { .detail .cover, .detail .plaatshouder { max-width: 12rem; } }
-.detail h2 { margin: 0; }
+.detail h1 { margin: 0; font-size: 1.4rem; }
+.detail h2.klein, h2.klein { font-size: 1.1rem; }
 .detail .auteur { font-size: 1.15rem; margin: .3rem 0 0; color: var(--kleur-tekst-zacht); }
 .gegevens { display: grid; grid-template-columns: max-content 1fr; gap: .3rem 1rem; margin: var(--ruimte) 0; }
 .gegevens dt { font-weight: 600; }
@@ -442,6 +444,7 @@ html[lang="nl"] [data-taal="nl"], html[lang="en"] [data-taal="en"] { display: re
 .sectie-aanraders { background: var(--kleur-geel); color: var(--kleur-op-geel); }
 .sectie-paars a, .sectie-donker a { color: var(--kleur-geel); }
 .sectie-geel a { color: var(--kleur-op-geel-zacht); }
+.sectie a.knop:not(.tweede) { color: var(--kleur-accent-tekst); }
 .sectie-geel .knop.tweede { background: transparent; color: var(--kleur-op-geel-zacht); border-color: var(--kleur-op-geel-zacht); }
 .sectie-licht { background: var(--kleur-achtergrond); }
 main.website { max-width: none; padding: 0; }
@@ -474,6 +477,7 @@ main.website { max-width: none; padding: 0; }
 .nieuwskaart a { color: var(--kleur-accent); }
 .tekstblok p, .detail .beschrijving { white-space: pre-line; }
 .lees p, .tekstblok, .detail .beschrijving, #intro p { font-family: var(--letter-lees); font-size: 1.05rem; line-height: 1.65; }
+.lees .knop { font-family: var(--letter-kop); font-size: 1rem; }
 
 .aanraders { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr)); list-style: none; margin: 0; padding: 0; }
 .aanrader a { display: block; color: inherit; text-decoration: none; }
@@ -482,6 +486,9 @@ main.website { max-width: none; padding: 0; }
 .aanrader-titel { display: block; font-weight: 700; margin-top: .5rem; font-size: .95rem; }
 .aanrader-auteur { display: block; font-size: .85rem; }
 .aanradergroep + .aanradergroep { margin-top: 2rem; }
+.meer { margin: 1rem 0 0; font-weight: 700; }
+.meer a::after { content: " →"; }
+.knop.klein { min-height: 2.4rem; padding: .3rem .8rem; font-size: .9rem; }
 .aanradergroep h3 { font-size: 1.15rem; margin: 0 0 .8rem; }
 .aanradergroep h3.met-ster::before { content: "★ "; }
 /* Wie het boek aanraadt: een opvallend label, ook op de gele achtergrond. */

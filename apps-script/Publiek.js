@@ -10,6 +10,7 @@
  *   v   uitvoering       n  nieuw/tweedehands                r  aanraders (lijst)
  *   g   filtergroepen    s  soort (boek/zine)                d  beschrijving
  *   de  beschrijving in het Engels (enkel als die verschilt)
+ *   ta  datum waarop het boek in de catalogus kwam (om te sorteren op laatst toegevoegd)
  *   w   1 als het boek gevoelige inhoud heeft (label op de website)
  *   c   cover-URL        b  beschikbaarheid { c: code, l: label, t: totaal, v: vrij,
  *                                           d: verwacht terug (datum), k: 1 als te koop }
@@ -42,7 +43,7 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
       i: schoon(rij.isbn), u: schoon(rij.uitgeverij), j: parseerGetal(rij.jaartal) || '',
       l: schoon(rij.taal), p: parseerGetal(rij.paginas) || '', v: schoon(rij.uitvoering),
       n: jaNee(rij.nieuwstaat) === 'ja' ? 'nieuw' : (jaNee(rij.nieuwstaat) === 'nee' ? 'tweedehands' : ''),
-      d: schoonMetRegels(rij.beschrijving), c: veiligeCoverUrl(rij.cover_url)
+      d: schoonMetRegels(rij.beschrijving), c: veiligeCoverUrl(rij.cover_url), ta: parseerDatum(rij.toegevoegd_op)
     };
     var en = schoonMetRegels(rij.beschrijving_en);
     if (en && en !== extra.d) extra.de = en;

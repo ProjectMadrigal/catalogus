@@ -1023,6 +1023,40 @@ test('aanraders wisselen per week, niet per dag', () => {
   assert.notStrictEqual(keuze('2026-10-19'), keuze('2026-10-26'));
 });
 
+console.log('\nAgenda, sorteren en Doe mee');
+test('agenda: uren lezen uit vrije tekst', () => {
+  gelijk(M.MadrigalAgenda.uren('19:00 - 21:30'), [[19, 0], [21, 30]]);
+  gelijk(M.MadrigalAgenda.uren('vanaf 19u'), [[19, 0]]);
+  gelijk(M.MadrigalAgenda.uren('19.30'), [[19, 30]]);
+  gelijk(M.MadrigalAgenda.uren(''), []);
+});
+test('agenda: .ics met uur, zonder einduur twee uur lang, zonder uur de hele dag', () => {
+  const ics = M.MadrigalAgenda.maakIcs({ datum: '2026-11-20', uur: '19:00', titel: 'Leesavond, met thee', locatie: 'Verzonnen zaal', tekst: 'Breng een boek mee.' }, '2026-10-24T10:00:00.000Z');
+  assert.ok(ics.includes('DTSTART;TZID=Europe/Brussels:20261120T190000'));
+  assert.ok(ics.includes('DTEND;TZID=Europe/Brussels:20261120T210000'));
+  assert.ok(ics.includes('SUMMARY:Leesavond\\, met thee'));
+  assert.ok(ics.includes('DTSTAMP:20261024T100000Z'));
+  const dag = M.MadrigalAgenda.maakIcs({ datum: '2026-12-31', titel: 'Oudejaar' }, '2026-10-24T10:00:00.000Z');
+  assert.ok(dag.includes('DTSTART;VALUE=DATE:20261231') && dag.includes('DTEND;VALUE=DATE:20270101'));
+});
+test('catalogus: sorteren op laatst toegevoegd, anders hoogste boek-ID', () => {
+  const lijst = [{ id: 'B0002', t: 'b' }, { id: 'B0010', t: 'c' }, { id: 'B0001', t: 'a', ta: '2026-10-20' }];
+  gelijk(M.MadrigalFilters.sorteer(lijst, 'toegevoegd').map((b) => b.id), ['B0001', 'B0010', 'B0002']);
+});
+test('publieke catalogus geeft de datum van toevoegen mee', () => {
+  const s = maakStaat();
+  s.catalogus[0].toegevoegd_op = '2026-10-01';
+  const p = M.bouwPubliekeCatalogus(s, []);
+  assert.strictEqual(p.boeken.find((b) => b.id === 'B0001').ta, '2026-10-01');
+  assert.ok(!('ta' in p.boeken.find((b) => b.id === 'B0002')));
+});
+test('Doe mee: teksten in beide talen, leeg Engels wordt Nederlands', () => {
+  const s = maakStaat('2026-10-23', { tekst_vrijwilliger: 'Kom helpen aan de balie.', tekst_schenken_en: '' });
+  const d = M.bouwSiteInhoud(s, {});
+  gelijk(d.doeMee.vrijwilliger, { nl: 'Kom helpen aan de balie.', en: 'Kom helpen aan de balie.' });
+  gelijk(d.doeMee.steunen, { nl: '', en: '' });
+});
+
 console.log('\nBack-up');
 test('back-up: naam met de datum', () => {
   assert.strictEqual(M.backupNaam('2026-10-24'), 'Madrigal back-up 2026-10-24');

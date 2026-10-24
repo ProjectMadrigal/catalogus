@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Doe mee · Project Madrigal</title>
+  <meta name="description" content="Word vrijwilliger, schenk boeken of steun Project Madrigal, de queer bibliotheek van Antwerpen.">
+  <link rel="canonical" href="https://projectmadrigal.github.io/doe-mee.html">
+  <!-- Voorbeeldweergave als je een link deelt (WhatsApp, Instagram, Facebook, ...) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Project Madrigal">
+  <meta property="og:locale" content="nl_BE">
+  <meta property="og:locale:alternate" content="en_GB">
+  <meta property="og:title" content="Doe mee met Project Madrigal">
+  <meta property="og:description" content="Word vrijwilliger, schenk boeken of steun Project Madrigal, de queer bibliotheek van Antwerpen.">
+  <meta property="og:url" content="https://projectmadrigal.github.io/doe-mee.html">
+  <meta property="og:image" content="https://projectmadrigal.github.io/assets/deelbeeld.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Logo van Project Madrigal met de tekst: queer bib in Antwerpen, leen gratis boeken.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="theme-color" content="#1b1b1c">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" href="assets/logo.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icoon-192.png">
+  <link rel="stylesheet" href="styles.css">
+  <script>try { var t = localStorage.getItem('madrigal_thema'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}</script>
+</head>
+<body data-pagina="doemee">
+  <header id="site-kop"></header>
+
+  <main id="inhoud" tabindex="-1">
+    <section class="sectie sectie-paars">
+      <div class="binnen">
+        <h1 data-i18n="doeMeeTitel">Doe mee</h1>
+        <p class="lees" data-i18n="doeMeeIntro"></p>
+      </div>
+    </section>
+
+    <section class="sectie sectie-licht" aria-labelledby="dm-vrijwilliger-titel" id="dm-vrijwilliger" hidden>
+      <div class="binnen lees">
+        <h2 id="dm-vrijwilliger-titel" data-i18n="dmVrijwilliger">Word vrijwilliger</h2>
+        <div class="tekstblok"><p data-tekst></p></div>
+        <p data-mail></p>
+      </div>
+    </section>
+
+    <section class="sectie sectie-geel" aria-labelledby="dm-schenken-titel" id="dm-schenken" hidden>
+      <div class="binnen lees">
+        <h2 id="dm-schenken-titel" data-i18n="dmSchenken">Schenk boeken</h2>
+        <div class="tekstblok"><p data-tekst></p></div>
+        <p data-mail></p>
+      </div>
+    </section>
+
+    <section class="sectie sectie-lila" aria-labelledby="dm-steunen-titel" id="dm-steunen" hidden>
+      <div class="binnen lees">
+        <h2 id="dm-steunen-titel" data-i18n="dmSteunen">Steun ons</h2>
+        <div class="tekstblok"><p data-tekst></p></div>
+        <p data-mail></p>
+      </div>
+    </section>
+
+    <section class="sectie sectie-licht" id="dm-leeg" hidden>
+      <div class="binnen lees">
+        <p data-i18n="dmLeeg"></p>
+        <p data-mail></p>
+      </div>
+    </section>
+  </main>
+
+  <footer id="site-voet"></footer>
+
+  <script src="config.js"></script>
+  <script src="i18n.js"></script>
+  <script src="layout.js"></script>
+  <script src="doemee.js"></script>
+</body>
+</html>

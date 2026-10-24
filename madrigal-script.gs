@@ -258,6 +258,12 @@ var STANDAARD_INSTELLINGEN = [
   ['tekst_welkom_en', 'Welcome to the catalogue of Project Madrigal, the queer library of Antwerp. Search, browse and come by to borrow.', 'Welkomsttekst in het Engels.'],
   ['tekst_uitleg_lenen_en', 'Borrowing is free, you only pay a 5 euro deposit per book. You get it back when you return the book. You can borrow 2 books at a time, for 4 weeks. Come by on Friday during opening hours.', 'Uitleg over lenen in het Engels.'],
   ['tekst_privacy_en', 'We only keep your first name, possibly your last name, your phone number and/or email address, and your borrower number. We only use them to follow up on your loans and to remind you when a book is due. Only the board can see your contact details. Twelve months after you return a book, we remove the link with you. Want to see your data or have it deleted? Ask at the desk or email [fill in the board email address].', 'Privacyverklaring in het Engels.'],
+  ['tekst_vrijwilliger', '', 'Pagina Doe mee: hoe word je vrijwilliger? Wat doe je, hoeveel tijd vraagt het, hoe meld je je aan. Leeg: dit blok staat niet op de pagina.'],
+  ['tekst_vrijwilliger_en', '', 'Pagina Doe mee, vrijwilliger worden, in het Engels.'],
+  ['tekst_schenken', '', 'Pagina Doe mee: welke boeken neem je graag aan, en welke niet? Hoe breng je ze binnen? Leeg: dit blok staat niet op de pagina.'],
+  ['tekst_schenken_en', '', 'Pagina Doe mee, boeken schenken, in het Engels.'],
+  ['tekst_steunen', '', 'Pagina Doe mee: hoe kan iemand Project Madrigal steunen (gift, rekeningnummer, materiaal)? Leeg: dit blok staat niet op de pagina.'],
+  ['tekst_steunen_en', '', 'Pagina Doe mee, steunen, in het Engels.'],
   ['adres', 'Peperfabriek (eerste verdieping)\nBreughelstraat 31\n2018 Antwerpen', 'Adres op de website. Een nieuwe regel maak je met Ctrl+Enter.'],
   ['openingsuren', 'Elke vrijdag: 18:00 - 20:00', 'Openingsuren op de website, in het Nederlands. Een nieuwe regel maak je met Ctrl+Enter.'],
   ['openingsuren_en', 'Every Friday: 18:00 - 20:00', 'Openingsuren op de website, in het Engels.'],
@@ -329,6 +335,7 @@ var INSTELLING_GROEPEN = [
   ['Herinneringen', ['tekst_herinnering', 'tekst_herinnering_binnenkort']],
   ['Website: contact', ['adres', 'openingsuren', 'openingsuren_en', 'mail_algemeen', 'mail_events']],
   ['Website: teksten bij Boeken', ['tekst_welkom', 'tekst_welkom_en', 'tekst_uitleg_lenen', 'tekst_uitleg_lenen_en', 'tekst_privacy', 'tekst_privacy_en']],
+  ['Website: Doe mee', ['tekst_vrijwilliger', 'tekst_vrijwilliger_en', 'tekst_schenken', 'tekst_schenken_en', 'tekst_steunen', 'tekst_steunen_en']],
   ['Aanraders', ['aanraders_uit_stocklijst', 'aanraders_verbergen', 'nieuw_op_startpagina_dagen', 'nieuw_op_startpagina_aantal']],
   ['Boekgegevens aanvullen', ['goodreads_shelf', 'google_books_api_key']],
   ['Rooster', ['rooster_url', 'rooster_code', 'rooster_link']],
@@ -351,7 +358,7 @@ var ROOSTER_CACHE_SLEUTEL = 'rooster_v1';
 
 var ROOSTER_CACHE_SECONDEN = 10 * 60;
 
-var SITE_CACHE_SLEUTEL = 'site_v2'; // v2: met de aparte lijst Nieuw binnen
+var SITE_CACHE_SLEUTEL = 'site_v3'; // v3: met de teksten van de pagina Doe mee
 
 var SITE_MAX_NIEUWS = 3;
 
@@ -1005,7 +1012,7 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
       i: schoon(rij.isbn), u: schoon(rij.uitgeverij), j: parseerGetal(rij.jaartal) || '',
       l: schoon(rij.taal), p: parseerGetal(rij.paginas) || '', v: schoon(rij.uitvoering),
       n: jaNee(rij.nieuwstaat) === 'ja' ? 'nieuw' : (jaNee(rij.nieuwstaat) === 'nee' ? 'tweedehands' : ''),
-      d: schoonMetRegels(rij.beschrijving), c: veiligeCoverUrl(rij.cover_url)
+      d: schoonMetRegels(rij.beschrijving), c: veiligeCoverUrl(rij.cover_url), ta: parseerDatum(rij.toegevoegd_op)
     };
     var en = schoonMetRegels(rij.beschrijving_en);
     if (en && en !== extra.d) extra.de = en;
@@ -1157,7 +1164,13 @@ function bouwSiteInhoud(staat, tabellen) {
     agenda: { komend: komend.slice(0, 3), vorig: voorbij[0] || null },
     faq: faq,
     aanraders: aanraders,
-    nieuw: nieuwBinnen
+    nieuw: nieuwBinnen,
+    // Pagina Doe mee. Een leeg blok toont de website niet.
+    doeMee: {
+      vrijwilliger: { nl: String(inst.tekst_vrijwilliger || ''), en: String(inst.tekst_vrijwilliger_en || '') || String(inst.tekst_vrijwilliger || '') },
+      schenken: { nl: String(inst.tekst_schenken || ''), en: String(inst.tekst_schenken_en || '') || String(inst.tekst_schenken || '') },
+      steunen: { nl: String(inst.tekst_steunen || ''), en: String(inst.tekst_steunen_en || '') || String(inst.tekst_steunen || '') }
+    }
   };
 }
 

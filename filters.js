@@ -89,7 +89,8 @@
 
   /**
    * Sorteert een lijst boeken.
-   * wijze: 'titel', 'auteur', 'jaar-nieuw', 'jaar-oud' of 'relevantie' (lijst blijft zoals ze is).
+   * wijze: 'titel', 'auteur', 'jaar-nieuw', 'jaar-oud', 'toegevoegd' of 'relevantie' (lijst blijft zoals ze is).
+   * toegevoegd: de datum van toevoegen (ta), anders het hoogste boek-ID eerst.
    */
   function sorteer(boeken, wijze) {
     var Z = root.MadrigalZoeken;
@@ -102,6 +103,9 @@
         if (!a.a !== !b.a) return a.a ? -1 : 1;
         return Z.normaliseer(a.a).localeCompare(Z.normaliseer(b.a), 'nl') || opTitel(a, b);
       });
+    } else if (wijze === 'toegevoegd') {
+      var nr = function (b) { return Number(String(b.id).replace(/\D/g, '')) || 0; };
+      lijst.sort(function (a, b) { return String(b.ta || '').localeCompare(String(a.ta || '')) || nr(b) - nr(a); });
     } else if (wijze === 'jaar-nieuw' || wijze === 'jaar-oud') {
       var richting = wijze === 'jaar-nieuw' ? -1 : 1;
       lijst.sort(function (a, b) {

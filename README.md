@@ -194,6 +194,10 @@ Elke rij in deze tabbladen is één bericht, event of vraag.
 
 Hoe je een bestand op GitHub aanpast, staat in [D3](#d3-de-website-zelf-aanpassen).
 
+**Pagina Doe mee.** In het menu staat de pagina **Doe mee** met drie blokken: **Word vrijwilliger**, **Schenk boeken** en **Steun ons**. Je vult de teksten in bij Instellingen, onder `── WEBSITE: DOE MEE ──` (of in het bestuursscherm onder Teksten en instellingen): `tekst_vrijwilliger`, `tekst_schenken`, `tekst_steunen` en hun Engelse versie op `_en`. Een leeg blok staat niet op de pagina. Elk blok krijgt vanzelf een knop om te mailen naar `mail_algemeen`.
+
+**Agenda.** Bij elk komend event staat een knop **Zet in mijn agenda**. Die maakt een bestand voor Google Agenda, Outlook of de agenda op je telefoon. Schrijf het uur in de kolom `uur` als `19:00` of `19:00 - 21:00`. Zonder einduur duurt het event twee uur, zonder uur de hele dag.
+
 ## A6. Werken aan de balie
 
 Druk de handleiding af: open [`handleiding-balie.html`](handleiding-balie.html) en klik op **Afdrukken**. Ze past op één A4. Leg ze naast de balie.
