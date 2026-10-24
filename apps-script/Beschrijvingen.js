@@ -45,10 +45,33 @@ function wachtOpGoogle(boek) {
   return String(boek.beschrijving_gezocht || '').indexOf(BS_ENKEL_OL) === 0;
 }
 
-/** Zoekt een ISBN op bij Google Books. Geeft { code, items } terug. */
+/**
+ * Zoekt een ISBN op bij Google Books. Geeft { code, items, limiet, fout } terug.
+ *   limiet: Google zegt dat de daglimiet op is (dan later opnieuw proberen);
+ *   fout:   wat Google zelf als reden geeft, bv. "API not enabled" of een probleem met de sleutel.
+ */
 function googleBooksZoek(isbn, sleutel) {
   var a = haalJson('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : ''));
-  return { code: a.code, items: (a.data && a.data.items) || [] };
+  var r = { code: a.code, items: (a.data && a.data.items) || [], limiet: false, fout: '' };
+  if (a.code >= 400) {
+    r.fout = googleFout(a.data) || ('code ' + a.code);
+    r.limiet = isGoogleLimiet(a.code, r.fout);
+  }
+  return r;
+}
+
+/** De foutmelding uit een antwoord van Google, kort. */
+function googleFout(data) {
+  var e = data && data.error;
+  if (!e) return '';
+  var reden = e.errors && e.errors[0] && e.errors[0].reason ? ' (' + e.errors[0].reason + ')' : '';
+  return String(e.message || e.status || '').replace(/\s+/g, ' ').slice(0, 200) + reden;
+}
+
+/** Gaat een fout van Google over de daglimiet, of over iets anders (sleutel, API uit, ...)? */
+function isGoogleLimiet(code, fout) {
+  if (code === 429) return true;
+  return code === 403 && /quota|rate ?limit|dailyLimit|userRateLimit|limitExceeded/i.test(String(fout || ''));
 }
 
 /**
@@ -148,7 +171,7 @@ function haalJson(url) {
 /** Beschrijving via Google Books. Geeft { tekst } of { limiet: true }. */
 function beschrijvingUitGoogleBooks(isbn, sleutel) {
   var r = googleBooksZoek(isbn, sleutel);
-  if (r.code === 429 || r.code === 403) return { limiet: true };
+  if (r.code === 429 || r.code === 403 || r.code === 400) return { limiet: true, fout: r.fout };
   var items = r.items;
   for (var i = 0; i < items.length; i++) {
     var tekst = maakBeschrijvingNetjes(items[i].volumeInfo && items[i].volumeInfo.description);
@@ -180,7 +203,7 @@ function vulBeschrijvingenAan() {
     meld('Er loopt al een andere bewerking. Probeer het zo meteen opnieuw.');
     return;
   }
-  var verwerkt = 0, gevonden = 0, rest = 0, limiet = false, gbLimiet = false;
+  var verwerkt = 0, gevonden = 0, rest = 0, limiet = false, gbLimiet = false, gbFout = '';
   try {
     var tabel = leesTabel('Catalogus');
     if (tabel.kop.indexOf('beschrijving_gezocht') === -1) {
@@ -198,7 +221,7 @@ function vulBeschrijvingenAan() {
       if (enkelGoogle && gbLimiet) break; // Google weigert nog: de rest wacht
       // Zit Google aan zijn daglimiet, dan zoeken we verder bij Open Library alleen.
       var r = gbLimiet ? { tekst: '' } : beschrijvingUitGoogleBooks(boek.isbn, sleutel);
-      if (r.limiet) { gbLimiet = true; limiet = true; r = { tekst: '' }; if (enkelGoogle) break; }
+      if (r.limiet) { gbLimiet = true; limiet = true; gbFout = r.fout || ''; r = { tekst: '' }; if (enkelGoogle) break; }
       if (!r.tekst && !enkelGoogle) { Utilities.sleep(1000); r = beschrijvingUitOpenLibrary(boek.isbn); }
       if (r.limiet) break; // Open Library vraagt om te wachten
       if (r.tekst) {
@@ -230,7 +253,7 @@ function vulBeschrijvingenAan() {
   if (gevonden) leegCache();
   // Nieuwe beschrijvingen gevonden? Dan vertalen (zie onderaan).
   if (gevonden) planVertaling(2);
-  logboek('menu', 'vulBeschrijvingenAan', verwerkt + ' opgezocht, ' + gevonden + ' beschrijvingen gevonden, ' + rest + ' te gaan' + (limiet ? ' (limiet bereikt)' : ''));
+  logboek('menu', 'vulBeschrijvingenAan', verwerkt + ' opgezocht, ' + gevonden + ' beschrijvingen gevonden, ' + rest + ' te gaan' + (limiet ? ' (limiet bereikt)' : '') + (gbFout ? '. Google meldt: ' + gbFout : ''));
   var tekst = verwerkt + ' boeken opgezocht, ' + gevonden + ' beschrijvingen gevonden.';
   if (rest > 0) tekst += limiet ? ' De daglimiet is bereikt: over 6 uur gaat het script vanzelf verder.' : ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.';
   else tekst += ' Alles is verwerkt.';

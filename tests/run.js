@@ -1065,6 +1065,15 @@ test('beschrijving: boek met OL-merkteken wacht nog op Google', () => {
   assert.strictEqual(M.parseerDatum('OL 20261024'), ''); // het merkteken blijft tekst, wordt geen datum
 });
 
+test('Google-fouten: daglimiet apart van een probleem met de sleutel of de API', () => {
+  const nietAan = { error: { code: 403, message: 'Books API has not been used in project 123 before or it is disabled.', errors: [{ reason: 'accessNotConfigured' }] } };
+  assert.ok(/has not been used.*\(accessNotConfigured\)/.test(M.googleFout(nietAan)));
+  assert.strictEqual(M.isGoogleLimiet(403, M.googleFout(nietAan)), false);
+  assert.strictEqual(M.isGoogleLimiet(403, 'Daily Limit Exceeded (dailyLimitExceeded)'), true);
+  assert.strictEqual(M.isGoogleLimiet(429, ''), true);
+  assert.strictEqual(M.isGoogleLimiet(400, 'API key not valid. Please pass a valid API key. (badRequest)'), false);
+});
+
 console.log('\nBack-up');
 test('back-up: naam met de datum', () => {
   assert.strictEqual(M.backupNaam('2026-10-24'), 'Madrigal back-up 2026-10-24');
