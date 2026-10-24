@@ -151,19 +151,22 @@ test('nieuw boek krijgt toegevoegd_op, maar niet bij de eerste opbouw', () => {
   assert.strictEqual(catalogus[1].toegevoegd_op, '2026-10-20');
 });
 
-test('aanrader komt nooit uit de stocklijst, en overgenomen aanraders kan je wissen', () => {
+test('aanrader uit de stocklijst: enkel toegelaten namen, de rest kan je wissen', () => {
   const boek = (titel, aanrader) => ({ soort: 'boek', titel: titel, auteur: 'Verzonnen, Iemand', isbn: '', uitgeverij: '', jaartal: '', taal: '', paginas: '', uitvoering: '', nieuwstaat: '', aanrader: aanrader, genre: 'roman', aantal: 1, herkomst: '', isbn_origineel: '' });
-  const bron = [boek('Eerste', 'Robin'), boek('Tweede', 'Robin'), boek('Derde', 'Robin')];
+  const inst = instellingen();
+  inst.aanraders_uit_stocklijst = 'Kim';
+  const bron = [boek('Eerste', 'Robin'), boek('Tweede', 'Kim'), boek('Derde', 'Robin en Kim'), boek('Vierde', 'Robin')];
   const catalogus = [];
   let n = 0;
-  M.voegBronSamen(catalogus, JSON.parse(JSON.stringify(bron)), () => 'B' + (++n), instellingen());
-  gelijk(catalogus.map((r) => r.aanrader), ['', '', '']);
-  // Een oude Catalogus met overgenomen aanraders: twee van stock, één zelf aangepast.
+  M.voegBronSamen(catalogus, JSON.parse(JSON.stringify(bron)), () => 'B' + (++n), inst);
+  gelijk(catalogus.map((r) => r.aanrader), ['', 'Kim', 'Kim', '']);
+  // Een oude Catalogus met alles overgenomen, en één aanrader die je zelf aanpaste.
   catalogus[0].aanrader = 'Robin';
-  catalogus[1].aanrader = 'robin ';
-  catalogus[2].aanrader = 'Sam';
-  assert.strictEqual(M.wisAanradersUitStockRijen(catalogus, bron), 2);
-  gelijk(catalogus.map((r) => r.aanrader), ['', '', 'Sam']);
+  catalogus[1].aanrader = 'Kim';
+  catalogus[2].aanrader = 'robin en Kim';
+  catalogus[3].aanrader = 'Sam';
+  assert.strictEqual(M.wisAanradersUitStockRijen(catalogus, bron, inst), 2);
+  gelijk(catalogus.map((r) => r.aanrader), ['', 'Kim', 'Kim', 'Sam']);
 });
 
 test('boeken zonder ISBN met dezelfde titel tot de dubbele punt blijven apart', () => {
