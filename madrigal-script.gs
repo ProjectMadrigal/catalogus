@@ -206,6 +206,7 @@ var STANDAARD_INSTELLINGEN = [
   ['mail_algemeen', 'info@projectmadrigal.be', 'Algemeen mailadres op de website.'],
   ['mail_events', 'events.madrigal@gmail.com', 'Mailadres voor events op de website.'],
   ['nieuw_op_startpagina_dagen', 60, 'Hoeveel dagen een nieuw toegevoegd boek bij de Aanraders op de startpagina staat, met het label "Nieuw binnen". 0: nieuwe boeken niet automatisch tonen.'],
+  ['aanraders_uit_stocklijst', 'Johanna', 'Namen van wie de aanraders uit de oude stocklijst overgenomen worden, gescheiden door komma\'s. Andere namen uit de stocklijst niet. Een aanrader die je zelf typt in de kolom aanrader van de Catalogus, staat altijd op de website.'],
   ['aanraders_verbergen', '', 'Namen van wie de aanraders nergens op de website staan, gescheiden door komma\'s (bv. Nance): niet op de startpagina, niet als label bij de boeken en niet in de filter Aanrader. De namen blijven in de Catalogus staan. Leeg: iedereen staat erop.'],
   ['tekst_herinnering', 'Hoi {voornaam}, je leende bij Project Madrigal "{titel}". Dat boek moest terug op {vervaldatum}. Breng je het binnenkort binnen? Lukt dat niet, laat het ons dan even weten. Dank je!', 'Herinnering voor een boek dat te laat is. Gebruik {voornaam}, {titel} en {vervaldatum}.'],
   ['tekst_herinnering_binnenkort', 'Hoi {voornaam}, een vriendelijke herinnering: "{titel}" mag terug naar Project Madrigal op {vervaldatum}. Wil je het langer houden? Laat het ons weten, dan verlengen we het. Veel leesplezier!', 'Herinnering voor een boek dat binnenkort vervalt.']
@@ -267,7 +268,7 @@ var INSTELLING_GROEPEN = [
   ['Herinneringen', ['tekst_herinnering', 'tekst_herinnering_binnenkort']],
   ['Website: contact', ['adres', 'openingsuren', 'openingsuren_en', 'mail_algemeen', 'mail_events']],
   ['Website: teksten bij Boeken', ['tekst_welkom', 'tekst_welkom_en', 'tekst_uitleg_lenen', 'tekst_uitleg_lenen_en', 'tekst_privacy', 'tekst_privacy_en']],
-  ['Startpagina: aanraders', ['nieuw_op_startpagina_dagen', 'aanraders_verbergen']],
+  ['Aanraders', ['aanraders_uit_stocklijst', 'aanraders_verbergen', 'nieuw_op_startpagina_dagen']],
   ['Boekgegevens aanvullen', ['goodreads_shelf', 'google_books_api_key']],
   ['Rooster', ['rooster_url', 'rooster_code', 'rooster_link']],
   ['Privacy', ['bewaartermijn_afgesloten_uitleningen_maanden']]
@@ -1851,6 +1852,14 @@ function nietPubliekVolgensHerkomst(herkomst) {
 }
 
 /**
+ * Voegt de boeken uit Stock en Zines samen met de bestaande Catalogus.
+ * bestaand: rijen van de Catalogus (worden aangevuld, nooit overschreven).
+ * bron: boek-objecten uit leesBronRijen.
+ * nieuwId: functie(soort) die een nieuwe, unieke boek-ID geeft.
+ * Geeft { nieuw, aangevuld } terug (aantallen).
+ */
+
+/**
  * Nieuwe lener inschrijven.
  * invoer: { voornaam, achternaam, telefoon, email, toestemming }
  */
@@ -2478,6 +2487,18 @@ function titelSleutel(titel) {
   return woorden(t).join(' ');
 }
 
+/**
+ * Enkel de namen uit de instelling aanraders_uit_stocklijst (bv. Johanna) komen
+ * uit de stocklijst. "Nance en Johanna" wordt zo "Johanna". Andere aanraders
+ * typ je zelf in de kolom aanrader van de Catalogus.
+ */
+function toegelatenStockAanrader(waarde, inst) {
+  var toegelaten = splitsLijst((inst || {}).aanraders_uit_stocklijst).map(normaliseerTekst);
+  return splitsLijst(String(waarde || '').replace(/ en | & /g, ',')).filter(function (naam) {
+    return toegelaten.indexOf(normaliseerTekst(naam)) > -1;
+  }).join(', ');
+}
+
 /** Vult aan met nullen: 7 wordt "07". */
 function tweeCijfers(n) {
   return (n < 10 ? '0' : '') + n;
@@ -2976,13 +2997,6 @@ function vindOudeDatabank() {
   return { url: url, sleutel: sleutel };
 }
 
-/**
- * Voegt de boeken uit Stock en Zines samen met de bestaande Catalogus.
- * bestaand: rijen van de Catalogus (worden aangevuld, nooit overschreven).
- * bron: boek-objecten uit leesBronRijen.
- * nieuwId: functie(soort) die een nieuwe, unieke boek-ID geeft.
- * Geeft { nieuw, aangevuld } terug (aantallen).
- */
 function voegBronSamen(bestaand, bron, nieuwId, inst, vandaag) {
   // Bij de eerste opbouw is niets "nieuw binnen". Daarna krijgt een nieuw boek de datum van vandaag.
   var datumNieuw = bestaand.length && vandaag ? vandaag : '';
@@ -3011,10 +3025,12 @@ function voegBronSamen(bestaand, bron, nieuwId, inst, vandaag) {
     if (rij) {
       // Enkel lege velden aanvullen. Wat iemand met de hand invulde, blijft.
       var velden = {};
-      // De aanrader nemen we nooit over uit de stocklijst: die vul je zelf in, per boek.
       ['titel', 'auteur', 'isbn', 'uitgeverij', 'jaartal', 'taal', 'paginas', 'uitvoering', 'nieuwstaat', 'genre', 'herkomst', 'isbn_origineel'].forEach(function (k) {
         if (isLeeg(rij[k]) && !isLeeg(b[k])) velden[k] = b[k];
       });
+      // De aanrader: enkel de toegelaten namen (zie toegelatenStockAanrader).
+      var aanrader = toegelatenStockAanrader(b.aanrader, inst);
+      if (isLeeg(rij.aanrader) && aanrader) velden.aanrader = aanrader;
       if (isLeeg(rij.aantal)) velden.aantal = b.aantal;
       if (Object.keys(velden).length) { wijzig(rij, velden); teller.aangevuld++; }
       return;
@@ -3025,7 +3041,7 @@ function voegBronSamen(bestaand, bron, nieuwId, inst, vandaag) {
       soort: b.soort,
       titel: b.titel, auteur: b.auteur, isbn: b.isbn, uitgeverij: b.uitgeverij, jaartal: b.jaartal,
       taal: b.taal, paginas: b.paginas, uitvoering: b.uitvoering, nieuwstaat: b.nieuwstaat,
-      aanrader: '', genre: b.genre, extra_onderwerpen: '', klassieker: '',
+      aanrader: toegelatenStockAanrader(b.aanrader, inst), genre: b.genre, extra_onderwerpen: '', klassieker: '',
       aantal: b.aantal,
       uitleenbaar: teKoop && !inst.zines_te_koop_uitleenbaar ? 'nee' : 'ja',
       publiek: nietPubliekVolgensHerkomst(b.herkomst) ? 'nee' : 'ja',
@@ -3457,23 +3473,24 @@ function wisAanradersUitStock() {
   var n;
   try {
     var tabel = leesTabel('Catalogus');
-    n = wisAanradersUitStockRijen(tabel.rijen, bron);
+    n = wisAanradersUitStockRijen(tabel.rijen, bron, leesInstellingen());
     bewaarTabel(tabel);
   } finally {
     lock.releaseLock();
   }
   leegCache();
   logboek('menu', 'wisAanradersUitStock', n + ' aanraders gewist');
-  meld(n + ' aanraders uit de stocklijst gewist. Aanraders die je zelf invulde, bleven staan. Een aanrader voeg je voortaan toe in de kolom aanrader van de Catalogus.');
+  meld(n + ' boeken kregen een aangepaste aanrader. De namen uit aanraders_uit_stocklijst (zoals Johanna) en wat je zelf invulde, bleven staan. Een andere aanrader typ je voortaan in de kolom aanrader van de Catalogus.');
 }
 
 /**
- * Wist de aanraders die uit de stocklijst kwamen. Een aanrader die je zelf
+ * Wist de aanraders die uit de stocklijst kwamen, behalve de namen uit de
+ * instelling aanraders_uit_stocklijst (bv. Johanna). Een aanrader die je zelf
  * invulde of aanpaste (een andere waarde dan in de stocklijst), blijft staan.
  * catalogusRijen: rijen van de Catalogus. bron: boek-objecten uit leesBronRijen.
- * Geeft het aantal gewiste aanraders terug.
+ * Geeft het aantal aangepaste boeken terug.
  */
-function wisAanradersUitStockRijen(catalogusRijen, bron) {
+function wisAanradersUitStockRijen(catalogusRijen, bron, inst) {
   var uitStock = {};
   bron.forEach(function (b) {
     var s = bronSleutel(b);
@@ -3483,7 +3500,9 @@ function wisAanradersUitStockRijen(catalogusRijen, bron) {
   catalogusRijen.forEach(function (rij) {
     if (isLeeg(rij.aanrader) || !rij.bron_sleutel) return;
     if (uitStock[rij.bron_sleutel] === normaliseerTekst(rij.aanrader)) {
-      wijzig(rij, { aanrader: '' });
+      var blijft = toegelatenStockAanrader(rij.aanrader, inst);
+      if (normaliseerTekst(blijft) === normaliseerTekst(rij.aanrader)) return;
+      wijzig(rij, { aanrader: blijft });
       n++;
     }
   });

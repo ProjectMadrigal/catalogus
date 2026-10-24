@@ -127,6 +127,18 @@ function nietPubliekVolgensHerkomst(herkomst) {
  * nieuwId: functie(soort) die een nieuwe, unieke boek-ID geeft.
  * Geeft { nieuw, aangevuld } terug (aantallen).
  */
+/**
+ * Enkel de namen uit de instelling aanraders_uit_stocklijst (bv. Johanna) komen
+ * uit de stocklijst. "Nance en Johanna" wordt zo "Johanna". Andere aanraders
+ * typ je zelf in de kolom aanrader van de Catalogus.
+ */
+function toegelatenStockAanrader(waarde, inst) {
+  var toegelaten = splitsLijst((inst || {}).aanraders_uit_stocklijst).map(normaliseerTekst);
+  return splitsLijst(String(waarde || '').replace(/ en | & /g, ',')).filter(function (naam) {
+    return toegelaten.indexOf(normaliseerTekst(naam)) > -1;
+  }).join(', ');
+}
+
 function voegBronSamen(bestaand, bron, nieuwId, inst, vandaag) {
   // Bij de eerste opbouw is niets "nieuw binnen". Daarna krijgt een nieuw boek de datum van vandaag.
   var datumNieuw = bestaand.length && vandaag ? vandaag : '';
@@ -155,10 +167,12 @@ function voegBronSamen(bestaand, bron, nieuwId, inst, vandaag) {
     if (rij) {
       // Enkel lege velden aanvullen. Wat iemand met de hand invulde, blijft.
       var velden = {};
-      // De aanrader nemen we nooit over uit de stocklijst: die vul je zelf in, per boek.
       ['titel', 'auteur', 'isbn', 'uitgeverij', 'jaartal', 'taal', 'paginas', 'uitvoering', 'nieuwstaat', 'genre', 'herkomst', 'isbn_origineel'].forEach(function (k) {
         if (isLeeg(rij[k]) && !isLeeg(b[k])) velden[k] = b[k];
       });
+      // De aanrader: enkel de toegelaten namen (zie toegelatenStockAanrader).
+      var aanrader = toegelatenStockAanrader(b.aanrader, inst);
+      if (isLeeg(rij.aanrader) && aanrader) velden.aanrader = aanrader;
       if (isLeeg(rij.aantal)) velden.aantal = b.aantal;
       if (Object.keys(velden).length) { wijzig(rij, velden); teller.aangevuld++; }
       return;
@@ -169,7 +183,7 @@ function voegBronSamen(bestaand, bron, nieuwId, inst, vandaag) {
       soort: b.soort,
       titel: b.titel, auteur: b.auteur, isbn: b.isbn, uitgeverij: b.uitgeverij, jaartal: b.jaartal,
       taal: b.taal, paginas: b.paginas, uitvoering: b.uitvoering, nieuwstaat: b.nieuwstaat,
-      aanrader: '', genre: b.genre, extra_onderwerpen: '', klassieker: '',
+      aanrader: toegelatenStockAanrader(b.aanrader, inst), genre: b.genre, extra_onderwerpen: '', klassieker: '',
       aantal: b.aantal,
       uitleenbaar: teKoop && !inst.zines_te_koop_uitleenbaar ? 'nee' : 'ja',
       publiek: nietPubliekVolgensHerkomst(b.herkomst) ? 'nee' : 'ja',
@@ -241,12 +255,13 @@ function maakCatalogus() {
 }
 
 /**
- * Wist de aanraders die uit de stocklijst kwamen. Een aanrader die je zelf
+ * Wist de aanraders die uit de stocklijst kwamen, behalve de namen uit de
+ * instelling aanraders_uit_stocklijst (bv. Johanna). Een aanrader die je zelf
  * invulde of aanpaste (een andere waarde dan in de stocklijst), blijft staan.
  * catalogusRijen: rijen van de Catalogus. bron: boek-objecten uit leesBronRijen.
- * Geeft het aantal gewiste aanraders terug.
+ * Geeft het aantal aangepaste boeken terug.
  */
-function wisAanradersUitStockRijen(catalogusRijen, bron) {
+function wisAanradersUitStockRijen(catalogusRijen, bron, inst) {
   var uitStock = {};
   bron.forEach(function (b) {
     var s = bronSleutel(b);
@@ -256,7 +271,9 @@ function wisAanradersUitStockRijen(catalogusRijen, bron) {
   catalogusRijen.forEach(function (rij) {
     if (isLeeg(rij.aanrader) || !rij.bron_sleutel) return;
     if (uitStock[rij.bron_sleutel] === normaliseerTekst(rij.aanrader)) {
-      wijzig(rij, { aanrader: '' });
+      var blijft = toegelatenStockAanrader(rij.aanrader, inst);
+      if (normaliseerTekst(blijft) === normaliseerTekst(rij.aanrader)) return;
+      wijzig(rij, { aanrader: blijft });
       n++;
     }
   });
@@ -280,14 +297,14 @@ function wisAanradersUitStock() {
   var n;
   try {
     var tabel = leesTabel('Catalogus');
-    n = wisAanradersUitStockRijen(tabel.rijen, bron);
+    n = wisAanradersUitStockRijen(tabel.rijen, bron, leesInstellingen());
     bewaarTabel(tabel);
   } finally {
     lock.releaseLock();
   }
   leegCache();
   logboek('menu', 'wisAanradersUitStock', n + ' aanraders gewist');
-  meld(n + ' aanraders uit de stocklijst gewist. Aanraders die je zelf invulde, bleven staan. Een aanrader voeg je voortaan toe in de kolom aanrader van de Catalogus.');
+  meld(n + ' boeken kregen een aangepaste aanrader. De namen uit aanraders_uit_stocklijst (zoals Johanna) en wat je zelf invulde, bleven staan. Een andere aanrader typ je voortaan in de kolom aanrader van de Catalogus.');
 }
 
 /**
