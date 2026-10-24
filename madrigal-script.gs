@@ -1530,14 +1530,14 @@ function googleBooksVraag(url) {
  *   fout:   wat Google zelf als reden geeft, bv. "API not enabled" of een probleem met de sleutel.
  */
 function googleBooksZoek(isbn, sleutel, land) {
-  var r = googleBooksVraag(googleBooksUrl(isbn, sleutel, land));
-  // Google geeft soms niets terug voor "isbn:…", terwijl het boek wel gekend is. Dan zoeken we
-  // op het ISBN als gewoon getal, en nemen enkel een uitgave met precies dat ISBN.
-  if (!r.fout && !r.items.length) {
-    var vrij = googleBooksVraag(googleBooksUrl(isbn, sleutel, land, 'vrij'));
-    if (!vrij.fout) r.items = googleItemsMetIsbn(vrij.items, isbn);
-  }
-  return r;
+  // Eerst op het ISBN als gewoon getal: dat werkt bij Google het best. We nemen enkel een
+  // uitgave met precies dat ISBN. Levert dat niets op, dan als reserve de vorm "isbn:…".
+  var r = googleBooksVraag(googleBooksUrl(isbn, sleutel, land, 'vrij'));
+  if (!r.fout) r.items = googleItemsMetIsbn(r.items, isbn);
+  if (r.limiet || r.items.length) return r;
+  var reserve = googleBooksVraag(googleBooksUrl(isbn, sleutel, land));
+  if (!reserve.fout) return reserve;
+  return r.fout ? r : { code: 200, items: [], limiet: false, fout: '' };
 }
 
 /** De foutmelding uit een antwoord van Google, kort. */

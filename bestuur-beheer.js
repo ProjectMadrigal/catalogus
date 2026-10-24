@@ -203,7 +203,7 @@
    * Deze browser vraagt dus de covers op bij Google, en stuurt per 20 boeken door naar de
    * web-app, die ze in de Catalogus zet.
    */
-  var COVERS_VERSIE = '4'; // staat in de voortgang: zo zie je of je browser de nieuwste versie gebruikt
+  var COVERS_VERSIE = '5'; // staat in de voortgang: zo zie je of je browser de nieuwste versie gebruikt
   var COVERS_PER_PORTIE = 20;
   var COVERS_PAUZE_MS = 350;
 
@@ -230,15 +230,16 @@
   }
 
   /**
-   * Vraagt één ISBN op. Google geeft soms niets terug voor "isbn:…" terwijl het boek gekend is:
-   * dan zoeken we op het ISBN als gewoon getal en nemen enkel een uitgave met precies dat ISBN.
+   * Vraagt één ISBN op. Eerst op het ISBN als gewoon getal (dat werkt bij Google het best),
+   * en we nemen enkel een uitgave met precies dat ISBN. Levert dat niets op, dan als reserve "isbn:…".
    */
   function vraagGoogle(isbn, sleutel) {
-    return vraagGoogleUrl('isbn:' + encodeURIComponent(isbn), sleutel).then(function (a) {
-      if (a.fout || a.items.length) return a;
-      return vraagGoogleUrl(encodeURIComponent(isbn), sleutel).then(function (b) {
-        if (b.fout) return a;
-        return { items: metIsbn(b.items, isbn) };
+    return vraagGoogleUrl(encodeURIComponent(isbn), sleutel).then(function (a) {
+      if (!a.fout) a = { items: metIsbn(a.items, isbn) };
+      if (a.limiet || (a.items && a.items.length)) return a;
+      return vraagGoogleUrl('isbn:' + encodeURIComponent(isbn), sleutel).then(function (b) {
+        if (!b.fout) return b;
+        return a.fout ? a : { items: [] };
       });
     }).then(function (a) {
       if (a.fout) return a;
