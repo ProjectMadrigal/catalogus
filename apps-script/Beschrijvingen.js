@@ -23,7 +23,9 @@
  */
 
 var BS_MAX_LOOPTIJD_MS = 4.5 * 60 * 1000;
-var BS_MAX_LENGTE = 1000;
+// Een beschrijving blijft volledig tot deze lengte. Is ze langer, dan stopt ze na
+// de laatste volledige zin, nooit midden in een zin.
+var BS_MAX_LENGTE = 2500;
 var BS_USER_AGENT = 'ProjectMadrigal-catalogus (Google Apps Script; queer bibliotheek Antwerpen)';
 
 /** Moet het script voor dit boek nog een beschrijving zoeken? */
@@ -54,8 +56,63 @@ function maakBeschrijvingNetjes(tekst) {
     .replace(/ *\n */g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
-  if (t.length > BS_MAX_LENGTE) t = t.slice(0, BS_MAX_LENGTE - 3).replace(/\s+\S*$/, '') + '...';
-  return t;
+  return kortAfOpZin(t, BS_MAX_LENGTE);
+}
+
+/**
+ * Kort een tekst af tot hoogstens max tekens, na de laatste volledige zin.
+ * Een zin eindigt op . ! ? of een regeleinde. Is er geen zinseinde, dan stopt
+ * de tekst na het laatste volledige woord, met "...".
+ */
+function kortAfOpZin(tekst, max) {
+  var t = String(tekst || '');
+  if (t.length <= max) return t;
+  var stuk = t.slice(0, max);
+  var einde = -1;
+  var re = /[.!?»"”')]\s|\n/g, m;
+  while ((m = re.exec(stuk))) einde = m.index + 1;
+  if (einde > max / 3) return stuk.slice(0, einde).trim();
+  return stuk.slice(0, max - 3).replace(/\s+\S*$/, '') + '...';
+}
+
+/** Werd deze beschrijving vroeger afgebroken (eindigt ze op "...")? */
+function isAfgebroken(tekst) {
+  return /(\.\.\.|…)\s*$/.test(String(tekst || ''));
+}
+
+/**
+ * Maakt afgebroken beschrijvingen leeg, zodat het script ze opnieuw volledig zoekt
+ * en vertaalt. Enkel beschrijvingen die het script zelf vond (met een datum in
+ * beschrijving_gezocht, ol_gecontroleerd of gb_gecontroleerd). Geeft het aantal terug.
+ */
+function maakAfgebrokenLeeg(rijen) {
+  var n = 0;
+  rijen.forEach(function (rij) {
+    var doorScript = !isLeeg(rij.beschrijving_gezocht) || !isLeeg(rij.ol_gecontroleerd) || !isLeeg(rij.gb_gecontroleerd);
+    if (!doorScript || !/^\d{13}$/.test(String(rij.isbn || ''))) return;
+    if (!isAfgebroken(rij.beschrijving) && !isAfgebroken(rij.beschrijving_en)) return;
+    wijzig(rij, { beschrijving: '', beschrijving_en: '', beschrijving_gezocht: '', beschrijving_vertaald: '' });
+    n++;
+  });
+  return n;
+}
+
+/** Menu: zoekt de afgebroken beschrijvingen opnieuw op, volledig. */
+function herstelAfgebrokenBeschrijvingen() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  var n;
+  try {
+    var tabel = leesTabel('Catalogus');
+    n = maakAfgebrokenLeeg(tabel.rijen);
+    bewaarTabel(tabel);
+  } finally {
+    lock.releaseLock();
+  }
+  logboek('menu', 'herstelAfgebrokenBeschrijvingen', n + ' beschrijvingen opnieuw te zoeken');
+  if (!n) { meld('Er zijn geen afgebroken beschrijvingen.'); return; }
+  meld(n + ' afgebroken beschrijvingen worden opnieuw opgezocht en vertaald. Dat gebeurt in porties en gaat vanzelf verder. Het Logboek toont de stand.');
+  vulBeschrijvingenAan();
 }
 
 /** Een beschrijving uit Open Library: tekst, of een object met value. */
