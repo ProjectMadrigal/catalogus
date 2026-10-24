@@ -203,15 +203,51 @@
    * Deze browser vraagt dus de covers op bij Google, en stuurt per 20 boeken door naar de
    * web-app, die ze in de Catalogus zet.
    */
-  var COVERS_VERSIE = '3'; // staat in de voortgang: zo zie je of je browser de nieuwste versie gebruikt
+  var COVERS_VERSIE = '4'; // staat in de voortgang: zo zie je of je browser de nieuwste versie gebruikt
   var COVERS_PER_PORTIE = 20;
   var COVERS_PAUZE_MS = 350;
 
   function wacht(ms) { return new Promise(function (klaar) { setTimeout(klaar, ms); }); }
 
   /** Vraagt één ISBN op bij Google Books. Geeft { info } of { fout, limiet, storing }. */
+  /** ISBN-13 (978…) naar ISBN-10, om uitgaven te vergelijken. */
+  function isbn13Naar10(s) {
+    if (!/^978\d{10}$/.test(s)) return '';
+    var kern = s.slice(3, 12), som = 0;
+    for (var i = 0; i < 9; i++) som += (10 - i) * Number(kern.charAt(i));
+    var c = (11 - (som % 11)) % 11;
+    return kern + (c === 10 ? 'X' : String(c));
+  }
+
+  /** Enkel uitgaven met precies dit ISBN. */
+  function metIsbn(items, isbn) {
+    var gezocht = [isbn, isbn13Naar10(isbn)].filter(Boolean);
+    return (items || []).filter(function (it) {
+      return ((it.volumeInfo || {}).industryIdentifiers || []).some(function (id) {
+        return gezocht.indexOf(String(id.identifier || '').replace(/[^0-9X]/gi, '').toUpperCase()) > -1;
+      });
+    });
+  }
+
+  /**
+   * Vraagt één ISBN op. Google geeft soms niets terug voor "isbn:…" terwijl het boek gekend is:
+   * dan zoeken we op het ISBN als gewoon getal en nemen enkel een uitgave met precies dat ISBN.
+   */
   function vraagGoogle(isbn, sleutel) {
-    var url = 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + encodeURIComponent(isbn) + (sleutel ? '&key=' + encodeURIComponent(sleutel) : '');
+    return vraagGoogleUrl('isbn:' + encodeURIComponent(isbn), sleutel).then(function (a) {
+      if (a.fout || a.items.length) return a;
+      return vraagGoogleUrl(encodeURIComponent(isbn), sleutel).then(function (b) {
+        if (b.fout) return a;
+        return { items: metIsbn(b.items, isbn) };
+      });
+    }).then(function (a) {
+      if (a.fout) return a;
+      return { info: a.items.length ? a.items[0].volumeInfo : null };
+    });
+  }
+
+  function vraagGoogleUrl(q, sleutel) {
+    var url = 'https://www.googleapis.com/books/v1/volumes?q=' + q + (sleutel ? '&key=' + encodeURIComponent(sleutel) : '');
     return fetch(url).then(function (r) { return r.json().then(function (d) { return { code: r.status, d: d }; }); }).then(function (a) {
       if (a.code >= 400 || a.d.error) {
         var e = a.d.error || {};
@@ -221,8 +257,7 @@
         var storing = a.code >= 500 || Number(e.code) >= 500 || /temporarily unavailable|backendFailed|backend error|internal error/i.test(fout);
         return { fout: fout, limiet: !storing && (a.code === 429 || /quota|limit/i.test(fout)), storing: storing };
       }
-      var item = (a.d.items || [])[0];
-      return { info: item ? item.volumeInfo : null };
+      return { items: a.d.items || [] };
     }, function () { return { fout: 'Geen verbinding met Google.', storing: true }; });
   }
 
