@@ -98,6 +98,7 @@ function onOpen() {
     .addItem('4. Vul aan uit Open Library', 'vulAanUitOpenLibrary')
     .addItem('5. Zoek ontbrekende covers bij Google Books', 'vulAanUitGoogleBooks')
     .addItem('Test Google Books (kies eerst een cel met een ISBN)', 'testGoogleBooks')
+    .addItem('Zoek covers opnieuw bij Google (boeken zonder cover)', 'zoekCoversOpnieuw')
     .addItem('6. Zoek ontbrekende beschrijvingen', 'vulBeschrijvingenAan')
     .addItem('7. Vertaal de beschrijvingen (Nederlands en Engels)', 'vertaalBeschrijvingen')
     .addItem('Zoek afgebroken beschrijvingen opnieuw (volledig)', 'herstelAfgebrokenBeschrijvingen')
