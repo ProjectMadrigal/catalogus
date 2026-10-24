@@ -232,7 +232,7 @@ function verwerkVervallenReservaties(staat) {
 function uitlenen(staat, invoer) {
   var ex = exemplaarInfo(staat, invoer.exemplaar);
   if (!ex) return { ok: false, fout: 'Dit exemplaar bestaat niet.' };
-  if (jaNee(ex.boek.uitleenbaar) === 'nee') return { ok: false, fout: 'Dit boek is niet uitleenbaar.' };
+  if (!isUitleenbaar(ex.boek)) return { ok: false, fout: nietUitleenbaarFout(ex.boek) };
   if (uitleningVanExemplaar(staat, ex.exemplaar)) return { ok: false, fout: 'Dit exemplaar is al uitgeleend. Kies een ander exemplaar of registreer eerst het terugbrengen.' };
   var lener = lenerVan(staat, invoer.lenersnummer);
   if (!lener) return { ok: false, fout: 'Er is geen lener met nummer ' + tekstInvoer(invoer.lenersnummer, 10) + '.' };
@@ -331,7 +331,7 @@ function verlengen(staat, invoer) {
 function reserveren(staat, invoer) {
   var boek = boekVan(staat, invoer.boek_id);
   if (!boek) return { ok: false, fout: 'Dit boek bestaat niet.' };
-  if (jaNee(boek.uitleenbaar) === 'nee') return { ok: false, fout: 'Dit boek is niet uitleenbaar.' };
+  if (!isUitleenbaar(boek)) return { ok: false, fout: nietUitleenbaarFout(boek) };
   var lener = lenerVan(staat, invoer.lenersnummer);
   if (!lener) return { ok: false, fout: 'Er is geen lener met nummer ' + tekstInvoer(invoer.lenersnummer, 10) + '.' };
   if (jaNee(lener.actief) === 'nee') return { ok: false, fout: 'Deze lener staat op inactief.' };
@@ -473,7 +473,7 @@ function uitleningInfo(staat, u, metContact) {
  */
 function beschikbaarheid(staat, boek) {
   var totaal = aantalExemplaren(boek);
-  if (jaNee(boek.uitleenbaar) === 'nee') {
+  if (!isUitleenbaar(boek)) {
     var teKoop = normaliseerTekst(boek.genre) === 'verkoop';
     return { code: 'niet_uitleenbaar', label: teKoop ? 'Te koop in de bib, niet uitleenbaar' : 'Niet uitleenbaar', totaal: totaal, beschikbaar: 0, terug: '' };
   }

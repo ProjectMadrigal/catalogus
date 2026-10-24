@@ -10,6 +10,7 @@
  *   v   uitvoering       n  nieuw/tweedehands                r  aanraders (lijst)
  *   g   filtergroepen    s  soort (boek/zine)                d  beschrijving
  *   de  beschrijving in het Engels (enkel als die verschilt)
+ *   w   1 als het boek gevoelige inhoud heeft (label op de website)
  *   c   cover-URL        b  beschikbaarheid { c: code, l: label, t: totaal, v: vrij,
  *                                           d: verwacht terug (datum), k: 1 als te koop }
  */
@@ -22,7 +23,7 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
   var boeken = [];
   staat.catalogus.forEach(function (rij) {
     if (isLeeg(rij.boek_id) || isLeeg(rij.titel)) return;
-    if (jaNee(rij.publiek) === 'nee') return;
+    if (!opWebsite(rij)) return;
     var b = beschikbaarheid(staat, rij);
     var boek = {
       id: String(rij.boek_id),
@@ -35,6 +36,7 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
     // Datum van verwachte terugkeer en "te koop": zo maakt de website het label in elke taal op.
     if (b.code === 'uitgeleend' && b.terug && b.terug >= staat.vandaag) boek.b.d = b.terug;
     if (b.code === 'niet_uitleenbaar' && normaliseerTekst(rij.genre) === 'verkoop') boek.b.k = 1;
+    if (boekStatus(rij) === 'gevoelig_zichtbaar') boek.w = 1;
     // Lege velden laten we weg: dat maakt de lijst kleiner.
     var extra = {
       i: schoon(rij.isbn), u: schoon(rij.uitgeverij), j: parseerGetal(rij.jaartal) || '',

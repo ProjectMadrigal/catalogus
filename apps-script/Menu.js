@@ -64,6 +64,15 @@ function installeer() {
     }
   });
 
+  // Kolom status: een keuzelijst, met uitleg bij de kop.
+  var si = catKop.indexOf('status');
+  if (si > -1) {
+    cat.getRange(2, si + 1, Math.max(1, cat.getMaxRows() - 1), 1).setDataValidation(
+      SpreadsheetApp.newDataValidation().requireValueInList(BOEKSTATUSSEN, true).setAllowInvalid(true).build());
+    cat.getRange(1, si + 1).setNote('Leeg = gewoon.\nverloren: niet op de website, niet uitleenbaar.\n' +
+      'gevoelig verborgen: niet op de website, wel uitleenbaar.\ngevoelig zichtbaar: op de website met het label "Gevoelige inhoud".');
+  }
+
   // Planning: elke nacht de privacy-opruiming, en de cache legen bij een wijziging.
   verwijderTriggers('ruimOp');
   verwijderTriggers('bijWijziging');

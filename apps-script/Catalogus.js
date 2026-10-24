@@ -115,6 +115,39 @@ function bronSleutel(boek) {
   return boek.soort + ':ta:' + normaliseerTekst(boek.titel) + '|' + normaliseerTekst(boek.auteur);
 }
 
+/**
+ * De kolom status in de Catalogus. Leeg = gewoon.
+ *   verloren            niet op de website, niet uitleenbaar
+ *   gevoelig verborgen  niet op de website, wel uitleenbaar aan de balie
+ *   gevoelig zichtbaar  op de website met het label "Gevoelige inhoud"
+ */
+var BOEKSTATUSSEN = ['verloren', 'gevoelig verborgen', 'gevoelig zichtbaar'];
+
+/** Geeft '', 'verloren', 'gevoelig_verborgen' of 'gevoelig_zichtbaar'. Hoofdletters en kleine tikfouten mogen. */
+function boekStatus(boek) {
+  var s = normaliseerTekst(boek && boek.status);
+  if (!s) return '';
+  if (/verlor|kwijt/.test(s)) return 'verloren';
+  if (/gevoelig/.test(s)) return /(^|\s)zichtbaar|waarschuw/.test(s) ? 'gevoelig_zichtbaar' : 'gevoelig_verborgen';
+  return '';
+}
+
+/** Mag het boek op de website? Niet bij publiek = nee, verloren of gevoelig verborgen. */
+function opWebsite(boek) {
+  var s = boekStatus(boek);
+  return jaNee(boek.publiek) !== 'nee' && s !== 'verloren' && s !== 'gevoelig_verborgen';
+}
+
+/** Mag het boek uitgeleend worden? Niet bij uitleenbaar = nee of verloren. */
+function isUitleenbaar(boek) {
+  return jaNee(boek.uitleenbaar) !== 'nee' && boekStatus(boek) !== 'verloren';
+}
+
+/** De foutmelding aan de balie voor een boek dat niet uitleenbaar is. */
+function nietUitleenbaarFout(boek) {
+  return boekStatus(boek) === 'verloren' ? 'Dit boek staat als verloren. Zet de status in de Catalogus leeg als het terug is.' : 'Dit boek is niet uitleenbaar.';
+}
+
 /** Staat er in de herkomst een interne notitie dat het boek niet publiek mag? */
 function nietPubliekVolgensHerkomst(herkomst) {
   return /niet\s+(op\s+(de\s+)?)?(site|website|online)|niet\s+publiek/i.test(herkomst || '');

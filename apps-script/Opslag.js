@@ -15,7 +15,7 @@ var KOLOMMEN = {
   'Catalogus': [
     'boek_id', 'soort', 'titel', 'auteur', 'isbn', 'uitgeverij', 'jaartal', 'taal', 'paginas',
     'uitvoering', 'nieuwstaat', 'aanrader', 'genre', 'extra_onderwerpen', 'klassieker', 'aantal',
-    'uitleenbaar', 'publiek', 'beschrijving', 'beschrijving_en', 'cover_url', 'startpagina', 'toegevoegd_op',
+    'uitleenbaar', 'publiek', 'status', 'beschrijving', 'beschrijving_en', 'cover_url', 'startpagina', 'toegevoegd_op',
     // Vanaf hier: nooit publiek.
     'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht', 'beschrijving_vertaald'
   ],

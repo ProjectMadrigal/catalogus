@@ -232,6 +232,10 @@ textarea { min-height: 6rem; }
 .status-niet_uitleenbaar::before { content: "–"; }
 .label-aanrader { color: var(--kleur-aanrader); background: var(--kleur-aanrader-vlak); }
 .label-aanrader::before { content: "★"; }
+.label-gevoelig { color: var(--kleur-let-op); background: var(--kleur-let-op-vlak); }
+.label-gevoelig::before { content: "⚠"; }
+.status-verloren { color: var(--kleur-fout); background: var(--kleur-fout-vlak); }
+.status-verloren::before { content: "?"; }
 .label-onderwerp { color: var(--kleur-tekst-zacht); background: var(--kleur-vlak); border-color: var(--kleur-rand); font-weight: normal; }
 
 /* ---------- Catalogus ---------- */
