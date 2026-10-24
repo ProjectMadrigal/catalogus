@@ -112,14 +112,11 @@
 
   /**
    * Verdeelt de sectie In de kijker in groepen: eerst per persoon (wie de meeste boeken
-   * aanraadt eerst), dan nieuw binnen, dan wat het bestuur zelf op de startpagina zette.
-   * Een boek met meerdere namen staat bij de eerste naam.
-   * nieuw: de aparte lijst Nieuw binnen van de web-app. Oudere versies van het script
-   * stuurden die nog niet mee: dan de boeken met het kenmerk "nieuw" uit de aanraders.
+   * aanraadt eerst), dan wat het bestuur zelf op de startpagina zette.
+   * Een boek met meerdere namen staat bij de eerste naam. Nieuw binnen is een eigen sectie.
    */
-  function aanraderGroepen(lijst, nieuw) {
+  function aanraderGroepen(lijst) {
     var perNaam = {}, namen = [], kijker = [];
-    if (!nieuw) nieuw = lijst.filter(function (b) { return b.n && !(b.r || []).length; });
     lijst.forEach(function (b) {
       var naam = (b.r || [])[0];
       if (naam) {
@@ -129,18 +126,17 @@
     });
     namen.sort(function (a, c) { return perNaam[c].length - perNaam[a].length; });
     var groepen = namen.map(function (naam) { return { titel: T.t('aanradersVan', { naam: naam }), ster: true, boeken: perNaam[naam] }; });
-    if (nieuw.length) groepen.push({ titel: T.t('nieuwBinnen'), boeken: nieuw, nieuw: true });
     if (kijker.length) groepen.push({ titel: T.t('uitgelicht'), boeken: kijker });
     return groepen;
   }
 
-  function tekenAanraders(lijst, nieuw) {
-    var groepen = aanraderGroepen(lijst, nieuw);
+  function tekenAanraders(lijst) {
+    var groepen = aanraderGroepen(lijst);
     return groepen.map(function (g, i) {
       var id = 'aanradergroep-' + i;
       return el('div', { class: 'aanradergroep' },
         el('h3', { id: id, class: g.ster ? 'met-ster' : null }, g.titel),
-        el('ul', { class: 'aanraders', 'aria-labelledby': id }, g.boeken.map(function (b) { return aanrader(b, g.nieuw); })));
+        el('ul', { class: 'aanraders', 'aria-labelledby': id }, g.boeken.map(function (b) { return aanrader(b, false); })));
     });
   }
 
@@ -157,7 +153,13 @@
     if (ag.vorig) kaarten.push(eventKaart(ag.vorig, T.t('vorigEvent')));
     D.vervang($('agenda'), kaarten);
 
-    var groepen = tekenAanraders(data.aanraders || [], data.nieuw);
+    // Nieuw binnen: een eigen lijst van de web-app. Oudere versies van het script
+    // stuurden die nog niet mee: dan de boeken met het kenmerk "nieuw" uit de aanraders.
+    var nieuw = data.nieuw || (data.aanraders || []).filter(function (b) { return b.n; });
+    $('nieuw-sectie').hidden = !nieuw.length;
+    D.vervang($('nieuw-binnen'), nieuw.map(function (b) { return aanrader(b, true); }));
+
+    var groepen = tekenAanraders(data.aanraders || []);
     $('aanraders-sectie').hidden = !groepen.length;
     D.vervang($('aanraders'), groepen);
 
