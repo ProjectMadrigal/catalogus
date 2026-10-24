@@ -1445,9 +1445,9 @@ function goodreadsWaarde(rij, kolommen) {
  * country=BE: Apps Script draait op servers van Google, zonder gekend land. Zonder
  * land weigert Google met "Cannot determine user location" (unknownLocation).
  */
-function googleBooksUrl(isbn, sleutel) {
-  return 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + encodeURIComponent(isbn) + '&country=BE' +
-    (sleutel ? '&key=' + encodeURIComponent(sleutel) : '');
+function googleBooksUrl(isbn, sleutel, land) {
+  return 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + encodeURIComponent(isbn) +
+    (land === '' ? '' : '&country=' + (land || 'BE')) + (sleutel ? '&key=' + encodeURIComponent(sleutel) : '');
 }
 
 /**
@@ -1455,8 +1455,8 @@ function googleBooksUrl(isbn, sleutel) {
  *   limiet: Google zegt dat de daglimiet op is (dan later opnieuw proberen);
  *   fout:   wat Google zelf als reden geeft, bv. "API not enabled" of een probleem met de sleutel.
  */
-function googleBooksZoek(isbn, sleutel) {
-  var a = haalJson(googleBooksUrl(isbn, sleutel));
+function googleBooksZoek(isbn, sleutel, land) {
+  var a = haalJson(googleBooksUrl(isbn, sleutel, land));
   var r = { code: a.code, items: (a.data && a.data.items) || [], limiet: false, fout: '' };
   if (a.code >= 400) {
     r.fout = googleFout(a.data) || ('code ' + a.code);
@@ -2693,6 +2693,7 @@ function onOpen() {
     .addItem('4. Vul aan uit Open Library', 'vulAanUitOpenLibrary')
     .addItem('5. Zoek ontbrekende covers bij Google Books', 'vulAanUitGoogleBooks')
     .addItem('Test Google Books (kies eerst een cel met een ISBN)', 'testGoogleBooks')
+    .addItem('Zoek covers opnieuw bij Google (boeken zonder cover)', 'zoekCoversOpnieuw')
     .addItem('6. Zoek ontbrekende beschrijvingen', 'vulBeschrijvingenAan')
     .addItem('7. Vertaal de beschrijvingen (Nederlands en Engels)', 'vertaalBeschrijvingen')
     .addItem('Zoek afgebroken beschrijvingen opnieuw (volledig)', 'herstelAfgebrokenBeschrijvingen')
@@ -3271,13 +3272,25 @@ function testGoogleBooks() {
     if (eigen) isbn = eigen;
   } catch (e) { /* geen cel gekozen */ }
   var sleutel = leesInstellingen().google_books_api_key;
-  var r = googleBooksZoek(isbn, sleutel);
-  var info = r.items.length ? r.items[0].volumeInfo : null;
-  var tekst = 'Google Books, ISBN ' + isbn + (sleutel ? ' (met sleutel)' : ' (zonder sleutel)') + ':\n';
-  if (r.fout) tekst += 'Fout: ' + r.fout;
-  else if (!info) tekst += 'Google kent dit ISBN niet.';
-  else tekst += 'Titel: ' + (info.title || '?') + '\nCover: ' + (info.imageLinks ? 'ja' : 'nee, Google heeft geen cover voor dit boek') + '\nBeschrijving: ' + (info.description ? 'ja' : 'nee');
-  logboek('menu', 'testGoogleBooks', tekst.replace(/\n/g, ' | '));
+  // Een paar varianten naast elkaar: zo zien we welke wel werkt.
+  var varianten = [
+    ['met sleutel, land BE', sleutel, 'BE'],
+    ['met sleutel, land US', sleutel, 'US'],
+    ['met sleutel, zonder land', sleutel, ''],
+    ['zonder sleutel, land BE', '', 'BE']
+  ];
+  var regels = ['Google Books, ISBN ' + isbn + (sleutel ? '' : ' (er staat geen google_books_api_key in Instellingen)')];
+  varianten.forEach(function (v) {
+    if (v[0].indexOf('met sleutel') === 0 && !sleutel) return;
+    var r = googleBooksZoek(isbn, v[1], v[2]);
+    var info = r.items.length ? r.items[0].volumeInfo : null;
+    regels.push(v[0] + ': ' + (r.fout ? 'fout, ' + r.fout
+      : !info ? 'kent dit ISBN niet (code ' + r.code + ')'
+      : '"' + (info.title || '?') + '", cover ' + (info.imageLinks ? 'ja' : 'nee') + ', beschrijving ' + (info.description ? 'ja' : 'nee')));
+    Utilities.sleep(300);
+  });
+  var tekst = regels.join('\n');
+  logboek('menu', 'testGoogleBooks', regels.join(' | '));
   meld(tekst);
 }
 
@@ -4047,7 +4060,8 @@ function vulAanUitGoogleBooks() {
     meld('Er loopt al een andere bewerking. Probeer het zo meteen opnieuw.');
     return;
   }
-  var verwerkt = 0, aangevuld = 0, rest = 0, limiet = false, fout = '', gekend = 0;
+  var verwerkt = 0, aangevuld = 0, rest = 0, limiet = false, fout = '', gekend = 0, storing = false, verdacht = false;
+  var gedaan = [];
   try {
     var sleutel = leesInstellingen().google_books_api_key;
     var tabel = leesTabel('Catalogus');
@@ -4064,14 +4078,22 @@ function vulAanUitGoogleBooks() {
       var code = antwoord.code;
       if (code >= 400) fout = antwoord.fout;
       if (antwoord.limiet || code === 403 || code === 400) { limiet = true; break; } // daglimiet, of Google weigert (zie fout)
-      if (code >= 500) break;                                                         // storing bij Google: later verder
+      if (code >= 500) { storing = true; break; }                                     // storing bij Google: later verder
       var info = antwoord.items.length ? antwoord.items[0].volumeInfo : null;
       if (info) gekend++;
       var velden = verwerkGoogleBooks(boek, info);
       if (velden.cover_url) aangevuld++;
       velden.gb_gecontroleerd = vandaag;
       wijzig(boek, velden);
+      gedaan.push(boek);
       verwerkt++;
+      // Kent Google na 20 boeken nog geen enkel boek, dan klopt er iets niet (sleutel, land, ...).
+      // Dan stoppen we en vinken we niets aan, zodat die boeken later opnieuw aan de beurt komen.
+      if (verwerkt === 20 && gekend === 0) {
+        verdacht = true;
+        gedaan.forEach(function (b) { wijzig(b, { gb_gecontroleerd: '' }); });
+        break;
+      }
       // Om de 25 boeken bewaren: zo gaat er niets verloren als het script stopt.
       if (verwerkt % 25 === 0) bewaarTabel(tabel);
       Utilities.sleep(GB_PAUZE_MS);
@@ -4082,9 +4104,16 @@ function vulAanUitGoogleBooks() {
     lock.releaseLock();
   }
   verwijderTriggers('vulAanUitGoogleBooks');
+  if (verdacht) {
+    var waarschuwing = 'Google Books kende geen enkel boek van de eerste 20. Er klopt iets niet: het script stopt en vinkt niets aan. Kies Madrigal > Test Google Books.';
+    logboek('menu', 'vulAanUitGoogleBooks', waarschuwing);
+    meld(waarschuwing);
+    return;
+  }
   if (rest > 0) {
-    // Bij de daglimiet wachten we een paar uur, anders een minuut.
-    ScriptApp.newTrigger('vulAanUitGoogleBooks').timeBased().after((limiet ? 6 * 60 : 1) * 60 * 1000).create();
+    // Daglimiet: 6 uur wachten. Storing bij Google: een kwartier. Anders: een minuut.
+    var minuten = limiet ? 6 * 60 : (storing ? 15 : 1);
+    ScriptApp.newTrigger('vulAanUitGoogleBooks').timeBased().after(minuten * 60 * 1000).create();
   } else {
     // Klaar: nu de beschrijvingen die nog ontbreken (zie Beschrijvingen.js).
     verwijderTriggers('vulBeschrijvingenAan');
@@ -4468,4 +4497,19 @@ function zoekBoekOpTitel(catalogus, titel, auteur) {
   if (!kandidaten.length) return {};
   kandidaten.sort(function (a, b) { return b.score - a.score; });
   return { twijfel: kandidaten.slice(0, 3).map(function (k) { return k.boek; }) };
+}
+
+/** Menu: boeken zonder cover nog eens laten opzoeken bij Google (maakt gb_gecontroleerd leeg). */
+function zoekCoversOpnieuw() {
+  var tabel = leesTabel('Catalogus');
+  var n = 0;
+  tabel.rijen.forEach(function (b) {
+    if (isLeeg(b.cover_url) && !isLeeg(b.gb_gecontroleerd) && /^\d{13}$/.test(String(b.isbn || ''))) {
+      wijzig(b, { gb_gecontroleerd: '' });
+      n++;
+    }
+  });
+  bewaarTabel(tabel);
+  logboek('menu', 'zoekCoversOpnieuw', n + ' boeken zonder cover komen opnieuw aan de beurt bij Google');
+  meld(n + ' boeken zonder cover komen opnieuw aan de beurt. Kies daarna Madrigal > 5. Zoek ontbrekende covers bij Google Books.');
 }

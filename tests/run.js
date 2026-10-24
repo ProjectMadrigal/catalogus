@@ -1076,6 +1076,8 @@ test('Google-fouten: daglimiet apart van een probleem met de sleutel of de API',
 
 test('Google Books: altijd met het land erbij, anders weigert Google vanuit Apps Script', () => {
   assert.strictEqual(M.googleBooksUrl('9780306406157', ''), 'https://www.googleapis.com/books/v1/volumes?q=isbn:9780306406157&country=BE');
+  assert.strictEqual(M.googleBooksUrl('9780306406157', '', 'US'), 'https://www.googleapis.com/books/v1/volumes?q=isbn:9780306406157&country=US');
+  assert.strictEqual(M.googleBooksUrl('9780306406157', '', ''), 'https://www.googleapis.com/books/v1/volumes?q=isbn:9780306406157');
   assert.ok(M.googleBooksUrl('9780306406157', 'abc').endsWith('&country=BE&key=abc'));
   assert.strictEqual(M.isGoogleLimiet(403, 'Cannot determine user location for geographically restricted operation. (unknownLocation)'), false);
 });
