@@ -15,5 +15,5 @@ window.MADRIGAL_CONFIG = {
   // Bezoekersaantallen via GoatCounter: zonder cookies en zonder persoonsgegevens.
   // Vul de code van je GoatCounter-account in (bv. 'projectmadrigal' voor
   // projectmadrigal.goatcounter.com). Leeg: er wordt niets geteld.
-  statistiek: ''
+  statistiek: 'projectmadrigal'
 };
