@@ -60,7 +60,7 @@ function vulAanUitGoogleBooks() {
     meld('Er loopt al een andere bewerking. Probeer het zo meteen opnieuw.');
     return;
   }
-  var verwerkt = 0, aangevuld = 0, rest = 0, limiet = false;
+  var verwerkt = 0, aangevuld = 0, rest = 0, limiet = false, fout = '';
   try {
     var sleutel = leesInstellingen().google_books_api_key;
     var tabel = leesTabel('Catalogus');
@@ -75,8 +75,9 @@ function vulAanUitGoogleBooks() {
       var boek = teDoen[i];
       var antwoord = googleBooksZoek(boek.isbn, sleutel); // zie Beschrijvingen.js
       var code = antwoord.code;
-      if (code === 429 || code === 403) { limiet = true; break; } // daglimiet bereikt
-      if (code >= 500) break;                                       // storing bij Google: later verder
+      if (code >= 400) fout = antwoord.fout;
+      if (antwoord.limiet || code === 403 || code === 400) { limiet = true; break; } // daglimiet, of Google weigert (zie fout)
+      if (code >= 500) break;                                                         // storing bij Google: later verder
       var info = antwoord.items.length ? antwoord.items[0].volumeInfo : null;
       var velden = verwerkGoogleBooks(boek, info);
       if (velden.cover_url) aangevuld++;
@@ -102,7 +103,9 @@ function vulAanUitGoogleBooks() {
     ScriptApp.newTrigger('vulBeschrijvingenAan').timeBased().after(60 * 1000).create();
   }
   if (aangevuld) leegCache();
-  logboek('menu', 'vulAanUitGoogleBooks', verwerkt + ' opgevraagd, ' + aangevuld + ' covers gevonden, ' + rest + ' te gaan' + (limiet ? ' (daglimiet van Google bereikt)' : ''));
+  var echteLimiet = !fout || /quota|limit/i.test(fout);
+  var reden = !limiet ? '' : (echteLimiet ? ' (daglimiet van Google bereikt)' : ' (Google weigert)');
+  logboek('menu', 'vulAanUitGoogleBooks', verwerkt + ' opgevraagd, ' + aangevuld + ' covers gevonden, ' + rest + ' te gaan' + reden + (fout ? '. Google meldt: ' + fout : '') + (sleutel ? '' : '. Er staat geen google_books_api_key in Instellingen.'));
   var tekst = verwerkt + ' boeken opgevraagd bij Google Books, ' + aangevuld + ' covers gevonden.';
   if (rest > 0) tekst += limiet ? ' De daglimiet van Google is bereikt: over 6 uur gaat het script vanzelf verder.' : ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.';
   else tekst += ' Alles is verwerkt. Het script zoekt nu nog ontbrekende beschrijvingen.';
