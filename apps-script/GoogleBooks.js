@@ -52,6 +52,28 @@ function verwerkGoogleBooks(boek, info) {
   return v;
 }
 
+/**
+ * Menu: test Google Books met één ISBN en toont het antwoord. Zo zie je meteen of de
+ * sleutel werkt en wat Google over een boek weet. Zonder ISBN in de cel: een bekend boek.
+ */
+function testGoogleBooks() {
+  var isbn = '9780141439518'; // Pride and Prejudice (Penguin Classics): Google kent dit boek zeker
+  try {
+    var cel = String(SpreadsheetApp.getActiveRange().getValue() || '');
+    var eigen = normaliseerIsbn(cel).isbn;
+    if (eigen) isbn = eigen;
+  } catch (e) { /* geen cel gekozen */ }
+  var sleutel = leesInstellingen().google_books_api_key;
+  var r = googleBooksZoek(isbn, sleutel);
+  var info = r.items.length ? r.items[0].volumeInfo : null;
+  var tekst = 'Google Books, ISBN ' + isbn + (sleutel ? ' (met sleutel)' : ' (zonder sleutel)') + ':\n';
+  if (r.fout) tekst += 'Fout: ' + r.fout;
+  else if (!info) tekst += 'Google kent dit ISBN niet.';
+  else tekst += 'Titel: ' + (info.title || '?') + '\nCover: ' + (info.imageLinks ? 'ja' : 'nee, Google heeft geen cover voor dit boek') + '\nBeschrijving: ' + (info.description ? 'ja' : 'nee');
+  logboek('menu', 'testGoogleBooks', tekst.replace(/\n/g, ' | '));
+  meld(tekst);
+}
+
 /** Menu: vult covers aan uit Google Books, in porties. */
 function vulAanUitGoogleBooks() {
   var start = Date.now();
@@ -60,7 +82,7 @@ function vulAanUitGoogleBooks() {
     meld('Er loopt al een andere bewerking. Probeer het zo meteen opnieuw.');
     return;
   }
-  var verwerkt = 0, aangevuld = 0, rest = 0, limiet = false, fout = '';
+  var verwerkt = 0, aangevuld = 0, rest = 0, limiet = false, fout = '', gekend = 0;
   try {
     var sleutel = leesInstellingen().google_books_api_key;
     var tabel = leesTabel('Catalogus');
@@ -79,6 +101,7 @@ function vulAanUitGoogleBooks() {
       if (antwoord.limiet || code === 403 || code === 400) { limiet = true; break; } // daglimiet, of Google weigert (zie fout)
       if (code >= 500) break;                                                         // storing bij Google: later verder
       var info = antwoord.items.length ? antwoord.items[0].volumeInfo : null;
+      if (info) gekend++;
       var velden = verwerkGoogleBooks(boek, info);
       if (velden.cover_url) aangevuld++;
       velden.gb_gecontroleerd = vandaag;
@@ -105,7 +128,7 @@ function vulAanUitGoogleBooks() {
   if (aangevuld) leegCache();
   var echteLimiet = !fout || /quota|limit/i.test(fout);
   var reden = !limiet ? '' : (echteLimiet ? ' (daglimiet van Google bereikt)' : ' (Google weigert)');
-  logboek('menu', 'vulAanUitGoogleBooks', verwerkt + ' opgevraagd, ' + aangevuld + ' covers gevonden, ' + rest + ' te gaan' + reden + (fout ? '. Google meldt: ' + fout : '') + (sleutel ? '' : '. Er staat geen google_books_api_key in Instellingen.'));
+  logboek('menu', 'vulAanUitGoogleBooks', verwerkt + ' opgevraagd, ' + gekend + ' gekend bij Google, ' + aangevuld + ' covers gevonden, ' + rest + ' te gaan' + reden + (fout ? '. Google meldt: ' + fout : '') + (sleutel ? '' : '. Er staat geen google_books_api_key in Instellingen.'));
   var tekst = verwerkt + ' boeken opgevraagd bij Google Books, ' + aangevuld + ' covers gevonden.';
   if (rest > 0) tekst += limiet ? ' De daglimiet van Google is bereikt: over 6 uur gaat het script vanzelf verder.' : ' Nog ' + rest + ' te gaan: het script gaat over een minuut vanzelf verder.';
   else tekst += ' Alles is verwerkt. Het script zoekt nu nog ontbrekende beschrijvingen.';
