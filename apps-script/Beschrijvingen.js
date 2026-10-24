@@ -51,13 +51,23 @@ function wachtOpGoogle(boek) {
  *   fout:   wat Google zelf als reden geeft, bv. "API not enabled" of een probleem met de sleutel.
  */
 function googleBooksZoek(isbn, sleutel) {
-  var a = haalJson('https://www.googleapis.com/books/v1/volumes?q=isbn:' + isbn + (sleutel ? '&key=' + encodeURIComponent(sleutel) : ''));
+  var a = haalJson(googleBooksUrl(isbn, sleutel));
   var r = { code: a.code, items: (a.data && a.data.items) || [], limiet: false, fout: '' };
   if (a.code >= 400) {
     r.fout = googleFout(a.data) || ('code ' + a.code);
     r.limiet = isGoogleLimiet(a.code, r.fout);
   }
   return r;
+}
+
+/**
+ * Het adres om een ISBN op te vragen bij Google Books.
+ * country=BE: Apps Script draait op servers van Google, zonder gekend land. Zonder
+ * land weigert Google met "Cannot determine user location" (unknownLocation).
+ */
+function googleBooksUrl(isbn, sleutel) {
+  return 'https://www.googleapis.com/books/v1/volumes?q=isbn:' + encodeURIComponent(isbn) + '&country=BE' +
+    (sleutel ? '&key=' + encodeURIComponent(sleutel) : '');
 }
 
 /** De foutmelding uit een antwoord van Google, kort. */
