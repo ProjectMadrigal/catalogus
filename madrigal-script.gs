@@ -38,7 +38,9 @@ var ACTIES = {
 
 var BS_MAX_LOOPTIJD_MS = 4.5 * 60 * 1000;
 
-var BS_MAX_LENGTE = 1000;
+// Een beschrijving blijft volledig tot deze lengte. Is ze langer, dan stopt ze na
+// de laatste volledige zin, nooit midden in een zin.
+var BS_MAX_LENGTE = 2500;
 
 var BS_USER_AGENT = 'ProjectMadrigal-catalogus (Google Apps Script; queer bibliotheek Antwerpen)';
 
@@ -1137,6 +1139,24 @@ function herinneringVerstuurd(staat, invoer) {
   return { ok: true, tekst: 'Herinnering genoteerd op ' + korteDatum(staat.vandaag) + '.' };
 }
 
+/** Menu: zoekt de afgebroken beschrijvingen opnieuw op, volledig. */
+function herstelAfgebrokenBeschrijvingen() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  var n;
+  try {
+    var tabel = leesTabel('Catalogus');
+    n = maakAfgebrokenLeeg(tabel.rijen);
+    bewaarTabel(tabel);
+  } finally {
+    lock.releaseLock();
+  }
+  logboek('menu', 'herstelAfgebrokenBeschrijvingen', n + ' beschrijvingen opnieuw te zoeken');
+  if (!n) { meld('Er zijn geen afgebroken beschrijvingen.'); return; }
+  meld(n + ' afgebroken beschrijvingen worden opnieuw opgezocht en vertaald. Dat gebeurt in porties en gaat vanzelf verder. Het Logboek toont de stand.');
+  vulBeschrijvingenAan();
+}
+
 /** HTML uit de oude databank naar gewone tekst met regeleinden. */
 function htmlNaarTekst(html) {
   return String(html || '')
@@ -1254,6 +1274,11 @@ function installeer() {
 /** Een tussenkop in het tabblad Instellingen: "── UITLENEN ──". */
 function instellingKop(titel) {
   return '── ' + titel.toUpperCase() + ' ──';
+}
+
+/** Werd deze beschrijving vroeger afgebroken (eindigt ze op "...")? */
+function isAfgebroken(tekst) {
+  return /(\.\.\.|…)\s*$/.test(String(tekst || ''));
 }
 
 /** Controleert het controlecijfer van een ISBN-10 (10 tekens, laatste mag X zijn). */
@@ -1379,6 +1404,22 @@ function koppelGoodreads(catalogus, goodreads) {
     }
   });
   return { aanvullingen: aanvullingen, naTeKijken: naTeKijken };
+}
+
+/**
+ * Kort een tekst af tot hoogstens max tekens, na de laatste volledige zin.
+ * Een zin eindigt op . ! ? of een regeleinde. Is er geen zinseinde, dan stopt
+ * de tekst na het laatste volledige woord, met "...".
+ */
+function kortAfOpZin(tekst, max) {
+  var t = String(tekst || '');
+  if (t.length <= max) return t;
+  var stuk = t.slice(0, max);
+  var einde = -1;
+  var re = /[.!?»"”')]\s|\n/g, m;
+  while ((m = re.exec(stuk))) einde = m.index + 1;
+  if (einde > max / 3) return stuk.slice(0, einde).trim();
+  return stuk.slice(0, max - 3).replace(/\s+\S*$/, '') + '...';
 }
 
 /** Korte datum: "20/11/2026". */
@@ -1666,6 +1707,23 @@ function lopendeUitleningenVan(staat, lenersnummer) {
 }
 
 /**
+ * Maakt afgebroken beschrijvingen leeg, zodat het script ze opnieuw volledig zoekt
+ * en vertaalt. Enkel beschrijvingen die het script zelf vond (met een datum in
+ * beschrijving_gezocht, ol_gecontroleerd of gb_gecontroleerd). Geeft het aantal terug.
+ */
+function maakAfgebrokenLeeg(rijen) {
+  var n = 0;
+  rijen.forEach(function (rij) {
+    var doorScript = !isLeeg(rij.beschrijving_gezocht) || !isLeeg(rij.ol_gecontroleerd) || !isLeeg(rij.gb_gecontroleerd);
+    if (!doorScript || !/^\d{13}$/.test(String(rij.isbn || ''))) return;
+    if (!isAfgebroken(rij.beschrijving) && !isAfgebroken(rij.beschrijving_en)) return;
+    wijzig(rij, { beschrijving: '', beschrijving_en: '', beschrijving_gezocht: '', beschrijving_vertaald: '' });
+    n++;
+  });
+  return n;
+}
+
+/**
  * Maakt een beschrijving uit een externe bron netjes: geen HTML, geen
  * bronvermeldingen van Open Library, en hoogstens BS_MAX_LENGTE tekens.
  * Alinea's blijven behouden.
@@ -1686,8 +1744,7 @@ function maakBeschrijvingNetjes(tekst) {
     .replace(/ *\n */g, '\n')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
-  if (t.length > BS_MAX_LENGTE) t = t.slice(0, BS_MAX_LENGTE - 3).replace(/\s+\S*$/, '') + '...';
-  return t;
+  return kortAfOpZin(t, BS_MAX_LENGTE);
 }
 
 /** Menu: bouwt de Catalogus op uit Stock en Zines. */
@@ -1976,6 +2033,7 @@ function onOpen() {
     .addItem('5. Zoek ontbrekende covers bij Google Books', 'vulAanUitGoogleBooks')
     .addItem('6. Zoek ontbrekende beschrijvingen', 'vulBeschrijvingenAan')
     .addItem('7. Vertaal de beschrijvingen (Nederlands en Engels)', 'vertaalBeschrijvingen')
+    .addItem('Zoek afgebroken beschrijvingen opnieuw (volledig)', 'herstelAfgebrokenBeschrijvingen')
     .addSeparator()
     .addItem('Nieuwe boeken verwerken', 'verwerkNieuweBoeken')
     .addItem('Werk de vertaaltabel Onderwerpen bij', 'werkOnderwerpenBijMenu')
@@ -2766,7 +2824,7 @@ function verwerkGoogleBooks(boek, info) {
   if (isLeeg(boek.taal) && GB_TALEN[info.language]) v.taal = GB_TALEN[info.language];
   if (isLeeg(boek.beschrijving) && info.description) {
     var b = schoon(String(info.description).replace(/<[^>]*>/g, ' '));
-    if (b) v.beschrijving = b.length > 600 ? b.slice(0, 597).replace(/\s+\S*$/, '') + '...' : b;
+    if (b) v.beschrijving = maakBeschrijvingNetjes(b);
   }
   return v;
 }
@@ -2867,7 +2925,7 @@ function verwerkOpenLibrary(boek, details) {
   if (isLeeg(boek.beschrijving) && details.description) {
     var b = typeof details.description === 'string' ? details.description : details.description.value;
     b = schoon(b);
-    if (b) v.beschrijving = b.length > 600 ? b.slice(0, 597).replace(/\s+\S*$/, '') + '...' : b;
+    if (b) v.beschrijving = maakBeschrijvingNetjes(b);
   }
   if (isLeeg(boek.cover_url) && details.covers && details.covers.length && details.covers[0] > 0) {
     v.cover_url = 'https://covers.openlibrary.org/b/id/' + details.covers[0] + '-M.jpg';

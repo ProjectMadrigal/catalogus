@@ -285,8 +285,16 @@ test('beschrijvingen: netjes gemaakt, enkel zoeken waar nodig', () => {
   const ol = 'Een verzonnen roman over een zee.\n\nTweede alinea met een [link](https://voorbeeld.test).\n\n----------\nZie ook: [1]\n[1]: https://voorbeeld.test';
   assert.strictEqual(M.maakBeschrijvingNetjes(ol), 'Een verzonnen roman over een zee.\n\nTweede alinea met een link.');
   assert.strictEqual(M.maakBeschrijvingNetjes('<p>Een <b>vet</b> boek&amp;meer</p>'), 'Een vet boek&meer');
-  const lang = M.maakBeschrijvingNetjes('woord '.repeat(400));
-  assert.ok(lang.length <= 1000 && lang.endsWith('...'));
+  // Een beschrijving van 650 tekens blijft volledig (vroeger stopte ze na 600 tekens).
+  const middel = 'Pietro is een stadsjongen uit Milaan. '.repeat(17).trim();
+  assert.strictEqual(M.maakBeschrijvingNetjes(middel), middel);
+  // Te lang: stopt na de laatste volledige zin, niet midden in een zin.
+  const zinnen = 'Dit is een verzonnen zin over een boek. '.repeat(100);
+  const kort = M.maakBeschrijvingNetjes(zinnen);
+  assert.ok(kort.length <= 2500 && kort.endsWith('boek.'));
+  // Zonder zinseinde: na een volledig woord, met ...
+  const woorden = M.maakBeschrijvingNetjes('woord '.repeat(600));
+  assert.ok(woorden.length <= 2500 && woorden.endsWith('woord...'));
   assert.strictEqual(M.olTekst({ value: 'Tekst' }), 'Tekst');
   assert.strictEqual(M.heeftBeschrijvingNodig({ isbn: '9780306406157', beschrijving: '', beschrijving_gezocht: '' }), true);
   assert.strictEqual(M.heeftBeschrijvingNodig({ isbn: '9780306406157', beschrijving: 'Eigen tekst', beschrijving_gezocht: '' }), false);
@@ -294,6 +302,18 @@ test('beschrijvingen: netjes gemaakt, enkel zoeken waar nodig', () => {
   assert.strictEqual(M.heeftBeschrijvingNodig({ isbn: '', beschrijving: '', beschrijving_gezocht: '' }), false);
 });
 
+test('afgebroken beschrijvingen: enkel die van het script worden opnieuw gezocht', () => {
+  const rijen = [
+    { isbn: '9780306406157', beschrijving: 'Een verhaal dat stopt...', beschrijving_en: 'A story that stops...', gb_gecontroleerd: '2026-10-20', beschrijving_vertaald: '2026-10-21' },
+    { isbn: '9780306406157', beschrijving: 'Een eigen tekst...', beschrijving_en: '' },
+    { isbn: '9780306406157', beschrijving: 'Een volledige tekst.', beschrijving_gezocht: '2026-10-20' }
+  ];
+  assert.strictEqual(M.maakAfgebrokenLeeg(rijen), 1);
+  assert.strictEqual(rijen[0].beschrijving, '');
+  assert.strictEqual(rijen[0].beschrijving_vertaald, '');
+  assert.strictEqual(rijen[1].beschrijving, 'Een eigen tekst...');
+  assert.strictEqual(M.heeftBeschrijvingNodig(rijen[0]), true);
+});
 test('beschrijvingen vertalen: Nederlands blijft, Engels komt in beschrijving_en', () => {
   const nep = (tekst, taal) => {
     const woordenboek = { 'A made-up novel.': { nl: 'Een verzonnen roman.', en: 'A made-up novel.' }, 'Een verzonnen roman.': { nl: 'Een verzonnen roman.', en: 'A made-up novel.' } };
