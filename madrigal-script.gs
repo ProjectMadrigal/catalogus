@@ -79,6 +79,14 @@ var ONDERWERP_VOORSTELLEN = [
   [/zine/, 'Zines']
 ];
 
+/**
+ * De kolom status in de Catalogus. Leeg = gewoon.
+ *   verloren            niet op de website, niet uitleenbaar
+ *   gevoelig verborgen  niet op de website, wel uitleenbaar aan de balie
+ *   gevoelig zichtbaar  op de website met het label "Gevoelige inhoud"
+ */
+var BOEKSTATUSSEN = ['verloren', 'gevoelig verborgen', 'gevoelig zichtbaar'];
+
 var WEEKDAGEN = ['zondag', 'maandag', 'dinsdag', 'woensdag', 'donderdag', 'vrijdag', 'zaterdag'];
 
 var MAANDEN = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
@@ -230,7 +238,7 @@ var KOLOMMEN = {
   'Catalogus': [
     'boek_id', 'soort', 'titel', 'auteur', 'isbn', 'uitgeverij', 'jaartal', 'taal', 'paginas',
     'uitvoering', 'nieuwstaat', 'aanrader', 'genre', 'extra_onderwerpen', 'klassieker', 'aantal',
-    'uitleenbaar', 'publiek', 'beschrijving', 'beschrijving_en', 'cover_url', 'startpagina', 'toegevoegd_op',
+    'uitleenbaar', 'publiek', 'status', 'beschrijving', 'beschrijving_en', 'cover_url', 'startpagina', 'toegevoegd_op',
     // Vanaf hier: nooit publiek.
     'herkomst', 'isbn_origineel', 'bron_sleutel', 'ol_gecontroleerd', 'gb_gecontroleerd', 'beschrijving_gezocht', 'beschrijving_vertaald'
   ],
@@ -378,10 +386,15 @@ function apartLeggenMelding(staat, r) {
 /** Korte lijst van alle boeken voor het uitleenscherm, ook de niet-publieke. */
 function baliecatalogus(staat) {
   return staat.catalogus.filter(function (b) { return !isLeeg(b.boek_id) && !isLeeg(b.titel); }).map(function (b) {
-    return {
+    var info = {
       id: String(b.boek_id), t: schoon(b.titel), a: schoon(b.auteur), i: schoon(b.isbn),
-      x: aantalExemplaren(b), u: jaNee(b.uitleenbaar) !== 'nee'
+      x: aantalExemplaren(b), u: isUitleenbaar(b)
     };
+    // st: zodat de vrijwilliger het weet. Gevoelig (verborgen of zichtbaar) mag je gewoon uitlenen.
+    var status = boekStatus(b);
+    if (status === 'verloren') info.st = 'verloren';
+    else if (status) info.st = 'gevoelig';
+    return info;
   });
 }
 
@@ -480,7 +493,7 @@ function berekenVervaldatum(datumUit, inst) {
  */
 function beschikbaarheid(staat, boek) {
   var totaal = aantalExemplaren(boek);
-  if (jaNee(boek.uitleenbaar) === 'nee') {
+  if (!isUitleenbaar(boek)) {
     var teKoop = normaliseerTekst(boek.genre) === 'verkoop';
     return { code: 'niet_uitleenbaar', label: teKoop ? 'Te koop in de bib, niet uitleenbaar' : 'Niet uitleenbaar', totaal: totaal, beschikbaar: 0, terug: '' };
   }
@@ -606,6 +619,7 @@ function bestuurGegevens(staat, onderwerpRijen) {
     groepen: groepen,
     reservaties: alleReservaties(staat),
     uitzonderingen: uitzonderingen,
+    boekstatus: boekenMetStatus(staat),
     leners: staat.leners.map(function (l) {
       return {
         lenersnummer: l.lenersnummer, voornaam: l.voornaam, achternaam: l.achternaam, telefoon: l.telefoon,
@@ -662,6 +676,29 @@ function bijWijziging(e) {
   if (['Catalogus', 'Onderwerpen', 'Instellingen', 'Uitleningen', 'Reservaties', 'Nieuws', 'Agenda', 'Veelgestelde vragen'].indexOf(naam) > -1) leegCache();
 }
 
+/** Boeken met een status, per status, voor het bestuursscherm. */
+function boekenMetStatus(staat) {
+  var lijsten = { verloren: [], gevoelig_verborgen: [], gevoelig_zichtbaar: [] };
+  staat.catalogus.forEach(function (b) {
+    var s = boekStatus(b);
+    if (!s || isLeeg(b.boek_id)) return;
+    lijsten[s].push({ boek_id: String(b.boek_id), titel: schoon(b.titel), auteur: schoon(b.auteur) });
+  });
+  Object.keys(lijsten).forEach(function (k) {
+    lijsten[k].sort(function (a, b) { return a.titel.localeCompare(b.titel); });
+  });
+  return lijsten;
+}
+
+/** Geeft '', 'verloren', 'gevoelig_verborgen' of 'gevoelig_zichtbaar'. Hoofdletters en kleine tikfouten mogen. */
+function boekStatus(boek) {
+  var s = normaliseerTekst(boek && boek.status);
+  if (!s) return '';
+  if (/verlor|kwijt/.test(s)) return 'verloren';
+  if (/gevoelig/.test(s)) return /(^|\s)zichtbaar|waarschuw/.test(s) ? 'gevoelig_zichtbaar' : 'gevoelig_verborgen';
+  return '';
+}
+
 function boekVan(staat, boekId) {
   var id = schoon(boekId).toUpperCase();
   for (var i = 0; i < staat.catalogus.length; i++) {
@@ -688,7 +725,7 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
   var boeken = [];
   staat.catalogus.forEach(function (rij) {
     if (isLeeg(rij.boek_id) || isLeeg(rij.titel)) return;
-    if (jaNee(rij.publiek) === 'nee') return;
+    if (!opWebsite(rij)) return;
     var b = beschikbaarheid(staat, rij);
     var boek = {
       id: String(rij.boek_id),
@@ -701,6 +738,7 @@ function bouwPubliekeCatalogus(staat, onderwerpRijen) {
     // Datum van verwachte terugkeer en "te koop": zo maakt de website het label in elke taal op.
     if (b.code === 'uitgeleend' && b.terug && b.terug >= staat.vandaag) boek.b.d = b.terug;
     if (b.code === 'niet_uitleenbaar' && normaliseerTekst(rij.genre) === 'verkoop') boek.b.k = 1;
+    if (boekStatus(rij) === 'gevoelig_zichtbaar') boek.w = 1;
     // Lege velden laten we weg: dat maakt de lijst kleiner.
     var extra = {
       i: schoon(rij.isbn), u: schoon(rij.uitgeverij), j: parseerGetal(rij.jaartal) || '',
@@ -793,6 +831,7 @@ function bouwSiteInhoud(staat, tabellen) {
   //   - iemand het aanraadt (namen uit aanraders_verbergen tellen niet mee), of
   //   - het nieuw binnen is: toegevoegd_op ligt minder dan nieuw_op_startpagina_dagen geleden.
   // "nee" in de kolom startpagina haalt een boek er altijd af.
+  // Een boek met gevoelige inhoud komt er enkel op met "ja" in de kolom startpagina.
   // Beschikbare boeken eerst, daarna willekeurig maar vast per dag.
   var verborgen = splitsLijst(inst.aanraders_verbergen).map(normaliseerTekst);
   var dagenNieuw = parseerGetal(inst.nieuw_op_startpagina_dagen);
@@ -804,7 +843,7 @@ function bouwSiteInhoud(staat, tabellen) {
     return dagen >= 0 && dagen < dagenNieuw;
   };
   var aanraders = staat.catalogus.filter(function (b) {
-    return !isLeeg(b.boek_id) && jaNee(b.publiek) !== 'nee' && jaNee(b.startpagina) !== 'nee';
+    return !isLeeg(b.boek_id) && opWebsite(b) && jaNee(b.startpagina) !== 'nee';
   }).map(function (b) {
     var bs = beschikbaarheid(staat, b);
     return {
@@ -815,12 +854,13 @@ function bouwSiteInhoud(staat, tabellen) {
       }),
       n: isNieuw(b) ? 1 : 0,
       zelf: jaNee(b.startpagina) === 'ja',
+      gevoelig: boekStatus(b) === 'gevoelig_zichtbaar',
       vrij: bs.code === 'beschikbaar',
       volgorde: dagVolgorde(String(b.boek_id), staat.vandaag)
     };
-  }).filter(function (b) { return b.zelf || b.r.length || b.n; }).sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
+  }).filter(function (b) { return b.zelf || (!b.gevoelig && (b.r.length || b.n)); }).sort(function (a, b) { return (b.vrij - a.vrij) || (a.volgorde - b.volgorde); })
     .slice(0, SITE_MAX_AANRADERS)
-    .map(function (b) { delete b.volgorde; delete b.zelf; return b; });
+    .map(function (b) { delete b.volgorde; delete b.zelf; if (b.gevoelig) b.w = 1; delete b.gevoelig; return b; });
 
   return {
     bijgewerkt: staat.vandaag,
@@ -1260,6 +1300,15 @@ function installeer() {
     }
   });
 
+  // Kolom status: een keuzelijst, met uitleg bij de kop.
+  var si = catKop.indexOf('status');
+  if (si > -1) {
+    cat.getRange(2, si + 1, Math.max(1, cat.getMaxRows() - 1), 1).setDataValidation(
+      SpreadsheetApp.newDataValidation().requireValueInList(BOEKSTATUSSEN, true).setAllowInvalid(true).build());
+    cat.getRange(1, si + 1).setNote('Leeg = gewoon.\nverloren: niet op de website, niet uitleenbaar.\n' +
+      'gevoelig verborgen: niet op de website, wel uitleenbaar.\ngevoelig zichtbaar: op de website met het label "Gevoelige inhoud".');
+  }
+
   // Planning: elke nacht de privacy-opruiming, en de cache legen bij een wijziging.
   verwijderTriggers('ruimOp');
   verwijderTriggers('bijWijziging');
@@ -1329,6 +1378,11 @@ function isOpeningsdag(datum, inst) {
 
 function isPubliek(rij) {
   return jaNee(rij.publiek) !== 'nee';
+}
+
+/** Mag het boek uitgeleend worden? Niet bij uitleenbaar = nee of verloren. */
+function isUitleenbaar(boek) {
+  return jaNee(boek.uitleenbaar) !== 'nee' && boekStatus(boek) !== 'verloren';
 }
 
 /** Maakt ja/nee eenvormig. Geeft 'ja', 'nee' of '' terug. */
@@ -1916,6 +1970,11 @@ function nietPubliekVolgensHerkomst(herkomst) {
  * Geeft { nieuw, aangevuld } terug (aantallen).
  */
 
+/** De foutmelding aan de balie voor een boek dat niet uitleenbaar is. */
+function nietUitleenbaarFout(boek) {
+  return boekStatus(boek) === 'verloren' ? 'Dit boek staat als verloren. Zet de status in de Catalogus leeg als het terug is.' : 'Dit boek is niet uitleenbaar.';
+}
+
 /**
  * Nieuwe lener inschrijven.
  * invoer: { voornaam, achternaam, telefoon, email, toestemming }
@@ -2054,6 +2113,12 @@ function opmaakKop(blad, kolommen) {
   if (kolommen < 1) return;
   blad.getRange(1, 1, 1, kolommen).setFontWeight('bold');
   blad.setFrozenRows(1);
+}
+
+/** Mag het boek op de website? Niet bij publiek = nee, verloren of gevoelig verborgen. */
+function opWebsite(boek) {
+  var s = boekStatus(boek);
+  return jaNee(boek.publiek) !== 'nee' && s !== 'verloren' && s !== 'gevoelig_verborgen';
 }
 
 /** Menu: orden de tabbladen en de instellingen. */
@@ -2263,7 +2328,7 @@ function reservatieVan(staat, reservatieId) {
 function reserveren(staat, invoer) {
   var boek = boekVan(staat, invoer.boek_id);
   if (!boek) return { ok: false, fout: 'Dit boek bestaat niet.' };
-  if (jaNee(boek.uitleenbaar) === 'nee') return { ok: false, fout: 'Dit boek is niet uitleenbaar.' };
+  if (!isUitleenbaar(boek)) return { ok: false, fout: nietUitleenbaarFout(boek) };
   var lener = lenerVan(staat, invoer.lenersnummer);
   if (!lener) return { ok: false, fout: 'Er is geen lener met nummer ' + tekstInvoer(invoer.lenersnummer, 10) + '.' };
   if (jaNee(lener.actief) === 'nee') return { ok: false, fout: 'Deze lener staat op inactief.' };
@@ -2611,7 +2676,7 @@ function uitleenStatus(uitlening, vandaag, inst) {
 function uitlenen(staat, invoer) {
   var ex = exemplaarInfo(staat, invoer.exemplaar);
   if (!ex) return { ok: false, fout: 'Dit exemplaar bestaat niet.' };
-  if (jaNee(ex.boek.uitleenbaar) === 'nee') return { ok: false, fout: 'Dit boek is niet uitleenbaar.' };
+  if (!isUitleenbaar(ex.boek)) return { ok: false, fout: nietUitleenbaarFout(ex.boek) };
   if (uitleningVanExemplaar(staat, ex.exemplaar)) return { ok: false, fout: 'Dit exemplaar is al uitgeleend. Kies een ander exemplaar of registreer eerst het terugbrengen.' };
   var lener = lenerVan(staat, invoer.lenersnummer);
   if (!lener) return { ok: false, fout: 'Er is geen lener met nummer ' + tekstInvoer(invoer.lenersnummer, 10) + '.' };

@@ -105,7 +105,8 @@
         beeld,
         el('span', { class: 'aanrader-titel' }, b.t),
         b.a ? el('span', { class: 'aanrader-auteur' }, b.a) : null,
-        door ? el('span', { class: 'aanrader-auteur' }, door) : null));
+        door ? el('span', { class: 'aanrader-auteur' }, door) : null,
+        b.w ? el('span', { class: 'aanrader-auteur' }, T.t('gevoelig')) : null));
   }
 
   function teken() {

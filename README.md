@@ -103,6 +103,11 @@ Bovenaan de spreadsheet staat het menu **Madrigal**. Zie je het niet? Vernieuw d
 - Een extra exemplaar van een boek dat er al is? Verhoog het getal in de kolom `aantal`.
 - Een boek uit de publieke catalogus halen zonder het te verwijderen? Zet `publiek` op **nee**. Aan de balie kan je het nog uitlenen.
 - Een boek dat niet uitgeleend mag worden? Zet `uitleenbaar` op **nee**.
+- Een boek kwijt, of met gevoelige inhoud? Kies een waarde in de kolom `status`:
+  - **verloren**: niet op de website en niet uitleenbaar. Komt het boek terug? Maak de status leeg.
+  - **gevoelig verborgen**: niet op de website. Aan de balie kan je het uitlenen, de vrijwilliger ziet de melding "Gevoelige inhoud".
+  - **gevoelig zichtbaar**: op de website met het label "Gevoelige inhoud" en een korte uitleg. Het staat enkel op de startpagina als je `startpagina` op **ja** zet.
+  - Het bestuursscherm toont alle boeken met een status onder **Verloren en gevoelig**.
 - Een boek in de filtergroep Klassiekers? Zet **ja** in de kolom `klassieker`.
 
 **De kolommen van de Catalogus**
@@ -120,6 +125,7 @@ Bovenaan de spreadsheet staat het menu **Madrigal**. Zie je het niet? Vernieuw d
 | `aantal` | aantal exemplaren (leeg = 1). Exemplaren heten B0012-1, B0012-2, ... |
 | `uitleenbaar` | nee = niet uitleenbaar (bv. zines te koop) |
 | `publiek` | nee = niet zichtbaar op de website, wel uitleenbaar aan de balie |
+| `status` | leeg = gewoon, **verloren**, **gevoelig verborgen** of **gevoelig zichtbaar** (zie hierboven) |
 | `beschrijving`, `beschrijving_en` | korte beschrijving in het Nederlands en het Engels |
 | `cover_url` | link naar de cover |
 | `startpagina` | leeg = automatisch, **ja** = altijd bij de Aanraders, **nee** = nooit (zie A3) |
@@ -210,6 +216,7 @@ Het bestuursscherm toont:
 - wat **te laat** is, met de contactgegevens en een herinnering om te kopiëren of meteen via WhatsApp of mail te versturen;
 - wat **binnenkort vervalt**;
 - alle lopende uitleningen, de borgen en giften, de reservaties, de uitzonderingen (met de reden), de leners en eenvoudige cijfers;
+- de boeken die **verloren** zijn of **gevoelige inhoud** hebben;
 - het **rooster**.
 
 Verstuurde je een herinnering? Klik op **Herinnering verstuurd**, dan zie je wanneer de laatste herinnering vertrok.

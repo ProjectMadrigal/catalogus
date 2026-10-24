@@ -837,5 +837,64 @@ test('madrigal-script.gs werkt op zichzelf', () => {
   assert.strictEqual(ctx.normaliseerIsbn('0-306-40615-2').isbn, '9780306406157');
 });
 
+console.log('\nBoekstatus');
+test('status lezen: verloren, gevoelig verborgen, gevoelig zichtbaar, tikfouten mogen', () => {
+  gelijk(['', 'Verloren', 'kwijt', 'Gevoelig verborgen', 'gevoelig', 'Gevoelig zichtbaar', 'gevoelig, met waarschuwing', 'gevoelig onzichtbaar', 'iets anders']
+    .map((st) => M.boekStatus({ status: st })),
+  ['', 'verloren', 'verloren', 'gevoelig_verborgen', 'gevoelig_verborgen', 'gevoelig_zichtbaar', 'gevoelig_zichtbaar', 'gevoelig_verborgen', '']);
+});
+test('website: verloren en gevoelig verborgen weg, gevoelig zichtbaar met label', () => {
+  const s = maakStaat();
+  s.catalogus[0].status = 'verloren';
+  s.catalogus[1].status = 'gevoelig verborgen';
+  s.catalogus[2].status = 'gevoelig zichtbaar';
+  const p = M.bouwPubliekeCatalogus(s, []);
+  const ids = p.boeken.map((b) => b.id);
+  assert.ok(ids.indexOf('B0001') === -1 && ids.indexOf('B0002') === -1);
+  const b3 = p.boeken.filter((b) => b.id === 'B0003')[0];
+  assert.strictEqual(b3.w, 1);
+  assert.ok(!('status' in b3));
+});
+test('verloren: niet uitleenbaar, niet reserveerbaar, met duidelijke melding', () => {
+  const s = maakStaat();
+  s.catalogus[0].status = 'verloren';
+  const r = uitleen(s, 'B0001-1', '1');
+  assert.strictEqual(r.ok, false);
+  assert.ok(/verloren/.test(r.fout));
+  assert.strictEqual(M.reserveren(s, { boek_id: 'B0001', lenersnummer: '2' }).ok, false);
+});
+test('gevoelig verborgen: wel uitleenbaar, balie krijgt een melding', () => {
+  const s = maakStaat();
+  s.catalogus[0].status = 'gevoelig verborgen';
+  assert.strictEqual(uitleen(s, 'B0001-1', '1').ok, true);
+  const b = M.baliecatalogus(s).filter((x) => x.id === 'B0001')[0];
+  assert.strictEqual(b.st, 'gevoelig');
+  assert.strictEqual(b.u, true);
+  s.catalogus[1].status = 'verloren';
+  const v = M.baliecatalogus(s).filter((x) => x.id === 'B0002')[0];
+  gelijk([v.st, v.u], ['verloren', false]);
+});
+test('startpagina: gevoelig zichtbaar enkel met startpagina = ja', () => {
+  const s = maakStaat();
+  s.catalogus[0].aanrader = 'Ari';
+  s.catalogus[0].status = 'gevoelig zichtbaar';
+  let d = M.bouwSiteInhoud(s, {});
+  assert.ok(!d.aanraders.some((b) => b.id === 'B0001'));
+  s.catalogus[0].startpagina = 'ja';
+  d = M.bouwSiteInhoud(s, {});
+  const b = d.aanraders.filter((x) => x.id === 'B0001')[0];
+  assert.strictEqual(b.w, 1);
+  assert.ok(!('gevoelig' in b));
+});
+test('bestuur: overzicht per status', () => {
+  const s = maakStaat();
+  s.catalogus[0].status = 'verloren';
+  s.catalogus[2].status = 'gevoelig zichtbaar';
+  const d = M.bestuurGegevens(s, []);
+  gelijk(d.boekstatus.verloren.map((b) => b.boek_id), ['B0001']);
+  gelijk(d.boekstatus.gevoelig_verborgen, []);
+  gelijk(d.boekstatus.gevoelig_zichtbaar.map((b) => b.boek_id), ['B0003']);
+});
+
 console.log('\n' + geslaagd + ' geslaagd, ' + mislukt.length + ' mislukt');
 if (mislukt.length) process.exit(1);

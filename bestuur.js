@@ -24,6 +24,7 @@
     ['borgen', 'Borgen en giften', toonBorgen],
     ['reservaties', 'Reservaties', toonReservaties],
     ['uitzonderingen', 'Uitzonderingen', toonUitzonderingen],
+    ['boekstatus', 'Verloren en gevoelig', toonBoekstatus],
     ['leners', 'Leners', toonLeners],
     ['cijfers', 'Cijfers', toonCijfers],
     ['rooster', 'Rooster', toonRoosterSectie]
@@ -238,6 +239,22 @@
             el('td', {}, x.lenersnummer ? x.lenersnummer + (x.voornaam ? ' (' + x.voornaam + ')' : '') : '(gewist)'),
             el('td', {}, x.titel || ''), el('td', {}, x.reden));
         })))) : el('p', {}, 'Geen uitzonderingen in de laatste 6 maanden.'));
+  }
+
+  /* ---------- Verloren en gevoelig ---------- */
+
+  function toonBoekstatus(vak) {
+    var s = data.boekstatus || { verloren: [], gevoelig_verborgen: [], gevoelig_zichtbaar: [] };
+    function lijst(titel, uitleg, boeken, leeg) {
+      return el('div', { class: 'blok' }, el('h3', {}, titel + ' (' + boeken.length + ')'), el('p', { class: 'hulptekst' }, uitleg),
+        boeken.length ? el('ul', {}, boeken.map(function (b) {
+          return el('li', {}, el('strong', {}, b.titel), b.auteur ? ', ' + b.auteur : '', ' ', el('span', { class: 'hulptekst' }, '(' + b.boek_id + ')'));
+        })) : el('p', {}, leeg));
+    }
+    D.vervang(vak, kop('Verloren en gevoelig', 'Boeken met een status in de kolom status van de Catalogus. Zet de status leeg om een boek terug gewoon te maken.'),
+      lijst('Verloren', 'Niet op de website en niet uitleenbaar.', s.verloren, 'Geen verloren boeken.'),
+      lijst('Gevoelig, verborgen', 'Niet op de website, wel uitleenbaar aan de balie.', s.gevoelig_verborgen, 'Geen boeken.'),
+      lijst('Gevoelig, zichtbaar', 'Op de website met het label "Gevoelige inhoud".', s.gevoelig_zichtbaar, 'Geen boeken.'));
   }
 
   /* ---------- Leners ---------- */

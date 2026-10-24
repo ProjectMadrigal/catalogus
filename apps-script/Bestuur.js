@@ -8,11 +8,30 @@
 /** Korte lijst van alle boeken voor het uitleenscherm, ook de niet-publieke. */
 function baliecatalogus(staat) {
   return staat.catalogus.filter(function (b) { return !isLeeg(b.boek_id) && !isLeeg(b.titel); }).map(function (b) {
-    return {
+    var info = {
       id: String(b.boek_id), t: schoon(b.titel), a: schoon(b.auteur), i: schoon(b.isbn),
-      x: aantalExemplaren(b), u: jaNee(b.uitleenbaar) !== 'nee'
+      x: aantalExemplaren(b), u: isUitleenbaar(b)
     };
+    // st: zodat de vrijwilliger het weet. Gevoelig (verborgen of zichtbaar) mag je gewoon uitlenen.
+    var status = boekStatus(b);
+    if (status === 'verloren') info.st = 'verloren';
+    else if (status) info.st = 'gevoelig';
+    return info;
   });
+}
+
+/** Boeken met een status, per status, voor het bestuursscherm. */
+function boekenMetStatus(staat) {
+  var lijsten = { verloren: [], gevoelig_verborgen: [], gevoelig_zichtbaar: [] };
+  staat.catalogus.forEach(function (b) {
+    var s = boekStatus(b);
+    if (!s || isLeeg(b.boek_id)) return;
+    lijsten[s].push({ boek_id: String(b.boek_id), titel: schoon(b.titel), auteur: schoon(b.auteur) });
+  });
+  Object.keys(lijsten).forEach(function (k) {
+    lijsten[k].sort(function (a, b) { return a.titel.localeCompare(b.titel); });
+  });
+  return lijsten;
 }
 
 /** Reservatie zoals de schermen ze tonen. */
@@ -158,6 +177,7 @@ function bestuurGegevens(staat, onderwerpRijen) {
     groepen: groepen,
     reservaties: alleReservaties(staat),
     uitzonderingen: uitzonderingen,
+    boekstatus: boekenMetStatus(staat),
     leners: staat.leners.map(function (l) {
       return {
         lenersnummer: l.lenersnummer, voornaam: l.voornaam, achternaam: l.achternaam, telefoon: l.telefoon,

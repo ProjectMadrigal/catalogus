@@ -175,6 +175,13 @@
     });
   }
 
+  /** Bij een boek met gevoelige inhoud: een melding voor de vrijwilliger. */
+  function gevoeligMelding(b) {
+    if (b.st !== 'gevoelig') return null;
+    return el('p', { class: 'labels' }, el('span', { class: 'label label-gevoelig' }, 'Gevoelige inhoud'),
+      el('span', { class: 'hulptekst' }, 'Dit boek staat niet of met een waarschuwing op de website. Je mag het gewoon uitlenen.'));
+  }
+
   function foutVak() { return el('div', { 'aria-live': 'assertive' }); }
 
   /** Zet een knop even op "bezig" tijdens het versturen. */
@@ -222,6 +229,7 @@
     var bevestig = el('button', { type: 'button', class: 'knop breed', disabled: true }, 'Bevestig de uitlening');
 
     function exemplaarKnoppen(b, kies) {
+      if (b.st === 'verloren') return el('p', { class: 'labels' }, D.statusLabel('verloren', 'Verloren'));
       if (!b.u) return el('p', { class: 'labels' }, D.statusLabel('niet_uitleenbaar', 'Niet uitleenbaar'));
       var knoppen = [];
       for (var i = 1; i <= b.x; i++) {
@@ -251,6 +259,7 @@
         zoek: zoekBoeken,
         toon: function (b, kies) {
           return el('div', { class: 'kaart' }, el('h3', {}, b.t), b.a ? el('p', {}, b.a) : null,
+            gevoeligMelding(b),
             el('div', { class: 'kaartlijst', style: 'margin-top:.5rem' }, exemplaarKnoppen(b, kies)));
         },
         kies: function (v) { keuze.boek = v.boek; keuze.exemplaar = v.exemplaar; tekenBoek(); controleer(); if (!keuze.lener) focusOp('uit-lener'); },
@@ -431,7 +440,8 @@
           var vrij = b.x - uit;
           return el('button', { type: 'button', class: 'knop keuzeknop', disabled: !b.u, onclick: function () { kies(b); } },
             el('strong', {}, b.t), b.a ? el('span', {}, b.a) : null,
-            el('span', {}, !b.u ? 'Niet uitleenbaar' : vrij > 0 ? vrij + ' van ' + b.x + ' in de kast: je kan het meteen uitlenen' : 'Alle exemplaren zijn uitgeleend of apart gelegd'));
+            b.st === 'gevoelig' ? el('span', {}, 'Gevoelige inhoud') : null,
+            el('span', {}, b.st === 'verloren' ? 'Verloren' : !b.u ? 'Niet uitleenbaar' : vrij > 0 ? vrij + ' van ' + b.x + ' in de kast: je kan het meteen uitlenen' : 'Alle exemplaren zijn uitgeleend of apart gelegd'));
         },
         kies: function (b) { keuze.boek = b; tekenBoek(); knop.disabled = !(keuze.boek && keuze.lener); focusOp('res-lener'); }
       }));

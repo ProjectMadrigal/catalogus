@@ -232,6 +232,7 @@
 
   function labels(b) {
     var items = [el('li', {}, D.statusLabel(b.b.c, status(b)))];
+    if (b.w) items.push(el('li', {}, el('span', { class: 'label label-gevoelig' }, t('gevoelig'))));
     (b.r || []).forEach(function (naam) { items.push(el('li', {}, el('span', { class: 'label label-aanrader' }, t('aanraderVan', { naam: naam })))); });
     return el('ul', { class: 'labels', 'aria-label': t('labels') }, items);
   }
@@ -284,6 +285,7 @@
         b.a ? el('p', { class: 'auteur' }, b.a) : null,
         el('p', { class: 'beschikbaarheid' }, D.statusLabel(b.b.c, status(b))),
         uitlegStatus ? el('p', {}, uitlegStatus) : null,
+        b.w ? el('p', {}, el('span', { class: 'label label-gevoelig' }, t('gevoelig')), ' ', t('gevoeligUitleg')) : null,
         (b.r || []).length ? el('ul', { class: 'labels' }, b.r.map(function (n) {
           return el('li', {}, el('a', { class: 'label label-aanrader', href: '#/?aanrader=' + encodeURIComponent('Aanrader van ' + n) }, t('aanraderVan', { naam: n })));
         })) : null,
