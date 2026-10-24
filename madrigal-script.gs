@@ -44,6 +44,8 @@ var ACTIES = {
 
 /* ---------- Staat lezen en bewaren ---------- */
 
+var BACKUP_VOORVOEGSEL = 'Madrigal back-up ';
+
 /** Velden van een boek die je via de website kan aanpassen. De rest (herkomst, ...) blijft enkel in de spreadsheet. */
 var BEHEER_BOEKVELDEN = [
   'soort', 'titel', 'auteur', 'isbn', 'uitgeverij', 'jaartal', 'taal', 'paginas', 'uitvoering', 'nieuwstaat',
@@ -231,6 +233,8 @@ var STANDAARD_INSTELLINGEN = [
   ['rooster_code', '', 'De toegangscode voor vrijwilligers van het rooster. Blijft op de server, de browser ziet ze nooit.'],
   ['rooster_link', 'https://projectmadrigal.github.io/rooster/', 'Adres van de roostertool, voor de knop "Beschikbaarheid invullen".'],
   ['code_bestuur', '', 'Code voor het bestuursscherm. Geef ze enkel aan het bestuur.'],
+  ['backup_map', 'Project Madrigal back-ups', 'Naam van de map op Google Drive waar elke week een kopie van deze spreadsheet komt.'],
+  ['backup_bewaren', 8, 'Hoeveel back-ups je bewaart. De oudste gaan vanzelf naar de prullenbak. Een back-up bevat ook de gegevens van leners.'],
   ['bewaartermijn_afgesloten_uitleningen_maanden', 12, 'Na hoeveel maanden de koppeling tussen een teruggebrachte uitlening en de lener gewist wordt.'],
   ['goodreads_shelf', '', 'Naam van de Goodreads-shelf met de boeken van Madrigal, precies zoals op Goodreads. Leeg: alle boeken uit de export.'],
   ['google_books_api_key', '', 'Optioneel. Een sleutel voor de Google Books-API, zodat covers sneller opgezocht worden. Leeg werkt ook, maar trager.'],
@@ -312,7 +316,8 @@ var INSTELLING_GROEPEN = [
   ['Aanraders', ['aanraders_uit_stocklijst', 'aanraders_verbergen', 'nieuw_op_startpagina_dagen']],
   ['Boekgegevens aanvullen', ['goodreads_shelf', 'google_books_api_key']],
   ['Rooster', ['rooster_url', 'rooster_code', 'rooster_link']],
-  ['Privacy', ['bewaartermijn_afgesloten_uitleningen_maanden']]
+  ['Privacy', ['bewaartermijn_afgesloten_uitleningen_maanden']],
+  ['Back-up', ['backup_map', 'backup_bewaren']]
 ];
 
 var TABBLAD_GROEPEN = [
@@ -421,6 +426,17 @@ function auteurAchternaamEerst(naam) {
   var delen = n.split(' ');
   if (delen.length < 2) return n;
   return delen.pop() + ', ' + delen.join(' ');
+}
+
+/** De map voor de back-ups. Bestaat ze nog niet, dan maken we ze. */
+function backupMap(naam) {
+  var mappen = DriveApp.getFoldersByName(naam);
+  return mappen.hasNext() ? mappen.next() : DriveApp.createFolder(naam);
+}
+
+/** De naam van een back-up: "Madrigal back-up 2026-10-24". */
+function backupNaam(vandaag) {
+  return BACKUP_VOORVOEGSEL + vandaag;
 }
 
 /** Korte lijst van alle boeken voor het uitleenscherm, ook de niet-publieke. */
@@ -1582,10 +1598,13 @@ function installeer() {
       'gevoelig verborgen: niet op de website, wel uitleenbaar.\ngevoelig zichtbaar: op de website met het label "Gevoelige inhoud".');
   }
 
-  // Planning: elke nacht de privacy-opruiming, en de cache legen bij een wijziging.
+  // Planning: elke nacht de privacy-opruiming, elke maandagnacht een back-up,
+  // en de cache legen bij een wijziging.
   verwijderTriggers('ruimOp');
   verwijderTriggers('bijWijziging');
+  verwijderTriggers('maakBackup');
   ScriptApp.newTrigger('ruimOp').timeBased().everyDays(1).atHour(3).create();
+  ScriptApp.newTrigger('maakBackup').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(4).create();
   ScriptApp.newTrigger('bijWijziging').forSpreadsheet(ss).onEdit().create();
 
   ordenTabbladen(ss);
@@ -2124,6 +2143,30 @@ function maakAfgebrokenLeeg(rijen) {
   return n;
 }
 
+/** Maakt een back-up en ruimt de oudste op. Draait elke week vanzelf (zie Installeer tabbladen). */
+function maakBackup() {
+  var inst = leesInstellingen();
+  var ss = spreadsheet();
+  var map = backupMap(inst.backup_map || 'Project Madrigal back-ups');
+  var kopie = DriveApp.getFileById(ss.getId()).makeCopy(backupNaam(vandaagTekst()), map);
+  var bestanden = [];
+  var lijst = map.getFiles();
+  while (lijst.hasNext()) {
+    var f = lijst.next();
+    bestanden.push({ id: f.getId(), naam: f.getName(), datum: f.getDateCreated().getTime() });
+  }
+  var weg = teVerwijderenBackups(bestanden, inst.backup_bewaren);
+  weg.forEach(function (id) { DriveApp.getFileById(id).setTrashed(true); });
+  logboek('systeem', 'back-up', kopie.getName() + (weg.length ? ', ' + weg.length + ' oude naar de prullenbak' : ''));
+  return { naam: kopie.getName(), map: map.getName(), url: kopie.getUrl(), opgeruimd: weg.length };
+}
+
+/** Menu: nu meteen een back-up maken. */
+function maakBackupMenu() {
+  var r = maakBackup();
+  meld('Back-up gemaakt: "' + r.naam + '" in de map "' + r.map + '" op je Google Drive.' + (r.opgeruimd ? ' ' + r.opgeruimd + ' oude back-up(s) gingen naar de prullenbak.' : ''));
+}
+
 /**
  * Maakt een beschrijving uit een externe bron netjes: geen HTML, geen
  * bronvermeldingen van Open Library, en hoogstens BS_MAX_LENGTE tekens.
@@ -2449,6 +2492,7 @@ function onOpen() {
     .addItem('Neem lopende uitleningen over uit het oude blad', 'neemUitleningenOver')
     .addItem('Neem nieuws, agenda en vragen over van de oude website', 'importeerOudeSite')
     .addItem('Privacy-opruiming nu uitvoeren', 'ruimOp')
+    .addItem('Maak nu een back-up', 'maakBackupMenu')
     .addItem('Orden tabbladen en instellingen', 'ordenAlles')
     .addSeparator()
     .addItem('Catalogus wissen en opnieuw opbouwen (enkel bij de start)', 'herbouwCatalogus')
@@ -2941,6 +2985,20 @@ function terugbrengen(staat, invoer) {
       (velden.borg_terugbetaald ? ' Borg van ' + bedragTekst(u.borg) + ' terugbetaald.' : (Number(u.borg) > 0 ? ' De borg staat nog open.' : '')),
     apartLeggen: melding ? [melding] : []
   };
+}
+
+/**
+ * Welke back-ups mogen weg? bestanden: [{ id, naam, datum }] (datum als getal of tekst).
+ * Geeft de id's van alles buiten de nieuwste "bewaren" back-ups. Enkel bestanden
+ * waarvan de naam met BACKUP_VOORVOEGSEL begint, tellen mee.
+ */
+function teVerwijderenBackups(bestanden, bewaren) {
+  var n = Math.max(1, Math.round(Number(bewaren) || 0));
+  return bestanden
+    .filter(function (b) { return String(b.naam || '').indexOf(BACKUP_VOORVOEGSEL) === 0; })
+    .sort(function (a, b) { return a.datum < b.datum ? 1 : a.datum > b.datum ? -1 : 0; })
+    .slice(n)
+    .map(function (b) { return b.id; });
 }
 
 /** Tijdzone van het script, voor datums van vandaag. */

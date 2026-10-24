@@ -990,5 +990,26 @@ test('elke beheeractie vraagt de code van het bestuur', () => {
   Object.keys(M.ACTIES).filter((a) => /^beheer/.test(a)).forEach((a) => assert.strictEqual(M.ACTIES[a], 'bestuur', a));
 });
 
+console.log('\nBack-up');
+test('back-up: naam met de datum', () => {
+  assert.strictEqual(M.backupNaam('2026-10-24'), 'Madrigal back-up 2026-10-24');
+});
+test('back-up: enkel de oudste back-ups weg, andere bestanden blijven', () => {
+  const b = [
+    { id: 'a', naam: 'Madrigal back-up 2026-10-05', datum: 5 },
+    { id: 'b', naam: 'Madrigal back-up 2026-10-12', datum: 12 },
+    { id: 'c', naam: 'Madrigal back-up 2026-10-19', datum: 19 },
+    { id: 'x', naam: 'Iets anders', datum: 1 },
+    { id: 'd', naam: 'Madrigal back-up 2026-10-26', datum: 26 }
+  ];
+  gelijk(M.teVerwijderenBackups(b, 2), ['b', 'a']);
+  gelijk(M.teVerwijderenBackups(b, 8), []);
+  gelijk(M.teVerwijderenBackups(b, 0), ['c', 'b', 'a']); // minstens één blijft altijd
+});
+test('back-up: standaard 8 back-ups bewaren', () => {
+  assert.strictEqual(instellingen().backup_bewaren, 8);
+  assert.strictEqual(instellingen().backup_map, 'Project Madrigal back-ups');
+});
+
 console.log('\n' + geslaagd + ' geslaagd, ' + mislukt.length + ' mislukt');
 if (mislukt.length) process.exit(1);

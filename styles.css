@@ -376,7 +376,12 @@ th { font-weight: 700; }
 td.getal, th.getal { text-align: right; }
 .balk { display: inline-block; height: .8rem; background: var(--kleur-accent); border-radius: 3px; vertical-align: middle; margin-right: .4rem; }
 
-.sectienav { display: flex; flex-wrap: wrap; gap: .4rem; margin-bottom: var(--ruimte); }
+.sectienav { display: grid; gap: .6rem; margin-bottom: var(--ruimte); }
+.navgroep { display: grid; grid-template-columns: 7rem 1fr; gap: .4rem; align-items: start; padding-bottom: .6rem; border-bottom: 1px solid var(--kleur-rand); }
+.navgroep:last-child { border-bottom: 0; padding-bottom: 0; }
+.navgroep-kop { font-weight: 700; padding-top: .55rem; color: var(--kleur-tekst-zacht); text-transform: uppercase; font-size: .8rem; letter-spacing: .05em; }
+.navgroep-knoppen { display: flex; flex-wrap: wrap; gap: .4rem; }
+@media (max-width: 34rem) { .navgroep { grid-template-columns: 1fr; } .navgroep-kop { padding-top: 0; } }
 .sectienav .knop { min-height: 2.6rem; padding: .3rem .8rem; font-size: .95rem; }
 
 .bovenbalk { display: flex; flex-wrap: wrap; gap: .5rem 1rem; align-items: center; justify-content: space-between; margin-bottom: var(--ruimte); }
