@@ -500,8 +500,6 @@ GitHub controleert elke wijziging automatisch (het tabblad **Actions**). Een roo
 | Menu, Instagram en de voet onderaan | [`layout.js`](layout.js) |
 | De grenzen aan de balie | [`apps-script/Grenzen.js`](apps-script/Grenzen.js), met uitleg bovenaan. Daarna `madrigal-script.gs` opnieuw maken (zie hieronder) en [D1](#d1-een-nieuwe-versie-van-het-script-publiceren). |
 
-**Met hulp van Claude.** In deze repository staat [`CLAUDE.md`](CLAUDE.md): een samenvatting die Claude bij een nieuwe sessie automatisch leest. Begin per opdracht een nieuwe sessie en beschrijf alles wat je wil in één bericht.
-
 **Voor wie de code aanpast.** Installeer [Node.js](https://nodejs.org) en voer in deze map uit:
 
 ```
@@ -548,7 +546,6 @@ node tests/run.js
 | `madrigal-script.gs` | dezelfde code in één bestand, om in Apps Script te plakken |
 | `tools/bundel.js` | maakt `madrigal-script.gs` opnieuw |
 | `tests/` | tests met verzonnen gegevens |
-| `CLAUDE.md` | samenvatting voor Claude |
 
 **De Apps Script-bestanden**
 
