@@ -26,7 +26,8 @@ var INSTELLING_GROEPEN = [
   ['Aanraders', ['aanraders_uit_stocklijst', 'aanraders_verbergen', 'nieuw_op_startpagina_dagen']],
   ['Boekgegevens aanvullen', ['goodreads_shelf', 'google_books_api_key']],
   ['Rooster', ['rooster_url', 'rooster_code', 'rooster_link']],
-  ['Privacy', ['bewaartermijn_afgesloten_uitleningen_maanden']]
+  ['Privacy', ['bewaartermijn_afgesloten_uitleningen_maanden']],
+  ['Back-up', ['backup_map', 'backup_bewaren']]
 ];
 
 var TABBLAD_GROEPEN = [

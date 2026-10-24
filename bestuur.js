@@ -19,22 +19,25 @@
   var data = null;
   var actief = 'telaat';
 
+  /** De onderdelen: [sleutel, knoptekst, functie, groep]. De groepen staan in GROEPEN. */
   var SECTIES = [
-    ['telaat', 'Te laat', toonTeLaat],
-    ['binnenkort', 'Vervalt binnenkort', toonBinnenkort],
-    ['lopend', 'Alle uitleningen', toonLopend],
-    ['borgen', 'Borgen en giften', toonBorgen],
-    ['reservaties', 'Reservaties', toonReservaties],
-    ['uitzonderingen', 'Uitzonderingen', toonUitzonderingen],
-    ['boekstatus', 'Verloren en gevoelig', toonBoekstatus],
-    ['leners', 'Leners', toonLeners],
-    ['cijfers', 'Cijfers', toonCijfers],
-    ['rooster', 'Rooster', toonRoosterSectie],
+    ['telaat', 'Te laat', toonTeLaat, 'uitlenen'],
+    ['binnenkort', 'Vervalt binnenkort', toonBinnenkort, 'uitlenen'],
+    ['lopend', 'Alle uitleningen', toonLopend, 'uitlenen'],
+    ['reservaties', 'Reservaties', toonReservaties, 'uitlenen'],
+    ['leners', 'Leners', toonLeners, 'uitlenen'],
+    ['borgen', 'Borgen en giften', toonBorgen, 'uitlenen'],
+    ['uitzonderingen', 'Uitzonderingen', toonUitzonderingen, 'uitlenen'],
     // De website aanpassen: zie bestuur-beheer.js.
-    ['boeken', 'Boeken', function (vak) { W.boeken(vak, context()); }],
-    ['inhoud', 'Nieuws en agenda', function (vak) { W.inhoud(vak, context()); }],
-    ['instellingen', 'Teksten en instellingen', function (vak) { W.instellingen(vak, context()); }]
+    ['boeken', 'Boeken', function (vak) { W.boeken(vak, context()); }, 'website'],
+    ['boekstatus', 'Verloren en gevoelig', toonBoekstatus, 'website'],
+    ['inhoud', 'Nieuws en agenda', function (vak) { W.inhoud(vak, context()); }, 'website'],
+    ['instellingen', 'Teksten en instellingen', function (vak) { W.instellingen(vak, context()); }, 'website'],
+    ['cijfers', 'Cijfers', toonCijfers, 'overzicht'],
+    ['rooster', 'Rooster', toonRoosterSectie, 'overzicht']
   ];
+
+  var GROEPEN = [['uitlenen', 'Uitlenen'], ['website', 'Website'], ['overzicht', 'Overzicht']];
 
   /** Wat bestuur-beheer.js nodig heeft van dit scherm. */
   function context() {
@@ -54,12 +57,17 @@
   }
 
   function tekenNav() {
-    D.vervang($('sectienav'), SECTIES.map(function (s) {
-      var aantal = s[0] === 'telaat' ? data.telaat.length : s[0] === 'binnenkort' ? data.binnenkort.length : null;
-      return el('button', {
-        type: 'button', class: 'knop' + (s[0] === actief ? '' : ' tweede'), 'aria-pressed': s[0] === actief ? 'true' : 'false',
-        onclick: function () { toonSectie(s[0], true); }
-      }, s[1] + (aantal !== null ? ' (' + aantal + ')' : ''));
+    D.vervang($('sectienav'), GROEPEN.map(function (g) {
+      var kopId = 'navgroep-' + g[0];
+      return el('div', { class: 'navgroep', role: 'group', 'aria-labelledby': kopId },
+        el('span', { class: 'navgroep-kop', id: kopId }, g[1]),
+        el('div', { class: 'navgroep-knoppen' }, SECTIES.filter(function (s) { return s[3] === g[0]; }).map(function (s) {
+          var aantal = s[0] === 'telaat' ? data.telaat.length : s[0] === 'binnenkort' ? data.binnenkort.length : null;
+          return el('button', {
+            type: 'button', class: 'knop' + (s[0] === actief ? '' : ' tweede'), 'aria-pressed': s[0] === actief ? 'true' : 'false',
+            onclick: function () { toonSectie(s[0], true); }
+          }, s[1] + (aantal !== null ? ' (' + aantal + ')' : ''));
+        })));
     }));
   }
 

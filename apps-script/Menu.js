@@ -73,10 +73,13 @@ function installeer() {
       'gevoelig verborgen: niet op de website, wel uitleenbaar.\ngevoelig zichtbaar: op de website met het label "Gevoelige inhoud".');
   }
 
-  // Planning: elke nacht de privacy-opruiming, en de cache legen bij een wijziging.
+  // Planning: elke nacht de privacy-opruiming, elke maandagnacht een back-up,
+  // en de cache legen bij een wijziging.
   verwijderTriggers('ruimOp');
   verwijderTriggers('bijWijziging');
+  verwijderTriggers('maakBackup');
   ScriptApp.newTrigger('ruimOp').timeBased().everyDays(1).atHour(3).create();
+  ScriptApp.newTrigger('maakBackup').timeBased().onWeekDay(ScriptApp.WeekDay.MONDAY).atHour(4).create();
   ScriptApp.newTrigger('bijWijziging').forSpreadsheet(ss).onEdit().create();
 
   ordenTabbladen(ss);
@@ -104,6 +107,7 @@ function onOpen() {
     .addItem('Neem lopende uitleningen over uit het oude blad', 'neemUitleningenOver')
     .addItem('Neem nieuws, agenda en vragen over van de oude website', 'importeerOudeSite')
     .addItem('Privacy-opruiming nu uitvoeren', 'ruimOp')
+    .addItem('Maak nu een back-up', 'maakBackupMenu')
     .addItem('Orden tabbladen en instellingen', 'ordenAlles')
     .addSeparator()
     .addItem('Catalogus wissen en opnieuw opbouwen (enkel bij de start)', 'herbouwCatalogus')

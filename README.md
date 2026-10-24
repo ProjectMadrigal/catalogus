@@ -231,6 +231,12 @@ Paste iemand dezelfde rij intussen aan in de spreadsheet, dan weigert de site te
 
 Enkel wie de code van het bestuur heeft, kan dit. Wil je later vrijwilligers bv. boeken laten toevoegen? Dat kan met een kleine aanpassing in `apps-script/Api.js` (de lijst `ACTIES`).
 
+**Back-up.** Elke maandagnacht maakt het script een kopie van de hele spreadsheet in de map **Project Madrigal back-ups** op de Google Drive van het Madrigal-account. Het bewaart de laatste 8 kopieën, de oudste gaan vanzelf naar de prullenbak. Je kan de naam van de map en het aantal aanpassen in Instellingen, onder `── BACK-UP ──`. Meteen een back-up nodig, bv. voor een grote wijziging? Kies **Madrigal > Maak nu een back-up**.
+
+- Iets per ongeluk gewist of overschreven? Open de laatste back-up, zoek de rij en kopieer ze terug naar de echte spreadsheet.
+- Werk nooit verder in een back-up: de website leest enkel de echte spreadsheet.
+- Een back-up bevat ook de gegevens van leners. Die blijven er dus nog tot 8 weken in staan nadat de privacy-opruiming ze wiste. Deel de map met niemand buiten het bestuur.
+
 ## A8. Wat te doen als iets niet werkt
 
 | Wat je ziet | Wat je doet |
